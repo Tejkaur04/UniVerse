@@ -8,30 +8,30 @@ body {
 
 @layer base {
   :root {
-    --background: 230 35% 7%; /* Very dark desaturated blue - space black */
-    --foreground: 210 40% 98%; /* Pale blueish white - starlight */
-    --card: 230 30% 12%; /* Slightly lighter dark blue for depth */
-    --card-foreground: 210 40% 95%;
-    --popover: 230 25% 10%; /* Even darker for popovers */
-    --popover-foreground: 210 40% 95%;
-    --primary: 260 80% 65%; /* Vibrant nebula purple */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 230 20% 20%; /* Darker secondary elements */
-    --secondary-foreground: 210 40% 98%;
-    --muted: 230 15% 25%;
-    --muted-foreground: 220 15% 65%; /* Softer text for muted */
-    --accent: 45 100% 58%; /* Bright starlight gold/yellow */
-    --accent-foreground: 230 35% 7%; /* Dark text on bright accent */
-    --destructive: 0 84.2% 60.2%; /* Keep destructive somewhat standard for errors */
-    --destructive-foreground: 0 0% 98%;
-    --border: 230 20% 25%; /* Subtle borders */
-    --input: 230 20% 22%; /* Dark input fields */
-    --ring: 260 80% 70%; /* Primary color for rings, slightly lighter */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --background: 240 50% 3%; /* Deeper, more "void-like" blue-black */
+    --foreground: 210 40% 98%; /* Pale blueish white - starlight (kept) */
+    --card: 235 40% 8%; /* Darker card, relies on border/shadow */
+    --card-foreground: 210 40% 95%; /* Kept */
+    --popover: 240 40% 6%; /* Darker popover */
+    --popover-foreground: 210 40% 95%; /* Kept */
+    --primary: 265 90% 70%; /* More vibrant nebula purple */
+    --primary-foreground: 210 40% 98%; /* Kept */
+    --secondary: 230 20% 15%; /* Darker secondary elements */
+    --secondary-foreground: 210 40% 98%; /* Kept */
+    --muted: 230 15% 20%; /* Adjusted muted */
+    --muted-foreground: 220 15% 60%; /* Softer text for muted */
+    --accent: 50 100% 62%; /* Brighter starlight gold/yellow */
+    --accent-foreground: 240 50% 5%; /* Dark text on bright accent */
+    --destructive: 0 84.2% 60.2%; /* Kept */
+    --destructive-foreground: 0 0% 98%; /* Kept */
+    --border: 220 20% 45%; /* Lighter, more visible borders */
+    --input: 235 30% 15%; /* Adjusted input fields */
+    --ring: 265 90% 75%; /* Primary color for rings, slightly lighter */
+    --chart-1: 220 70% 55%; /* Adjusted chart colors for new bg */
+    --chart-2: 160 60% 50%;
+    --chart-3: 30 80% 60%;
+    --chart-4: 280 65% 65%;
+    --chart-5: 340 75% 60%;
     --radius: 0.5rem;
     --sidebar-background: 230 30% 10%;
     --sidebar-foreground: 210 30% 90%;
@@ -44,30 +44,30 @@ body {
   }
 
   .dark {
-    --background: 230 35% 7%; /* Very dark desaturated blue - space black */
-    --foreground: 210 40% 98%; /* Pale blueish white - starlight */
-    --card: 230 30% 12%; /* Slightly lighter dark blue for depth */
+    --background: 240 50% 3%; 
+    --foreground: 210 40% 98%; 
+    --card: 235 40% 8%; 
     --card-foreground: 210 40% 95%;
-    --popover: 230 25% 10%; /* Even darker for popovers */
+    --popover: 240 40% 6%; 
     --popover-foreground: 210 40% 95%;
-    --primary: 260 80% 65%; /* Vibrant nebula purple */
+    --primary: 265 90% 70%; 
     --primary-foreground: 210 40% 98%;
-    --secondary: 230 20% 20%; /* Darker secondary elements */
+    --secondary: 230 20% 15%; 
     --secondary-foreground: 210 40% 98%;
-    --muted: 230 15% 25%;
-    --muted-foreground: 220 15% 65%; /* Softer text for muted */
-    --accent: 45 100% 58%; /* Bright starlight gold/yellow */
-    --accent-foreground: 230 35% 7%; /* Dark text on bright accent */
-    --destructive: 0 62.8% 30.6%;
+    --muted: 230 15% 20%;
+    --muted-foreground: 220 15% 60%; 
+    --accent: 50 100% 62%; 
+    --accent-foreground: 240 50% 5%; 
+    --destructive: 0 70% 50%; /* Adjusted destructive for dark */
     --destructive-foreground: 0 0% 98%;
-    --border: 230 20% 25%; /* Subtle borders */
-    --input: 230 20% 22%; /* Dark input fields */
-    --ring: 260 80% 70%; /* Primary color for rings, slightly lighter */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --border: 220 20% 45%; 
+    --input: 235 30% 15%; 
+    --ring: 265 90% 75%; 
+    --chart-1: 220 70% 55%;
+    --chart-2: 160 60% 50%;
+    --chart-3: 30 80% 60%;
+    --chart-4: 280 65% 65%;
+    --chart-5: 340 75% 60%;
     --sidebar-background: 230 30% 10%;
     --sidebar-foreground: 210 30% 90%;
     --sidebar-primary: 260 80% 65%;
@@ -85,6 +85,12 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    /* Subtle, large-scale radial gradient for depth/texture */
+    background-image: radial-gradient(ellipse at center, hsla(240, 50%, 10%, 0.15) 0%, transparent 60%);
+    background-size: 150% 150%; /* Ensure it's larger than viewport */
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* Keep it fixed with scrolling content */
   }
 }
 
@@ -98,14 +104,16 @@ body {
     z-index: 0; 
     pointer-events: none;
     overflow: hidden;
+    /* Ensure body background gradient can be seen if needed */
+    background: transparent; 
   }
 
   #stars-small, #stars-medium, #stars-large {
     position: absolute;
-    top: -50%; /* Start off-screen to allow movement */
-    left: -50%; /* Start off-screen to allow movement */
-    width: 200%; /* Make larger to allow seamless movement */
-    height: 200%; /* Make larger to allow seamless movement */
+    top: -50%; 
+    left: -50%; 
+    width: 200%; 
+    height: 200%; 
     background: transparent;
   }
 
@@ -156,7 +164,7 @@ body {
 
   @keyframes move-stars-small {
     0% { transform: translate(0, 0); }
-    100% { transform: translate(25%, 25%); } /* Adjust percentages for different effects */
+    100% { transform: translate(25%, 25%); } 
   }
 
   @keyframes move-stars-medium {
