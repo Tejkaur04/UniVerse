@@ -233,9 +233,10 @@ export default function NebulaOfIdeasPage() {
             <CardTitle className="text-2xl flex items-center text-primary"><MessageSquare className="mr-3 h-7 w-7 text-accent" />Project Collaboration Hub</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-foreground/90">
-              Once your project team is assembled, this space will transform into your mission control! Features for discussion threads, task assignments, file sharing, and progress tracking are on the horizon to help your ideas take flight. <Badge variant="outline" className="ml-2 border-accent text-accent">Coming Soon!</Badge>
-            </p>
+            <div className="text-foreground/90">
+              <span>Once your project team is assembled, this space will transform into your mission control! Features for discussion threads, task assignments, file sharing, and progress tracking are on the horizon to help your ideas take flight. </span>
+              <Badge variant="outline" className="ml-2 border-accent text-accent">Coming Soon!</Badge>
+            </div>
           </CardContent>
         </Card>
 
@@ -245,9 +246,10 @@ export default function NebulaOfIdeasPage() {
             <CardTitle className="text-2xl flex items-center text-primary"><Trophy className="mr-3 h-7 w-7 text-accent" />Galaxy of Achievements</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-foreground/90">
-              Future update: A dedicated gallery to showcase the brilliant projects completed by UniVerse student teams. Inspire others and celebrate your collaborative successes! <Badge variant="outline" className="ml-2 border-accent text-accent">Coming Soon!</Badge>
-            </p>
+            <div className="text-foreground/90">
+              <span>Future update: A dedicated gallery to showcase the brilliant projects completed by UniVerse student teams. Inspire others and celebrate your collaborative successes! </span>
+              <Badge variant="outline" className="ml-2 border-accent text-accent">Coming Soon!</Badge>
+            </div>
           </CardContent>
         </Card>
 
@@ -255,4 +257,3 @@ export default function NebulaOfIdeasPage() {
     </div>
   );
 }
-
