@@ -1,9 +1,11 @@
 
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Rocket, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Orbit, Sparkles, Telescope } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface FeatureInfo {
   icon: LucideIcon;
@@ -11,7 +13,7 @@ interface FeatureInfo {
   description: string;
   details: string;
   color: string;
-  iconColor: string; // Added for full-width section icon
+  iconColor: string;
 }
 
 
@@ -94,7 +96,10 @@ export default function LandingPage() {
           {features.map((feature, index) => (
             <section 
               key={feature.title}
-              className="w-full py-12 sm:py-16 md:py-20 bg-card/40 backdrop-blur-md border-y border-border/50 animate-fade-in-up rounded-xl shadow-2xl overflow-hidden" // Added overflow-hidden
+              className={cn(
+                "w-full py-12 sm:py-16 md:py-20 backdrop-blur-md border-y border-border/50 animate-fade-in-up rounded-xl shadow-2xl overflow-hidden",
+                index % 2 === 0 ? "bg-card/40" : "bg-secondary/40" // Alternating background
+              )}
               style={{ animationDelay: `${0.8 + index * 0.2}s`, animationFillMode: 'forwards' }}
             >
               <div className="container mx-auto px-6 sm:px-8">
@@ -134,3 +139,4 @@ export default function LandingPage() {
     </div>
   );
 }
+
