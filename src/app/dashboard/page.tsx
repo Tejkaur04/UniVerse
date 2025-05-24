@@ -10,7 +10,7 @@ interface FeatureCardProps {
   description: string;
   icon: LucideIcon;
   href: string;
-  children?: React.ReactNode; // Made children optional
+  children?: React.ReactNode; 
   animationDelay?: string;
 }
 
@@ -80,19 +80,21 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-8">
-        {features.map((feature, index) => (
-          <FeatureCard
-            key={feature.title}
-            title={feature.title}
-            description={feature.description}
-            icon={feature.icon}
-            href={feature.href}
-            animationDelay={`${0.4 + index * 0.15}s`}
-          >
-            {/* No detailed paragraph here for a cleaner dashboard card */}
-          </FeatureCard>
-        ))}
+      <div className="max-w-4xl mx-auto"> {/* Constraining wrapper for the grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+          {features.map((feature, index) => (
+            <FeatureCard
+              key={feature.title}
+              title={feature.title}
+              description={feature.description}
+              icon={feature.icon}
+              href={feature.href}
+              animationDelay={`${0.4 + index * 0.15}s`}
+            >
+              {/* No detailed paragraph here for a cleaner dashboard card */}
+            </FeatureCard>
+          ))}
+        </div>
       </div>
     </div>
   );
