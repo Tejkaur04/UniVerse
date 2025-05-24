@@ -11,11 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, UserPlus, Loader2 } from "lucide-react";
-import type { AuthError } from "firebase/auth";
+// We are not using AuthError directly in handleSubmit anymore if we skip Firebase call
+// import type { AuthError } from "firebase/auth";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup, user, loading: authLoading } = useAuth();
+  // const { signup, user, loading: authLoading } = useAuth(); // signup function from useAuth will not be called
+  const { user, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -49,30 +51,25 @@ export default function SignupPage() {
       setIsLoading(false);
       return;
     }
-    // Basic email validation (can be more robust if needed)
     if (!/\S+@\S+\.\S+/.test(email)) {
         setError("Please enter a valid email address.");
         setIsLoading(false);
         return;
     }
 
+    // Simulate form processing without Firebase validation
+    console.log("Signup form submitted (Firebase validation skipped):", { email });
+    // Here, we are NOT calling `await signup({ email, password })`
+    // This means no Firebase user creation attempt from this form submission.
 
-    const result = await signup({ email, password });
-    if ((result as AuthError).code) {
-      const authError = result as AuthError;
-      if (authError.code === 'auth/email-already-in-use') {
-        setError("This email address is already in use. Please try logging in or use a different email.");
-      } else if (authError.code === 'auth/weak-password') {
-        setError("The password is too weak. Please choose a stronger password.");
-      }
-      else {
-        setError(authError.message || "An unexpected error occurred. Please try again.");
-      }
+    // Simulate a short delay as if an API call was made
+    setTimeout(() => {
       setIsLoading(false);
-    } else {
-      // Successful signup handled by onAuthStateChanged, triggers useEffect
-      // router.push("/dashboard"); // Let useEffect handle redirect
-    }
+      // Note: No automatic redirect to /dashboard here.
+      // Redirection to /dashboard will only happen if `user` becomes non-null
+      // via `onAuthStateChanged` in AuthContext (e.g., if user was already logged in).
+      // Or if you explicitly navigate after a successful *simulated* signup.
+    }, 500);
   };
 
   if (authLoading || (!authLoading && user)) {
@@ -139,7 +136,7 @@ export default function SignupPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Creating Account...
+                  Processing...
                 </>
               ) : (
                 "Create Account"

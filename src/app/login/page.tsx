@@ -11,11 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, LogIn, Loader2 } from "lucide-react";
-import type { AuthError } from "firebase/auth";
+// We are not using AuthError directly in handleSubmit anymore if we skip Firebase call
+// import type { AuthError } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, user, loading: authLoading } = useAuth();
+  // const { login, user, loading: authLoading } = useAuth(); // login function from useAuth will not be called
+  const { user, loading: authLoading } = useAuth();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -44,20 +46,21 @@ export default function LoginPage() {
         return;
     }
 
-
-    const result = await login({ email, password });
-    if ((result as AuthError).code) {
-      const authError = result as AuthError;
-      if (authError.code === "auth/invalid-credential" || authError.code === "auth/user-not-found" || authError.code === "auth/wrong-password") {
-        setError("Invalid email or password. Please try again.");
-      } else {
-        setError(authError.message || "An unexpected error occurred. Please try again.");
-      }
+    // Simulate form processing without Firebase validation
+    console.log("Login form submitted (Firebase validation skipped):", { email });
+    // Here, we are NOT calling `await login({ email, password })`
+    // This means no Firebase validation attempt from this form submission.
+    // If you wanted to simulate a login, you'd do it here locally or by updating a context.
+    // For now, we just stop the loading spinner.
+    
+    // Simulate a short delay as if an API call was made
+    setTimeout(() => {
       setIsLoading(false);
-    } else {
-      // Successful login is handled by onAuthStateChanged, which triggers useEffect
-      // router.push("/dashboard"); // Let useEffect handle redirect
-    }
+      // Note: No automatic redirect to /dashboard here.
+      // Redirection to /dashboard will only happen if `user` becomes non-null
+      // via `onAuthStateChanged` in AuthContext (e.g., if user was already logged in).
+      // Or if you explicitly navigate after a successful *simulated* login.
+    }, 500);
   };
 
   if (authLoading || (!authLoading && user)) {
@@ -113,7 +116,7 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Logging In...
+                  Processing...
                 </>
               ) : (
                 "Log In"
