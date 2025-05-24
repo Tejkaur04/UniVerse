@@ -97,8 +97,8 @@ export default function LandingPage() {
             <section 
               key={feature.title}
               className={cn(
-                "w-full py-12 sm:py-16 md:py-20 backdrop-blur-md border border-primary/40 animate-fade-in-up rounded-xl shadow-2xl overflow-hidden",
-                "bg-card/60" // Consistent, slightly more opaque background with a primary-themed border
+                "w-3/4 mx-auto py-12 sm:py-16 md:py-20 backdrop-blur-md border border-primary/40 animate-fade-in-up rounded-xl shadow-2xl overflow-hidden",
+                "bg-card/60"
               )}
               style={{ animationDelay: `${0.8 + index * 0.2}s`, animationFillMode: 'forwards' }}
             >
