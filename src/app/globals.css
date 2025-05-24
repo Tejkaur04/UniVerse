@@ -95,7 +95,7 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -1; /* Behind page content but above body background */
+    z-index: 0; /* Adjusted from -1 to ensure visibility above body background */
     pointer-events: none;
     overflow: hidden;
   }
