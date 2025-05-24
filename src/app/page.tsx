@@ -6,10 +6,34 @@ import { Rocket, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Orb
 
 export default function LandingPage() {
   const features = [
-    { icon: UsersRound, title: "Study Sphere", description: "Find study partners & groups.", color: "text-chart-1" },
-    { icon: CalendarDays, title: "Event Horizon", description: "Explore campus events.", color: "text-chart-3" },
-    { icon: MessageCircleQuestion, title: "Celestial Chats", description: "Get alumni guidance.", color: "text-chart-2" },
-    { icon: Lightbulb, title: "Nebula of Ideas", description: "Launch project collaborations.", color: "text-chart-4" },
+    { 
+      icon: UsersRound, 
+      title: "Study Sphere", 
+      description: "Find study partners & groups.", 
+      details: "Forge alliances, share knowledge, and conquer courses together. Stellar study groups await discovery!",
+      color: "text-chart-1" 
+    },
+    { 
+      icon: CalendarDays, 
+      title: "Event Horizon", 
+      description: "Explore campus events.", 
+      details: "Stay informed about academic gatherings, social mixers, and skill-building opportunities unfolding across the university.",
+      color: "text-chart-3" 
+    },
+    { 
+      icon: MessageCircleQuestion, 
+      title: "Celestial Chats", 
+      description: "Get alumni guidance.", 
+      details: "Ask your burning questions, seek guidance on your academic path, and learn from those who've journeyed before you.",
+      color: "text-chart-2" 
+    },
+    { 
+      icon: Lightbulb, 
+      title: "Nebula of Ideas", 
+      description: "Launch project collaborations.", 
+      details: "A vibrant space for brilliant minds to spark collaborations, nurture innovations, and bring groundbreaking ideas to life.",
+      color: "text-chart-4" 
+    },
   ];
 
   return (
@@ -51,7 +75,7 @@ export default function LandingPage() {
           <Telescope className="mr-3 h-8 w-8 sm:h-10 sm:w-10 text-accent transition-transform duration-300 group-hover:rotate-[-5deg]" />
           What Awaits You?
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-8">
           {features.map((feature, index) => (
             <div 
               key={feature.title}
@@ -67,8 +91,9 @@ export default function LandingPage() {
                   </div>
                   <CardTitle className="text-xl font-semibold text-card-foreground group-hover:text-accent transition-colors">{feature.title}</CardTitle>
                 </CardHeader>
-                <CardContent className="text-center pb-6 px-4 flex-grow">
-                  <CardDescription className="text-sm text-foreground/80 min-h-[2.5em]">{feature.description}</CardDescription>
+                <CardContent className="text-center pb-6 px-4 flex-grow flex flex-col">
+                  <CardDescription className="text-sm text-foreground/80 mb-3">{feature.description}</CardDescription>
+                  <p className="text-xs text-foreground/70 mt-auto">{feature.details}</p>
                 </CardContent>
               </Card>
             </div>
