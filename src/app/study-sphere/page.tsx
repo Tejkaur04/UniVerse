@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UsersRound } from 'lucide-react';
 import Link from 'next/link';
@@ -23,7 +24,7 @@ export default function StudySpherePage() {
             This is where you'll find tools to connect with students taking the same courses, match study styles, and achieve your academic goals together. Get ready to form your study constellations!
           </p>
           <Button asChild variant="outline" className="mt-8 bg-accent hover:bg-accent/90 text-accent-foreground hover:text-accent-foreground">
-            <Link href="/">
+            <Link href="/dashboard">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Dashboard
             </Link>
