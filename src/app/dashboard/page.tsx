@@ -3,17 +3,25 @@ import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface FeatureCardProps {
   title: string;
   description: string;
   icon: LucideIcon;
   href: string;
-  children: React.ReactNode;
+  children?: React.ReactNode; // Made children optional
+  animationDelay?: string;
 }
 
-const FeatureCard = ({ title, description, icon: Icon, href, children }: FeatureCardProps) => (
-  <Link href={href} className="block group rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background">
+const FeatureCard = ({ title, description, icon: Icon, href, children, animationDelay }: FeatureCardProps) => (
+  <Link 
+    href={href} 
+    className={cn(
+      "block group rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background animate-fade-in-up"
+    )}
+    style={{ animationDelay, animationFillMode: 'forwards' }}
+  >
     <Card className="bg-card/70 backdrop-blur-sm border-border/60 shadow-xl hover:shadow-primary/30 hover:scale-[1.03] transition-all duration-300 ease-in-out flex flex-col h-full overflow-hidden">
       <CardHeader className="items-center text-center pt-8">
         <Icon className="h-16 w-16 text-accent mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]" />
@@ -34,52 +42,55 @@ export default function DashboardPage() {
       description: "Find your ideal study constellations and connect with fellow learners.",
       icon: UsersRound,
       href: "/study-sphere",
-      details: "Forge alliances, share knowledge, and conquer courses together. Stellar study groups await discovery!"
     },
     {
       title: "Event Horizon",
       description: "Discover exciting campus events, workshops, and seminars on your horizon.",
       icon: CalendarDays,
       href: "/event-horizon",
-      details: "Stay informed about academic gatherings, social mixers, and skill-building opportunities unfolding across the university."
     },
     {
       title: "Celestial Chats",
       description: "Gain wisdom from experienced navigators – university seniors and alumni.",
       icon: MessageCircleQuestion,
       href: "/celestial-chats",
-      details: "Ask your burning questions, seek guidance on your academic path, and learn from those who've journeyed before you."
     },
     {
       title: "Nebula of Ideas",
       description: "Launch your innovative projects and find co-creators in this cosmic hub.",
       icon: Lightbulb,
       href: "/nebula-of-ideas",
-      details: "A vibrant space for brilliant minds to spark collaborations, nurture innovations, and bring groundbreaking ideas to life."
     }
   ];
 
   return (
     <div className="container mx-auto px-4 py-12 w-full">
       <div className="text-center mb-16">
-        <h1 className="text-4xl sm:text-5xl font-bold text-primary mb-4 tracking-tight">
+        <h1 
+          className="text-4xl sm:text-5xl font-bold text-primary mb-4 tracking-tight animate-fade-in-up"
+          style={{ animationFillMode: 'forwards' }}
+        >
           Welcome to UniVerse Dashboard
         </h1>
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
+        <p 
+          className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto animate-fade-in-up"
+          style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}
+        >
           Your cosmic command center for navigating the university journey. Explore the stars of opportunity below!
         </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-8">
-        {features.map((feature) => (
+        {features.map((feature, index) => (
           <FeatureCard
             key={feature.title}
             title={feature.title}
             description={feature.description}
             icon={feature.icon}
             href={feature.href}
+            animationDelay={`${0.4 + index * 0.15}s`}
           >
-            <p className="text-sm text-foreground/80">{feature.details}</p>
+            {/* No detailed paragraph here for a cleaner dashboard card */}
           </FeatureCard>
         ))}
       </div>
