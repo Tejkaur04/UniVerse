@@ -97,8 +97,8 @@ export default function LandingPage() {
             <section 
               key={feature.title}
               className={cn(
-                "w-full py-12 sm:py-16 md:py-20 backdrop-blur-md border-y border-border/50 animate-fade-in-up rounded-xl shadow-2xl overflow-hidden",
-                index % 2 === 0 ? "bg-card/40" : "bg-secondary/40" // Alternating background
+                "w-full py-12 sm:py-16 md:py-20 backdrop-blur-md border border-primary/40 animate-fade-in-up rounded-xl shadow-2xl overflow-hidden",
+                "bg-card/60" // Consistent, slightly more opaque background with a primary-themed border
               )}
               style={{ animationDelay: `${0.8 + index * 0.2}s`, animationFillMode: 'forwards' }}
             >
@@ -139,4 +139,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
