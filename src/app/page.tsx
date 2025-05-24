@@ -3,41 +3,56 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Rocket, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Orbit, Sparkles, Telescope } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+interface FeatureInfo {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  details: string;
+  color: string;
+  iconColor: string; // Added for full-width section icon
+}
+
 
 export default function LandingPage() {
-  const features = [
+  const features: FeatureInfo[] = [
     { 
       icon: UsersRound, 
       title: "Study Sphere", 
-      description: "Find study partners & groups.", 
-      details: "Forge alliances, share knowledge, and conquer courses together. Stellar study groups await discovery!",
-      color: "text-chart-1" 
+      description: "Connect with your perfect study partners and groups.", 
+      details: "Navigate the academic cosmos by finding study buddies taking the same courses. Match study styles, share insights, and conquer challenging subjects together. Form your knowledge constellations and illuminate your path to success!",
+      color: "text-chart-1",
+      iconColor: "text-sky-400"
     },
     { 
       icon: CalendarDays, 
       title: "Event Horizon", 
-      description: "Explore campus events.", 
-      details: "Stay informed about academic gatherings, social mixers, and skill-building opportunities unfolding across the university.",
-      color: "text-chart-3" 
+      description: "Discover campus events, workshops, and seminars.", 
+      details: "Stay ahead of the curve by exploring a universe of campus happenings. From academic workshops and career fairs to social gatherings and guest lectures, Event Horizon is your telescope to opportunities that enrich your university experience.",
+      color: "text-chart-3",
+      iconColor: "text-amber-400"
     },
     { 
       icon: MessageCircleQuestion, 
       title: "Celestial Chats", 
-      description: "Get alumni guidance.", 
-      details: "Ask your burning questions, seek guidance on your academic path, and learn from those who've journeyed before you.",
-      color: "text-chart-2" 
+      description: "Gain wisdom from experienced seniors and alumni.", 
+      details: "Tap into the collective wisdom of those who've navigated the university terrain before you. Ask your burning questions about courses, careers, or campus life, and receive guidance from a constellation of experienced seniors and alumni.",
+      color: "text-chart-2",
+      iconColor: "text-violet-400"
     },
     { 
       icon: Lightbulb, 
       title: "Nebula of Ideas", 
-      description: "Launch project collaborations.", 
-      details: "A vibrant space for brilliant minds to spark collaborations, nurture innovations, and bring groundbreaking ideas to life.",
-      color: "text-chart-4" 
+      description: "Launch project collaborations and find teammates.", 
+      details: "Ignite innovation in this cosmic incubator for ideas. Share your groundbreaking project concepts, search for specific skills, and assemble a stellar team to bring your visions to life. The next big bang in campus innovation starts here!",
+      color: "text-chart-4",
+      iconColor: "text-emerald-400"
     },
   ];
 
   return (
-    <div className="w-full flex-grow flex flex-col items-center justify-center text-center px-4 py-12 z-10 overflow-hidden">
+    <div className="w-full flex-grow flex flex-col items-center text-center px-4 py-12 z-10 overflow-x-hidden"> {/* Added overflow-x-hidden */}
       {/* Hero Section */}
       <section className="w-full max-w-4xl mb-20 sm:mb-24 md:mb-32 relative">
         <Orbit className="h-20 w-20 sm:h-24 sm:w-24 text-primary mx-auto mb-6 animate-pulse" />
@@ -67,36 +82,36 @@ export default function LandingPage() {
       </section>
 
       {/* Features Overview Section */}
-      <section className="w-full max-w-6xl mb-20 sm:mb-24 md:mb-32">
+      <section className="w-full max-w-7xl mb-20 sm:mb-24 md:mb-32">
         <h2 
-          className="text-3xl sm:text-4xl font-bold mb-12 text-primary flex items-center justify-center animate-fade-in-up"
+          className="text-3xl sm:text-4xl font-bold mb-12 sm:mb-16 md:mb-20 text-primary flex items-center justify-center animate-fade-in-up"
           style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}
         >
           <Telescope className="mr-3 h-8 w-8 sm:h-10 sm:w-10 text-accent transition-transform duration-300 group-hover:rotate-[-5deg]" />
           What Awaits You?
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-8">
+        <div className="space-y-16 md:space-y-24">
           {features.map((feature, index) => (
-            <div 
+            <section 
               key={feature.title}
-              className="animate-fade-in-up"
-              style={{ animationDelay: `${0.8 + index * 0.15}s`, animationFillMode: 'forwards' }}
+              className="w-full py-12 sm:py-16 md:py-20 bg-card/40 backdrop-blur-md border-y border-border/50 animate-fade-in-up rounded-xl shadow-2xl overflow-hidden" // Added overflow-hidden
+              style={{ animationDelay: `${0.8 + index * 0.2}s`, animationFillMode: 'forwards' }}
             >
-              <Card 
-                className="bg-card/60 backdrop-blur-sm border-border/50 shadow-xl hover:shadow-primary/25 transition-all duration-300 ease-in-out hover:scale-105 group flex flex-col h-full"
-              >
-                <CardHeader className="items-center pt-6 pb-3">
-                  <div className="p-3 bg-card rounded-full mb-3 group-hover:animate-bounce">
-                    <feature.icon className={`h-10 w-10 sm:h-12 sm:w-12 ${feature.color}`} />
+              <div className="container mx-auto px-6 sm:px-8">
+                <div 
+                  className={`flex flex-col ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} items-center justify-center gap-8 md:gap-12`}
+                >
+                  <div className="md:w-1/3 flex justify-center mb-6 md:mb-0 transform transition-transform duration-500 hover:scale-110">
+                    <feature.icon className={`h-28 w-28 sm:h-36 sm:w-36 ${feature.iconColor} drop-shadow-[0_0_15px_var(--tw-shadow-color)]`} style={{'--tw-shadow-color': `hsl(var(--${feature.color.replace('text-','')}))`} as React.CSSProperties} />
                   </div>
-                  <CardTitle className="text-xl font-semibold text-card-foreground group-hover:text-accent transition-colors">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center pb-6 px-4 flex-grow flex flex-col">
-                  <CardDescription className="text-sm text-foreground/80 mb-3">{feature.description}</CardDescription>
-                  <p className="text-xs text-foreground/70 mt-auto">{feature.details}</p>
-                </CardContent>
-              </Card>
-            </div>
+                  <div className="md:w-2/3 text-center md:text-left">
+                    <h3 className={`text-3xl sm:text-4xl font-bold ${feature.color} mb-4`}>{feature.title}</h3>
+                    <p className="text-lg sm:text-xl text-foreground/85 mb-3 leading-relaxed">{feature.description}</p>
+                    <p className="text-md sm:text-lg text-foreground/70 leading-relaxed">{feature.details}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
           ))}
         </div>
       </section>
@@ -104,7 +119,7 @@ export default function LandingPage() {
       {/* Footer Call to Action */}
       <section 
         className="w-full max-w-2xl animate-fade-in-up"
-        style={{ animationDelay: '1.4s', animationFillMode: 'forwards' }}
+        style={{ animationDelay: `${0.8 + features.length * 0.2 + 0.2}s`, animationFillMode: 'forwards' }}
       >
          <p className="text-md sm:text-lg text-foreground/80 mb-6">
           Ready to embark on your stellar university adventure?
