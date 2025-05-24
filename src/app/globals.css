@@ -8,26 +8,26 @@ body {
 
 @layer base {
   :root {
-    --background: 240 50% 3%; /* Deeper, more "void-like" blue-black */
-    --foreground: 210 40% 98%; /* Pale blueish white - starlight (kept) */
-    --card: 235 40% 8%; /* Darker card, relies on border/shadow */
-    --card-foreground: 210 40% 95%; /* Kept */
-    --popover: 240 40% 6%; /* Darker popover */
-    --popover-foreground: 210 40% 95%; /* Kept */
-    --primary: 265 90% 70%; /* More vibrant nebula purple */
-    --primary-foreground: 210 40% 98%; /* Kept */
-    --secondary: 230 20% 15%; /* Darker secondary elements */
-    --secondary-foreground: 210 40% 98%; /* Kept */
-    --muted: 230 15% 20%; /* Adjusted muted */
-    --muted-foreground: 220 15% 60%; /* Softer text for muted */
-    --accent: 50 100% 62%; /* Brighter starlight gold/yellow */
-    --accent-foreground: 240 50% 5%; /* Dark text on bright accent */
-    --destructive: 0 84.2% 60.2%; /* Kept */
-    --destructive-foreground: 0 0% 98%; /* Kept */
-    --border: 220 20% 45%; /* Lighter, more visible borders */
-    --input: 235 30% 15%; /* Adjusted input fields */
-    --ring: 265 90% 75%; /* Primary color for rings, slightly lighter */
-    --chart-1: 220 70% 55%; /* Adjusted chart colors for new bg */
+    --background: 240 60% 2%; /* Even deeper, more void-like blue-black */
+    --foreground: 210 40% 98%; 
+    --card: 235 45% 7%; /* Slightly darker card */
+    --card-foreground: 210 40% 95%; 
+    --popover: 240 45% 5%; /* Darker popover */
+    --popover-foreground: 210 40% 95%; 
+    --primary: 265 95% 72%; /* More vibrant nebula purple */
+    --primary-foreground: 210 40% 98%; 
+    --secondary: 230 25% 12%; /* Darker secondary */
+    --secondary-foreground: 210 40% 98%; 
+    --muted: 230 20% 18%; /* Adjusted muted */
+    --muted-foreground: 220 20% 65%; /* Softer text for muted */
+    --accent: 50 100% 65%; /* Brighter starlight gold/yellow */
+    --accent-foreground: 240 50% 4%; /* Darker text on bright accent */
+    --destructive: 0 84.2% 60.2%; 
+    --destructive-foreground: 0 0% 98%; 
+    --border: 220 25% 50%; /* Lighter, more visible borders */
+    --input: 235 35% 14%; /* Adjusted input fields */
+    --ring: 265 95% 78%; /* Primary color for rings, slightly lighter */
+    --chart-1: 220 70% 55%; 
     --chart-2: 160 60% 50%;
     --chart-3: 30 80% 60%;
     --chart-4: 280 65% 65%;
@@ -44,25 +44,25 @@ body {
   }
 
   .dark {
-    --background: 240 50% 3%; 
+    --background: 240 60% 2%; 
     --foreground: 210 40% 98%; 
-    --card: 235 40% 8%; 
+    --card: 235 45% 7%; 
     --card-foreground: 210 40% 95%;
-    --popover: 240 40% 6%; 
+    --popover: 240 45% 5%; 
     --popover-foreground: 210 40% 95%;
-    --primary: 265 90% 70%; 
+    --primary: 265 95% 72%; 
     --primary-foreground: 210 40% 98%;
-    --secondary: 230 20% 15%; 
+    --secondary: 230 25% 12%; 
     --secondary-foreground: 210 40% 98%;
-    --muted: 230 15% 20%;
-    --muted-foreground: 220 15% 60%; 
-    --accent: 50 100% 62%; 
-    --accent-foreground: 240 50% 5%; 
-    --destructive: 0 70% 50%; /* Adjusted destructive for dark */
+    --muted: 230 20% 18%;
+    --muted-foreground: 220 20% 65%; 
+    --accent: 50 100% 65%; 
+    --accent-foreground: 240 50% 4%; 
+    --destructive: 0 70% 50%; 
     --destructive-foreground: 0 0% 98%;
-    --border: 220 20% 45%; 
-    --input: 235 30% 15%; 
-    --ring: 265 90% 75%; 
+    --border: 220 25% 50%; 
+    --input: 235 35% 14%; 
+    --ring: 265 95% 78%; 
     --chart-1: 220 70% 55%;
     --chart-2: 160 60% 50%;
     --chart-3: 30 80% 60%;
@@ -87,10 +87,10 @@ body {
     @apply bg-background text-foreground;
     /* Subtle, large-scale radial gradient for depth/texture */
     background-image: radial-gradient(ellipse at center, hsla(240, 50%, 10%, 0.15) 0%, transparent 60%);
-    background-size: 150% 150%; /* Ensure it's larger than viewport */
+    background-size: 150% 150%; 
     background-position: center center;
     background-repeat: no-repeat;
-    background-attachment: fixed; /* Keep it fixed with scrolling content */
+    background-attachment: fixed; 
   }
 }
 
@@ -104,76 +104,9 @@ body {
     z-index: 0; 
     pointer-events: none;
     overflow: hidden;
-    /* Ensure body background gradient can be seen if needed */
-    background: transparent; 
+    background: transparent; /* Ensure tsparticles canvas is transparent */
   }
 
-  #stars-small, #stars-medium, #stars-large {
-    position: absolute;
-    top: -50%; 
-    left: -50%; 
-    width: 200%; 
-    height: 200%; 
-    background: transparent;
-  }
-
-  /* Small stars */
-  #stars-small {
-    box-shadow:
-      5% 85% 0 0px rgba(255,255,255,0.4), 10% 30% 0 0px rgba(255,255,255,0.7),
-      15% 60% 0 0px rgba(255,255,255,0.5), 20% 10% 0 0px rgba(255,255,255,0.9),
-      25% 75% 0 0px rgba(255,255,255,0.3), 30% 20% 0 0px rgba(255,255,255,0.6),
-      35% 90% 0 0px rgba(255,255,255,0.8), 40% 40% 0 0px rgba(255,255,255,0.4),
-      45% 70% 0 0px rgba(255,255,255,0.7), 50% 15% 0 0px rgba(255,255,255,0.5),
-      55% 80% 0 0px rgba(255,255,255,0.9), 60% 25% 0 0px rgba(255,255,255,0.3),
-      65% 65% 0 0px rgba(255,255,255,0.6), 70% 5% 0 0px rgba(255,255,255,0.8),
-      75% 70% 0 0px rgba(255,255,255,0.4), 80% 35% 0 0px rgba(255,255,255,0.7),
-      85% 95% 0 0px rgba(255,255,255,0.5), 90% 50% 0 0px rgba(255,255,255,0.9),
-      95% 20% 0 0px rgba(255,255,255,0.3), 7% 50% 0 0px rgba(255,255,255,0.6);
-    animation: twinkle-opacity 10s infinite ease-in-out, move-stars-small 150s linear infinite;
-  }
-
-  /* Medium stars */
-  #stars-medium {
-    box-shadow:
-      8% 40% 0 1px rgba(255,255,255,0.5), 18% 70% 0 1px rgba(255,255,255,0.8),
-      28% 15% 0 1px rgba(255,255,255,0.3), 38% 80% 0 1px rgba(255,255,255,0.6),
-      48% 25% 0 1px rgba(255,255,255,0.9), 58% 90% 0 1px rgba(255,255,255,0.4),
-      68% 5% 0 1px rgba(255,255,255,0.7), 78% 55% 0 1px rgba(255,255,255,0.2),
-      88% 30% 0 1px rgba(255,255,255,0.5), 98% 75% 0 1px rgba(255,255,255,0.8);
-    animation: twinkle-opacity 15s infinite ease-in-out 0.5s, move-stars-medium 100s linear infinite;
-  }
-
-  /* Large stars */
-  #stars-large {
-    box-shadow:
-      12% 60% 0 2px rgba(255,255,255,0.7), 32% 22% 0 2px rgba(255,255,255,0.9),
-      52% 82% 0 2px rgba(255,255,255,0.4), 72% 32% 0 2px rgba(255,255,255,0.6),
-      92% 52% 0 2px rgba(255,255,255,0.8);
-    animation: twinkle-opacity 20s infinite ease-in-out 1s, move-stars-large 75s linear infinite;
-  }
-
-  @keyframes twinkle-opacity {
-    0% { opacity: 0.2; }
-    20% { opacity: 0.8; }
-    40% { opacity: 0.3; }
-    60% { opacity: 1; }
-    80% { opacity: 0.4; }
-    100% { opacity: 0.2; }
-  }
-
-  @keyframes move-stars-small {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(25%, 25%); } 
-  }
-
-  @keyframes move-stars-medium {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(15%, 15%); }
-  }
-
-  @keyframes move-stars-large {
-    0% { transform: translate(0, 0); }
-    100% { transform: translate(10%, 10%); }
-  }
+ /* Old CSS star styles are removed from here */
+ /* Keyframes for old stars (twinkle-opacity, move-stars-*) are also removed */
 }
