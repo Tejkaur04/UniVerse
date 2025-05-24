@@ -11,13 +11,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, LogIn, Loader2 } from "lucide-react";
-// We are not using AuthError directly in handleSubmit anymore if we skip Firebase call
-// import type { AuthError } from "firebase/auth";
+import type { AuthError } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  // const { login, user, loading: authLoading } = useAuth(); // login function from useAuth will not be called
-  const { user, loading: authLoading } = useAuth();
+  const { login, user, loading: authLoading } = useAuth(); 
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -46,21 +44,27 @@ export default function LoginPage() {
         return;
     }
 
-    // Simulate form processing without Firebase validation
-    console.log("Login form submitted (Firebase validation skipped):", { email });
-    // Here, we are NOT calling `await login({ email, password })`
-    // This means no Firebase validation attempt from this form submission.
-    // If you wanted to simulate a login, you'd do it here locally or by updating a context.
-    // For now, we just stop the loading spinner.
-    
-    // Simulate a short delay as if an API call was made
-    setTimeout(() => {
+    try {
+      const result = await login({ email, password });
+      if (result && 'code' in result) { // Check if it's an AuthError
+        const authError = result as AuthError;
+        if (authError.code === 'auth/invalid-credential' || authError.code === 'auth/user-not-found' || authError.code === 'auth/wrong-password') {
+          setError("Invalid email or password. Please try again.");
+        } else if (authError.code === 'auth/too-many-requests') {
+          setError("Access to this account has been temporarily disabled due to many failed login attempts. You can immediately restore it by resetting your password or you can try again later.");
+        } else {
+          setError(authError.message || "An unexpected error occurred. Please try again.");
+        }
+      } else {
+        // Successful login is handled by the useEffect watching the `user` state
+        // No explicit redirect here, as onAuthStateChanged will update `user`
+      }
+    } catch (e: any) {
+      // This catch block might be redundant if login function already returns AuthError
+      setError(e.message || "An unexpected error occurred during login.");
+    } finally {
       setIsLoading(false);
-      // Note: No automatic redirect to /dashboard here.
-      // Redirection to /dashboard will only happen if `user` becomes non-null
-      // via `onAuthStateChanged` in AuthContext (e.g., if user was already logged in).
-      // Or if you explicitly navigate after a successful *simulated* login.
-    }, 500);
+    }
   };
 
   if (authLoading || (!authLoading && user)) {
