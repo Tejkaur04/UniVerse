@@ -1,10 +1,11 @@
+// This file uses server-side code.
 "use client";
 
 import { useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Sparkles, AlertTriangle, MessageCircleQuestion, SendHorizonal } from 'lucide-react';
+import { Loader2, Sparkles, AlertTriangle, MessageCircleQuestion, SendHorizonal, Compass } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,15 +50,15 @@ export default function CelestialChatsClient() {
   };
 
   return (
-    <Card className="w-full shadow-xl">
+    <Card className="w-full shadow-xl bg-card/80 backdrop-blur-sm border-border/60">
       <CardHeader className="text-center">
         <div className="flex justify-center items-center mb-2">
           <Sparkles className="h-10 w-10 text-accent mr-2" />
-          <MessageCircleQuestion className="h-10 w-10 text-accent" />
+          <Compass className="h-10 w-10 text-accent" />
         </div>
-        <CardTitle className="text-3xl font-bold">Celestial Chats</CardTitle>
+        <CardTitle className="text-3xl font-bold text-primary">Stellar Guidance</CardTitle>
         <CardDescription className="text-lg text-muted-foreground">
-          Ask anything about university life, courses, or career paths!
+          Pose your questions to the cosmos and receive wisdom from university seniors and alumni to navigate your academic journey.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -68,11 +69,11 @@ export default function CelestialChatsClient() {
               name="question"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base">Your Question</FormLabel>
+                  <FormLabel className="text-base">Your Cosmic Query</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="e.g., What are some good ways to prepare for final exams?"
-                      className="min-h-[100px] resize-none text-base"
+                      placeholder="e.g., What are some good ways to prepare for final exams in astrophysics?"
+                      className="min-h-[100px] resize-none text-base bg-background/70"
                       {...field}
                       aria-label="Your Question"
                     />
@@ -81,16 +82,16 @@ export default function CelestialChatsClient() {
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isLoading} className="w-full text-base py-6">
+            <Button type="submit" disabled={isLoading} className="w-full text-base py-6 bg-accent hover:bg-accent/90 text-accent-foreground">
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Asking the Stars...
+                  Gathering Starlight...
                 </>
               ) : (
                 <>
                   <SendHorizonal className="mr-2 h-5 w-5" />
-                  Ask Question
+                  Seek Counsel
                 </>
               )}
             </Button>
@@ -100,9 +101,9 @@ export default function CelestialChatsClient() {
 
       {error && (
         <>
-        <Separator className="my-4"/>
+        <Separator className="my-4 bg-border/50"/>
         <CardFooter className="flex flex-col items-start">
-            <Alert variant="destructive" className="w-full">
+            <Alert variant="destructive" className="w-full bg-destructive/80 text-destructive-foreground">
             <AlertTriangle className="h-5 w-5" />
             <AlertTitle>Oops! Stardust in the System</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
@@ -113,10 +114,10 @@ export default function CelestialChatsClient() {
 
       {answer && (
         <>
-        <Separator className="my-4"/>
+        <Separator className="my-4 bg-border/50"/>
         <CardFooter className="flex flex-col items-start">
             <h3 className="text-xl font-semibold mb-2 text-primary">Wisdom from the Cosmos:</h3>
-            <Card className="w-full bg-background/50 p-4 rounded-md border">
+            <Card className="w-full bg-background/60 p-4 rounded-md border-border/70">
                 <p className="text-foreground whitespace-pre-wrap text-base">{answer.answer}</p>
             </Card>
         </CardFooter>
