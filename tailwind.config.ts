@@ -83,16 +83,20 @@ export default {
   					height: '0'
   				}
   			},
-          'ping-slow': { // Added for Nebula of Ideas icon
+          'ping-slow': { 
             '0%, 100%': { transform: 'scale(1)', opacity: '1' },
             '50%': { transform: 'scale(1.1)', opacity: '0.7' },
-          }
+          },
+          'fade-in-up': {
+            '0%': { opacity: '0', transform: 'translateY(20px)' },
+            '100%': { opacity: '1', transform: 'translateY(0)' },
+          },
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
-        'ping-slow': 'ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite', // Added for Nebula of Ideas icon
-        // Note: 'animate-bounce' and 'animate-pulse' are standard Tailwind animations.
+        'ping-slow': 'ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite',
+        'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
   		}
   	}
   },

@@ -43,15 +43,12 @@ export default function RootLayout({
                 UniVerse
               </span>
             </Link>
-            {/* Basic Navigation (optional, dashboard cards serve as primary nav from home) */}
-            {/*
-            <nav className="flex items-center space-x-4 lg:space-x-6 text-sm">
-              <Link href="/study-sphere" className="transition-colors hover:text-primary">Study Sphere</Link>
-              <Link href="/event-horizon" className="transition-colors hover:text-primary">Event Horizon</Link>
-              <Link href="/celestial-chats" className="transition-colors hover:text-primary">Celestial Chats</Link>
-              <Link href="/nebula-of-ideas" className="transition-colors hover:text-primary">Nebula of Ideas</Link>
+            <nav className="ml-auto flex items-center space-x-4 lg:space-x-6 text-sm">
+              <Link href="/study-sphere" className="transition-colors hover:text-primary focus:outline-none focus-visible:text-primary">Study Sphere</Link>
+              <Link href="/event-horizon" className="transition-colors hover:text-primary focus:outline-none focus-visible:text-primary">Event Horizon</Link>
+              <Link href="/celestial-chats" className="transition-colors hover:text-primary focus:outline-none focus-visible:text-primary">Celestial Chats</Link>
+              <Link href="/nebula-of-ideas" className="transition-colors hover:text-primary focus:outline-none focus-visible:text-primary">Nebula of Ideas</Link>
             </nav>
-            */}
           </div>
         </header>
         <main className="flex-1 flex flex-col items-center justify-start py-8 px-4 z-10">
