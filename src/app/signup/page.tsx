@@ -1,67 +1,83 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { useForm, type SubmitHandler } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import type { z } from "zod";
+import { useState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { signupSchema } from "@/lib/auth-schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, UserPlus, Loader2 } from "lucide-react";
-import type { User as FirebaseUser, AuthError } from "firebase/auth";
-
-type SignupFormValues = z.infer<typeof signupSchema>;
+import type { AuthError } from "firebase/auth";
 
 export default function SignupPage() {
   const router = useRouter();
   const { signup, user, loading: authLoading } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
-
-  const onSubmit: SubmitHandler<SignupFormValues> = async (data) => {
-    setIsLoading(true);
-    setError(null);
-    const result = await signup(data);
-
-    if ((result as AuthError).code) {
-      const authError = result as AuthError;
-      if (authError.code === 'auth/email-already-in-use') {
-        setError("This email address is already in use. Please try logging in or use a different email.");
-      } else {
-        setError(authError.message || "An unexpected error occurred. Please try again.");
-      }
-      setIsLoading(false);
-    } else {
-      router.push("/dashboard"); // Redirect to dashboard on successful signup
-    }
-  };
-  
   useEffect(() => {
     if (!authLoading && user) {
       router.push('/dashboard');
     }
   }, [user, authLoading, router]);
 
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    if (!email || !password || !confirmPassword) {
+      setError("Please fill in all fields.");
+      setIsLoading(false);
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      setIsLoading(false);
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      setIsLoading(false);
+      return;
+    }
+    // Basic email validation (can be more robust if needed)
+    if (!/\S+@\S+\.\S+/.test(email)) {
+        setError("Please enter a valid email address.");
+        setIsLoading(false);
+        return;
+    }
+
+
+    const result = await signup({ email, password });
+    if ((result as AuthError).code) {
+      const authError = result as AuthError;
+      if (authError.code === 'auth/email-already-in-use') {
+        setError("This email address is already in use. Please try logging in or use a different email.");
+      } else if (authError.code === 'auth/weak-password') {
+        setError("The password is too weak. Please choose a stronger password.");
+      }
+      else {
+        setError(authError.message || "An unexpected error occurred. Please try again.");
+      }
+      setIsLoading(false);
+    } else {
+      // Successful signup handled by onAuthStateChanged, triggers useEffect
+      // router.push("/dashboard"); // Let useEffect handle redirect
+    }
+  };
+
   if (authLoading || (!authLoading && user)) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
@@ -85,59 +101,51 @@ export default function SignupPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email Address</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="you@example.com" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required 
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="Create a strong password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="Create a strong password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required 
               />
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="Re-enter your password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input 
+                id="confirmPassword" 
+                type="password" 
+                placeholder="Re-enter your password" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required 
               />
-              <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Creating Account...
-                  </>
-                ) : (
-                  "Create Account"
-                )}
-              </Button>
-            </form>
-          </Form>
+            </div>
+            <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Create Account"
+              )}
+            </Button>
+          </form>
         </CardContent>
         <CardFooter className="flex flex-col items-center space-y-2">
           <p className="text-sm text-muted-foreground">
