@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, UsersRound, Pencil, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, Brain } from 'lucide-react';
+import { ArrowLeft, UsersRound, Pencil, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, Brain, Telescope, MessageCircleQuestion, Lightbulb, Bot, Rocket, Orbit, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 
 // Hardcoded initial data
@@ -44,6 +44,21 @@ interface StudyGroup {
   description: string;
 }
 
+interface SharedResource {
+  id: number;
+  name: string;
+  type: string;
+  uploader: string;
+  course: string;
+}
+
+interface StudySession {
+  id: number;
+  topic: string;
+  dateTime: string;
+  group: string;
+  location: string;
+}
 
 const initialStudyProfile: StudyProfileData = {
   courses: ["Astrophysics 101", "Quantum Mechanics"],
@@ -63,12 +78,12 @@ const initialStudyGroups: StudyGroup[] = [
   { id: 2, name: "Astro Alliance", courses: ["Astrophysics 101"], members: 5, description: "Exploring the cosmos, one equation at a time." },
 ];
 
-const sharedResources = [
+const initialSharedResources: SharedResource[] = [
   { id: 1, name: "Astro Notes Ch. 1-3.pdf", type: "PDF", uploader: "Alex Cosmo", course: "Astrophysics 101" },
   { id: 2, name: "Calculus Practice Set 1.docx", type: "DOCX", uploader: "Admin", course: "Calculus II" },
 ];
 
-const studySessions = [
+const initialStudySessions: StudySession[] = [
   { id: 1, topic: "Astrophysics Midterm Review", dateTime: "October 28, 2024, 2:00 PM", group: "Astro Alliance", location: "Virtual via UniMeet" },
   { id: 2, topic: "Quantum Entanglement Workshop", dateTime: "November 5, 2024, 5:00 PM", group: "Quantum Leapsters", location: "Library Room 3B" },
 ];
@@ -77,7 +92,6 @@ export default function StudySpherePage() {
   const { toast } = useToast();
   const [studyProfile, setStudyProfile] = useState<StudyProfileData>(initialStudyProfile);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
   const [editCoursesInput, setEditCoursesInput] = useState('');
   const [editLearningStyles, setEditLearningStyles] = useState<string[]>([]);
 
@@ -91,6 +105,18 @@ export default function StudySpherePage() {
   const [newGroupCourses, setNewGroupCourses] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
 
+  const [sharedResources, setSharedResources] = useState<SharedResource[]>(initialSharedResources);
+  const [isUploadResourceDialogOpen, setIsUploadResourceDialogOpen] = useState(false);
+  const [newResourceName, setNewResourceName] = useState('');
+  const [newResourceCourse, setNewResourceCourse] = useState('');
+  const [newResourceType, setNewResourceType] = useState('');
+
+  const [studySessions, setStudySessions] = useState<StudySession[]>(initialStudySessions);
+  const [isScheduleSessionDialogOpen, setIsScheduleSessionDialogOpen] = useState(false);
+  const [newSessionTopic, setNewSessionTopic] = useState('');
+  const [newSessionDateTime, setNewSessionDateTime] = useState('');
+  const [newSessionGroup, setNewSessionGroup] = useState('');
+  const [newSessionLocation, setNewSessionLocation] = useState('');
 
   useEffect(() => {
     if (isEditDialogOpen) {
@@ -143,10 +169,10 @@ export default function StudySpherePage() {
       return;
     }
     const newGroup: StudyGroup = {
-      id: Date.now(), // Simple unique ID
+      id: Date.now(), 
       name: newGroupName.trim(),
       courses: newGroupCourses.split(',').map(c => c.trim()).filter(c => c),
-      members: 1, // Starts with the creator
+      members: 1, 
       description: newGroupDescription.trim(),
     };
     setStudyGroups(prevGroups => [newGroup, ...prevGroups]);
@@ -157,6 +183,61 @@ export default function StudySpherePage() {
     toast({
       title: "Study Group Created!",
       description: `The group "${newGroup.name}" has been successfully created.`,
+    });
+  };
+
+  const handleUploadResource = () => {
+    if (!newResourceName.trim() || !newResourceCourse.trim() || !newResourceType.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill out all fields for the new resource.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const newResource: SharedResource = {
+      id: Date.now(),
+      name: newResourceName.trim(),
+      course: newResourceCourse.trim(),
+      type: newResourceType.trim(),
+      uploader: "You (Demo User)", // Hardcoded for now
+    };
+    setSharedResources(prevResources => [newResource, ...prevResources]);
+    setIsUploadResourceDialogOpen(false);
+    setNewResourceName('');
+    setNewResourceCourse('');
+    setNewResourceType('');
+    toast({
+      title: "Resource Uploaded!",
+      description: `"${newResource.name}" has been added to shared resources.`,
+    });
+  };
+
+  const handleScheduleSession = () => {
+    if (!newSessionTopic.trim() || !newSessionDateTime.trim() || !newSessionGroup.trim() || !newSessionLocation.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill out all fields for the new study session.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const newSession: StudySession = {
+      id: Date.now(),
+      topic: newSessionTopic.trim(),
+      dateTime: newSessionDateTime.trim(),
+      group: newSessionGroup.trim(),
+      location: newSessionLocation.trim(),
+    };
+    setStudySessions(prevSessions => [newSession, ...prevSessions]);
+    setIsScheduleSessionDialogOpen(false);
+    setNewSessionTopic('');
+    setNewSessionDateTime('');
+    setNewSessionGroup('');
+    setNewSessionLocation('');
+    toast({
+      title: "Study Session Scheduled!",
+      description: `"${newSession.topic}" has been added to upcoming sessions.`,
     });
   };
 
@@ -446,9 +527,62 @@ export default function StudySpherePage() {
               <CardDescription>Exchange notes, summaries, and helpful materials with your connections and groups.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button onClick={() => handleDemoClick("Navigating to 'Upload Resource' page... (Demo)")} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                <UploadCloud className="mr-2 h-4 w-4" /> Upload Resource
-              </Button>
+              <Dialog open={isUploadResourceDialogOpen} onOpenChange={setIsUploadResourceDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => setIsUploadResourceDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                    <UploadCloud className="mr-2 h-4 w-4" /> Upload Resource
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[480px] bg-card border-accent/50">
+                  <DialogHeader>
+                    <DialogTitle className="text-primary">Upload a New Resource</DialogTitle>
+                    <DialogDescription>
+                      Share your knowledge with the UniVerse community!
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="space-y-1">
+                        <Label htmlFor="resource-name" className="text-foreground/90">Resource Name</Label>
+                        <Input 
+                            id="resource-name" 
+                            value={newResourceName} 
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setNewResourceName(e.target.value)} 
+                            placeholder="e.g., Astro Chapter 5 Summary.pdf" 
+                            className="bg-background/70"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="resource-course" className="text-foreground/90">Relevant Course</Label>
+                        <Input 
+                            id="resource-course" 
+                            value={newResourceCourse} 
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setNewResourceCourse(e.target.value)} 
+                            placeholder="e.g., Astrophysics 101"
+                            className="bg-background/70"
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="resource-type" className="text-foreground/90">Resource Type (e.g., PDF, Notes, Link)</Label>
+                        <Input 
+                            id="resource-type" 
+                            value={newResourceType} 
+                            onChange={(e: ChangeEvent<HTMLInputElement>) => setNewResourceType(e.target.value)} 
+                            placeholder="e.g., PDF, DOCX, Google Doc Link"
+                            className="bg-background/70"
+                        />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="button" variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button type="button" onClick={handleUploadResource} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                        Upload Resource
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              
               <Separator className="my-6 bg-border/50" />
               <h3 className="font-semibold text-lg mb-2 text-foreground">Available Resources:</h3>
               {sharedResources.map(resource => (
@@ -464,7 +598,7 @@ export default function StudySpherePage() {
                   </Button>
                 </Card>
               ))}
-              {sharedResources.length === 0 && <p className="text-muted-foreground">No resources shared yet. Be the first to contribute!</p>}
+              {sharedResources.length === 0 && <p className="text-muted-foreground text-center py-4">No resources shared yet. Be the first to contribute!</p>}
             </CardContent>
           </Card>
         </TabsContent>
@@ -478,9 +612,72 @@ export default function StudySpherePage() {
               <CardDescription>Plan and schedule study times with your partners or groups.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button onClick={() => handleDemoClick("Navigating to 'Schedule New Session' page... (Demo)")} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                <CalendarPlus className="mr-2 h-4 w-4" /> Schedule New Session
-              </Button>
+              <Dialog open={isScheduleSessionDialogOpen} onOpenChange={setIsScheduleSessionDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => setIsScheduleSessionDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                    <CalendarPlus className="mr-2 h-4 w-4" /> Schedule New Session
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[480px] bg-card border-accent/50">
+                  <DialogHeader>
+                      <DialogTitle className="text-primary">Schedule a New Study Session</DialogTitle>
+                      <DialogDescription>
+                        Coordinate your learning efforts with the UniVerse crew!
+                      </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                      <div className="space-y-1">
+                          <Label htmlFor="session-topic" className="text-foreground/90">Topic</Label>
+                          <Input 
+                              id="session-topic" 
+                              value={newSessionTopic} 
+                              onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionTopic(e.target.value)} 
+                              placeholder="e.g., Quantum Mechanics Midterm Prep" 
+                              className="bg-background/70"
+                          />
+                      </div>
+                      <div className="space-y-1">
+                          <Label htmlFor="session-datetime" className="text-foreground/90">Date & Time</Label>
+                          <Input 
+                              id="session-datetime" 
+                              value={newSessionDateTime} 
+                              onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionDateTime(e.target.value)} 
+                              placeholder="e.g., November 10, 2024, 3:00 PM"
+                              className="bg-background/70"
+                          />
+                      </div>
+                      <div className="space-y-1">
+                          <Label htmlFor="session-group" className="text-foreground/90">Group / Participants</Label>
+                          <Input 
+                              id="session-group" 
+                              value={newSessionGroup} 
+                              onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionGroup(e.target.value)} 
+                              placeholder="e.g., Astro Alliance, or 'Open to all'"
+                              className="bg-background/70"
+                          />
+                      </div>
+                      <div className="space-y-1">
+                          <Label htmlFor="session-location" className="text-foreground/90">Location / Meeting Link</Label>
+                          <Input 
+                              id="session-location" 
+                              value={newSessionLocation} 
+                              onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionLocation(e.target.value)} 
+                              placeholder="e.g., Library Room 2A, or Virtual via UniMeet"
+                              className="bg-background/70"
+                          />
+                      </div>
+                  </div>
+                  <DialogFooter>
+                      <DialogClose asChild>
+                          <Button type="button" variant="outline">Cancel</Button>
+                      </DialogClose>
+                      <Button type="button" onClick={handleScheduleSession} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                          Schedule Session
+                      </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               <Separator className="my-6 bg-border/50" />
               <h3 className="font-semibold text-lg mb-2 text-foreground">Upcoming Sessions:</h3>
               {studySessions.map(session => (
@@ -491,7 +688,7 @@ export default function StudySpherePage() {
                   <Button onClick={() => handleDemoClick(`Viewing details for session: ${session.topic} (Demo)`)} size="sm" variant="link" className="p-0 h-auto text-accent hover:text-accent/80 mt-1">View Details / Join</Button>
                 </Card>
               ))}
-              {studySessions.length === 0 && <p className="text-muted-foreground">No study sessions scheduled yet.</p>}
+              {studySessions.length === 0 && <p className="text-muted-foreground text-center py-4">No study sessions scheduled yet.</p>}
             </CardContent>
           </Card>
         </TabsContent>
