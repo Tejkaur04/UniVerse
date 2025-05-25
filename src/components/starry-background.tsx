@@ -31,11 +31,11 @@ const StarryBackground: FC = () => {
     interactivity: {
       events: {
         onHover: {
-          enable: true,
-          mode: "grab",
+          enable: false, // Disabled to prevent "grab" lines
+          mode: "grab", 
         },
         onClick: {
-          enable: false, // Keep false to avoid too much distraction
+          enable: false, 
           mode: "push",
         },
       },
@@ -43,7 +43,7 @@ const StarryBackground: FC = () => {
         grab: {
           distance: 100,
           links: {
-            opacity: 0.3,
+            opacity: 0, // Ensure no links even if mode was active
           },
         },
         push: {
@@ -58,8 +58,8 @@ const StarryBackground: FC = () => {
       links: {
         color: "#ffffff",
         distance: 120,
-        enable: false, // No links for a starry sky
-        opacity: 0.1,
+        enable: false, // Explicitly no links between particles
+        opacity: 0,
         width: 1,
       },
       move: {
@@ -75,9 +75,9 @@ const StarryBackground: FC = () => {
       number: {
         density: {
           enable: true,
-          area: 800,
+          area: 900, // Adjusted for a slightly sparser feel with more particles
         },
-        value: 120, // Number of stars
+        value: 160, // Increased number of stars
       },
       opacity: {
         value: { min: 0.1, max: 0.8 },
@@ -110,7 +110,7 @@ const StarryBackground: FC = () => {
     left: 0,
     width: '100%',
     height: '100vh',
-    zIndex: 0, // Ensure it's behind content but above body background
+    zIndex: 0, 
     pointerEvents: 'none',
   };
 
@@ -127,7 +127,7 @@ const StarryBackground: FC = () => {
     );
   }
 
-  return <div style={particlesContainerStyle} className="starry-sky-base"></div>; // Fallback while not initialized
+  return <div style={particlesContainerStyle} className="starry-sky-base"></div>;
 };
 
 export default StarryBackground;

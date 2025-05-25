@@ -12,7 +12,11 @@ import {
   Loader2,
   LogInIcon,
   Home as HomeIcon,
-  Waypoints // Logo icon
+  Waypoints, // Logo icon
+  UsersRound as StudySphereIcon,
+  CalendarDays,
+  MessageCircleQuestion,
+  Lightbulb,
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -51,7 +55,7 @@ const robotoMono = Roboto_Mono({
 });
 
 function AppContent({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading, logout } // Correctly named variable
+  const { user, loading: authLoading, logout }
     = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -84,6 +88,9 @@ function AppContent({ children }: { children: ReactNode }) {
   }
 
   if (!user && !authLoading && !['/login', '/signup'].includes(pathname)) {
+    // This state might be hit briefly if auth takes a moment after mount
+    // and before the useEffect redirect kicks in.
+    // Or if AuthProvider immediately determines no user (e.g. no stored token).
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -100,12 +107,11 @@ function AppContent({ children }: { children: ReactNode }) {
       <div className="flex flex-col flex-grow">
         <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container flex h-16 max-w-screen-2xl items-center px-4">
-            {/* Logo and App Name are now part of the sidebar, keeping header clean */}
-            {/* If sidebar is hidden on mobile, a mobile menu trigger might be needed here */}
+            {/* UniVerse Logo/Name in Sidebar now */}
             <div className="flex-grow"></div> {/* Pushes user menu to the right */}
 
             <nav className="flex items-center space-x-1 sm:space-x-2">
-              {/* Removed feature icons from here, they are now in UserStatsSidebar */}
+              {/* Feature shortcuts removed from here, now in UserStatsSidebar */}
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -155,7 +161,7 @@ function AppContent({ children }: { children: ReactNode }) {
             </nav>
           </div>
         </header>
-        <main className={cn("flex-1 flex flex-col items-center py-8 px-4 z-10 relative", showSidebarAndGuide ? "md:ml-64" : "")}> 
+        <main className={cn("flex-1 flex flex-col items-center py-8 px-4 md:px-2 z-10 relative", showSidebarAndGuide ? "md:ml-64" : "")}> 
           <div className="w-full max-w-7xl">
             {children}
           </div>
