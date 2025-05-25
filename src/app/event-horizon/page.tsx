@@ -8,18 +8,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog"; // DialogFooter removed as it's not used here.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext'; // Mock Auth
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft, CalendarDays, Search, Tags, CheckCircle, Star, Share2, PlusCircle, Telescope, Rocket, Users, ListFilter,
-  CalendarCheck, Info, Filter as FilterIcon, Eye, Compass
+  CalendarCheck, Info, Filter as FilterIcon, Eye, Compass, CalendarPlus // Added CalendarPlus
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Image from 'next/image'; // For placeholder images
+import Image from 'next/image';
 
 
 interface CampusEvent {
@@ -32,7 +32,7 @@ interface CampusEvent {
   organizer: string;
   tags: string[];
   type: 'official' | 'peer';
-  iconName: string; // Store icon name instead of component
+  iconName: string;
   dataAiHint?: string;
 }
 
@@ -48,7 +48,7 @@ const ALL_INTEREST_TAGS = ["All", "Coding", "Literature", "Science", "Tech Talk"
 const iconMap: { [key: string]: LucideIcon } = {
   CalendarDays: CalendarDays,
   Users: Users,
-  DefaultEventIcon: Info, // Fallback icon
+  DefaultEventIcon: Info,
 };
 
 const initialHardcodedEvents: CampusEvent[] = [
@@ -59,17 +59,27 @@ const initialHardcodedEvents: CampusEvent[] = [
 
 
 const EventHorizonPage: FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuth(); // Using mock auth
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("discover");
 
   const userLocalStorageKey = (dataKey: string) => user ? `uniVerse-eventHorizon-${dataKey}-${user.uid}` : `uniVerse-eventHorizon-${dataKey}-guest`;
 
-  const [allEvents, setAllEvents] = useState<CampusEvent[]>(initialHardcodedEvents);
+  const [allEvents, setAllEvents] = useState<CampusEvent[]>(() => {
+    if (typeof window === 'undefined' || !user) return initialHardcodedEvents;
+    const savedEvents = localStorage.getItem(userLocalStorageKey('allEvents'));
+    return savedEvents ? JSON.parse(savedEvents) : initialHardcodedEvents;
+  });
+
   const [displayedEvents, setDisplayedEvents] = useState<CampusEvent[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('All');
-  const [userInteractions, setUserInteractions] = useState<UserEventInteractions>({});
+
+  const [userInteractions, setUserInteractions] = useState<UserEventInteractions>(() => {
+    if (typeof window === 'undefined' || !user) return {};
+    const savedInteractions = localStorage.getItem(userLocalStorageKey('userInteractions'));
+    return savedInteractions ? JSON.parse(savedInteractions) : {};
+  });
 
   // For Create Event Dialog
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
@@ -82,38 +92,32 @@ const EventHorizonPage: FC = () => {
   const [newEventTags, setNewEventTags] = useState('');
 
 
-  // Load data from localStorage on mount
+  // Load data from localStorage on initial mount if user is available
   useEffect(() => {
-    if (!user) return;
-    const loadData = <T,>(key: string, fallbackData: T): T => {
-      try {
-        const saved = localStorage.getItem(userLocalStorageKey(key));
-        return saved ? JSON.parse(saved) as T : fallbackData;
-      } catch (error) {
-        console.error(`Failed to load ${key} from localStorage`, error);
-        return fallbackData;
-      }
-    };
-    setAllEvents(loadData<CampusEvent[]>('allEvents', initialHardcodedEvents));
-    setUserInteractions(loadData<UserEventInteractions>('userInteractions', {}));
-  }, [user]);
+    if (typeof window !== 'undefined' && user) {
+      const savedEvents = localStorage.getItem(userLocalStorageKey('allEvents'));
+      if (savedEvents) setAllEvents(JSON.parse(savedEvents));
+      
+      const savedInteractions = localStorage.getItem(userLocalStorageKey('userInteractions'));
+      if (savedInteractions) setUserInteractions(JSON.parse(savedInteractions));
+    }
+  }, [user]); // Re-run if user changes (e.g., after mock login)
 
-  // Save data to localStorage
+  // Save allEvents to localStorage
   useEffect(() => {
-    if (!user) return;
-    try {
-        localStorage.setItem(userLocalStorageKey('allEvents'), JSON.stringify(allEvents));
-    } catch (error) { console.error("Failed to save allEvents to localStorage", error); }
+    if (typeof window !== 'undefined' && user) {
+      localStorage.setItem(userLocalStorageKey('allEvents'), JSON.stringify(allEvents));
+    }
   }, [allEvents, user]);
 
+  // Save userInteractions to localStorage
   useEffect(() => {
-    if (!user) return;
-    try {
-        localStorage.setItem(userLocalStorageKey('userInteractions'), JSON.stringify(userInteractions));
-    } catch (error) { console.error("Failed to save userInteractions to localStorage", error); }
+    if (typeof window !== 'undefined' && user) {
+      localStorage.setItem(userLocalStorageKey('userInteractions'), JSON.stringify(userInteractions));
+    }
   }, [userInteractions, user]);
 
-  // Filtering logic
+  // Filtering logic for displayedEvents
   useEffect(() => {
     let filtered = allEvents;
     if (searchTerm) {
@@ -158,9 +162,9 @@ const EventHorizonPage: FC = () => {
       location: newEventLocation || 'To Be Announced',
       description: newEventDescription,
       organizer: newEventOrganizer || (user?.email?.split('@')[0] || 'Peer'),
-      tags: newEventTags.split(',').map(tag => tag.trim()).filter(tag => tag) || ['Peer Event'],
+      tags: newEventTags.split(',').map(tag => tag.trim()).filter(tag => tag),
       type: 'peer',
-      iconName: 'Users', // Default for peer events
+      iconName: 'Users',
     };
     setAllEvents(prev => [newEvent, ...prev]);
     setIsCreateEventDialogOpen(false);
@@ -194,7 +198,7 @@ const EventHorizonPage: FC = () => {
           <h1 className="text-4xl font-bold font-mono mb-2 bg-gradient-to-r from-primary via-accent to-primary text-transparent bg-clip-text">Event Horizon</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Chart your course through campus happenings. Workshops, seminars, social galaxies, and more!
-            Your interactions are saved locally in your browser.
+            Your interactions and created events are saved locally in your browser.
           </p>
         </div>
       </div>
@@ -290,7 +294,6 @@ const EventHorizonPage: FC = () => {
                         <Button variant={isInterested ? "default" : "outline"} size="sm" onClick={() => handleInteraction(event.id, 'interested')} className={isInterested ? "bg-primary text-primary-foreground" : "border-primary text-primary hover:bg-primary/10"}>
                            {isInterested ? <Star className="mr-1 h-4 w-4 fill-current"/> : <Star className="mr-1 h-4 w-4"/>} {isInterested ? "Interested" : "Mark Interest"}
                         </Button>
-                        {/* <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-accent col-span-2" onClick={() => toast({title: "Sharing Event (Demo)", description: `Sharing "${event.title}" link...`})}><Share2 className="mr-1 h-4 w-4"/> Share</Button> */}
                         </CardFooter>
                     </Card>
                     );
@@ -377,7 +380,7 @@ const EventHorizonPage: FC = () => {
                         })}
                         </div>
                     ) : (
-                        <p className="text-muted-foreground text-center py-4">No specific alignments found for now. Explore all events!</p>
+                         <Card className="text-center py-10 bg-background/50 border border-border/50 shadow-md"><CardContent><Telescope className="mx-auto h-12 w-12 text-muted-foreground mb-4" /><h3 className="text-xl font-semibold text-primary">No Specific Alignments</h3><p className="text-muted-foreground">Explore all events or mark some as interesting to help us find alignments!</p></CardContent></Card>
                     )}
                 </CardContent>
             </Card>
@@ -422,7 +425,7 @@ const EventHorizonPage: FC = () => {
                             );
                         })
                     ) : (
-                        <p className="text-muted-foreground text-center py-4">The horizon is quiet. No events logged yet.</p>
+                        <Card className="text-center py-10 bg-background/50 border border-border/50 shadow-md"><CardContent><Rocket className="mx-auto h-12 w-12 text-muted-foreground mb-4" /><h3 className="text-xl font-semibold text-primary">Quiet Cosmos</h3><p className="text-muted-foreground">The event horizon is clear. No events logged yet. Perhaps create one?</p></CardContent></Card>
                     )}
                 </CardContent>
             </Card>
