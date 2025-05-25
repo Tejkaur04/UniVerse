@@ -57,7 +57,6 @@ const initialProfileData: UserProfile = {
 };
 
 const navFeatures = [
-  // { href: "/", label: "UniVerse Home", icon: HomeIcon }, // Removed as per request
   { href: "/study-sphere", label: "Study Sphere", icon: UsersRound },
   { href: "/event-horizon", label: "Event Horizon", icon: CalendarDays },
   { href: "/celestial-chats", label: "Celestial Chats", icon: MessageCircleQuestion },
@@ -86,7 +85,6 @@ const UserStatsSidebar: FC = () => {
       const profileKey = userLocalStorageKey('studyProfile');
       const connectionsKey = userLocalStorageKey('connections');
 
-      // Load Profile
       if (profileKey) {
         const savedProfile = localStorage.getItem(profileKey);
         if (savedProfile) {
@@ -96,7 +94,6 @@ const UserStatsSidebar: FC = () => {
             setEditForm(parsedProfile); 
           } catch (e) {
             console.error("Error parsing profile from localStorage", e);
-            // Fallback to initial profile if parsing fails
             const newProfile: UserProfile = {
               ...initialProfileData,
               id: user.uid,
@@ -122,7 +119,6 @@ const UserStatsSidebar: FC = () => {
         }
       }
 
-      // Load Connections Count
       if (connectionsKey) {
         const savedConnections = localStorage.getItem(connectionsKey);
         if (savedConnections) {
@@ -149,10 +145,9 @@ const UserStatsSidebar: FC = () => {
   }, [user, userLocalStorageKey]);
 
   useEffect(() => {
-    fetchUserData(); // Initial fetch
+    fetchUserData(); 
 
     const handleConnectionsUpdate = () => {
-      // Re-fetch connections count when event is dispatched
       const connectionsKey = userLocalStorageKey('connections');
       if (connectionsKey) {
         const savedConnections = localStorage.getItem(connectionsKey);
@@ -201,6 +196,7 @@ const UserStatsSidebar: FC = () => {
       return;
     }
     const profileToSave: UserProfile = {
+        ...initialProfileData, // Ensure all fields are present
         ...editForm,
         skills: Array.isArray(editForm.skills) ? editForm.skills : [],
         interests: Array.isArray(editForm.interests) ? editForm.interests : [],
@@ -237,18 +233,17 @@ const UserStatsSidebar: FC = () => {
     });
   };
 
-  if (!user) { // Simplified loading: If no user, don't show sidebar (AppContent handles initial auth loading)
+  if (!user) { 
     return null; 
   }
   
-  if (isLoading && !profile) { // Still loading profile data
+  if (isLoading && !profile) { 
     return (
       <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border/70 bg-card/70 backdrop-blur-sm p-6 sticky top-0 overflow-y-auto shadow-lg items-center justify-center">
-        {/* You can put a skeleton loader here if desired */}
+        {/* Sidebar Skeleton or Loader if needed */}
       </aside>
     );
   }
-
 
   const skills = profile?.skills || [];
   const projectAreas = profile?.projectAreas || [];
@@ -257,14 +252,9 @@ const UserStatsSidebar: FC = () => {
     <>
     <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border/70 bg-card/70 backdrop-blur-sm p-6 sticky top-0 overflow-y-auto shadow-lg">
       <div className="flex-grow space-y-6">
-         <Link href="/" className="flex items-center space-x-2 mb-6 group">
-            <Waypoints className="h-8 w-8 text-primary group-hover:text-accent transition-colors" />
-            <span className="font-bold text-2xl font-mono text-primary group-hover:text-accent transition-colors">
-              UniVerse
-            </span>
-        </Link>
+         {/* Removed UniVerse logo and title from here */}
 
-        <nav className="space-y-1">
+        <nav className="space-y-1 mt-4"> {/* Added mt-4 for spacing if logo was above */}
           <h3 className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Navigate</h3>
           {navFeatures.map((item) => (
             <Button
@@ -371,7 +361,7 @@ const UserStatsSidebar: FC = () => {
         <DialogContent className="bg-card border-primary/50 sm:max-w-[525px]">
         <DialogHeader>
             <DialogTitle className="font-mono text-primary flex items-center"><Pencil className="mr-2 h-5 w-5"/>Edit Your UniVerse Coordinates</DialogTitle>
-            <DialogDescription>Update your profile. Changes are saved locally to your browser for this mock demo.</DialogDescription>
+            <DialogDescription>Update your profile. Changes are saved locally to your browser.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSaveProfile} className="space-y-3 py-2 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
             <div><Label htmlFor="edit-name">Name</Label><Input id="edit-name" name="name" value={editForm.name || ''} onChange={handleProfileInputChange} /></div>
