@@ -12,6 +12,10 @@ import {
   Loader2,
   LogInIcon,
   Waypoints, 
+  UsersRound,
+  CalendarDays,
+  MessageCircleQuestion,
+  Lightbulb,
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -57,11 +61,11 @@ function AppContent({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname(); 
 
+  const isPublicPage = pathname === '/login' || pathname === '/signup';
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
-
-  const isPublicPage = pathname === '/login' || pathname === '/signup';
 
   useEffect(() => {
     if (isMounted && !authLoading && !user && !isPublicPage) {
@@ -72,20 +76,21 @@ function AppContent({ children }: { children: ReactNode }) {
   const showSidebarAndGuide = isMounted && user && !isPublicPage;
 
 
+  // Consistent root structure for AppContent
   return (
-    <div className="flex min-h-screen"> {/* This is the main flex container */}
+    <div className="flex min-h-screen">
       {showSidebarAndGuide && <UserStatsSidebar />}
       
-      <div className="flex flex-col flex-grow"> {/* This div grows to take space next to sidebar */}
-        {!isMounted || authLoading ? (
-           <div className="flex items-center justify-center flex-1"> {/* Centered loader for the main content area */}
+      <div className="flex flex-col flex-grow">
+        {(!isMounted || authLoading) && !isPublicPage && user == null ? ( // Show main loader if not mounted OR auth is loading (and not on public page without user)
+           <div className="flex items-center justify-center flex-1">
             <Loader2 className="h-16 w-16 animate-spin text-primary" />
           </div>
-        ) : !user && !isPublicPage ? (
-            <div className="flex items-center justify-center flex-1"> {/* Centered loader while redirecting */}
+        ) : !user && !isPublicPage ? ( // Show loader if no user and not on public page (during redirect phase)
+            <div className="flex items-center justify-center flex-1">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
             </div>
-        ) : (
+        ) : ( // Render main app content
           <>
             <header className={cn(
                 "sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
@@ -101,6 +106,7 @@ function AppContent({ children }: { children: ReactNode }) {
                 <div className="flex-grow"></div> 
 
                 <nav className="flex items-center space-x-1 sm:space-x-2">
+                  {/* Feature Icons removed from here as they are in UserStatsSidebar now */}
                   {user ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -150,10 +156,10 @@ function AppContent({ children }: { children: ReactNode }) {
             </header>
             <main className={cn(
               "flex-1 flex flex-col z-10 relative", 
-              "py-8", // Vertical padding for main
-              "px-4 md:px-0" // No horizontal padding on md+ for main element itself
+              showSidebarAndGuide ? "md:ml-[25rem]" : "", 
+              "px-4 md:px-0" // No horizontal padding on main for md+, sidebar offset handles it
             )}>
-              <div className="w-full max-w-7xl p-4 md:py-6 md:pr-6 md:pl-0"> {/* Adjusted padding here */}
+              <div className="w-full max-w-7xl p-4 md:py-6 md:px-4"> {/* Content wrapper with padding */}
                 {children}
               </div>
             </main>
@@ -189,3 +195,4 @@ export default function RootLayout({
     </html>
   );
 }
+
