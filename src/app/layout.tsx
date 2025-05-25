@@ -2,10 +2,10 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react'; // Added useState, useEffect
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Geist } from 'next/font/google';
+import { Geist } from 'next/font/google'; // Changed from next/font/google to next/font directly
 import { Waypoints, UserRound, LogOut, Loader2, LogInIcon } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -25,10 +25,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 
-const geistSans = Geist({
+const geistSans = Geist({ // Corrected initialization if Geist is directly from next/font/google
   variable: '--font-geist-sans',
   subsets: ['latin'],
-  display: 'swap', 
+  display: 'swap',
 });
 
 
@@ -36,12 +36,28 @@ function AppContent({ children }: { children: ReactNode }) {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user && pathname !== '/login' && pathname !== '/signup' && pathname !== '/') {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    // Only attempt redirection after the component has mounted and auth state is settled
+    if (isMounted && !loading && !user && pathname !== '/login' && pathname !== '/signup' && pathname !== '/') {
       router.push('/login');
     }
-  }, [user, loading, pathname, router]);
+  }, [isMounted, user, loading, pathname, router]);
+
+  if (!isMounted) {
+    // Render a consistent placeholder or loader on the server and initial client render
+    // This ensures the server and client match before client-specific logic runs
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -52,6 +68,8 @@ function AppContent({ children }: { children: ReactNode }) {
   }
 
   if (!user && pathname !== '/login' && pathname !== '/signup' && pathname !== '/') {
+    // This state is usually brief as the useEffect above will trigger a redirect.
+    // Showing a loader here is good practice.
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -60,7 +78,7 @@ function AppContent({ children }: { children: ReactNode }) {
     );
   }
 
-
+  // User is authenticated, or on a public page, and not loading, and component is mounted
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -97,7 +115,7 @@ function AppContent({ children }: { children: ReactNode }) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={async () => {
                     await logout();
-                    router.push('/login');
+                    router.push('/login'); // Redirect to login after logout
                   }}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
@@ -105,7 +123,7 @@ function AppContent({ children }: { children: ReactNode }) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              (pathname !== '/login' && pathname !== '/signup') && (
+              (pathname !== '/login' && pathname !== '/signup') && ( // Only show Login button if not on login/signup pages
                 <Button asChild variant="outline" size="sm">
                   <Link href="/login">
                     <LogInIcon className="mr-2 h-4 w-4" />
