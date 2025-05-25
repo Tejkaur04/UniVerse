@@ -95,6 +95,7 @@ const tabContentVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeInOut" } },
 };
 
+const initialGuideMessage = "Welcome to the Study Sphere, Earthling! Customize your profile, find study buddies, join groups, share resources, and schedule sessions all from here. Explore the tabs to get started!";
 
 export default function StudySpherePage() {
   const { toast } = useToast();
@@ -126,7 +127,8 @@ export default function StudySpherePage() {
   const [newSessionGroup, setNewSessionGroup] = useState('');
   const [newSessionLocation, setNewSessionLocation] = useState('');
   
-  const [activeTab, setActiveTab] = useState("profile"); // To control animation key
+  const [activeTab, setActiveTab] = useState("profile");
+  const [guideMessage, setGuideMessage] = useState(initialGuideMessage);
 
   useEffect(() => {
     if (isEditDialogOpen) {
@@ -145,6 +147,29 @@ export default function StudySpherePage() {
     }
     setFilteredMatches(matches);
   }, [selectedCourseFilter, selectedStyleFilter]); 
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    switch (value) {
+      case "profile":
+        setGuideMessage("This is your Study Profile! Keep your courses and learning styles up-to-date to find the best study matches.");
+        break;
+      case "find-buddies":
+        setGuideMessage("Looking for study partners? Use the filters here to find students taking similar courses or who share your learning style!");
+        break;
+      case "groups":
+        setGuideMessage("Collaborate in Study Groups! You can join an existing one or start your own group for a specific subject.");
+        break;
+      case "resources":
+        setGuideMessage("Share and discover helpful study materials here! Notes, summaries, or useful links – knowledge grows when shared.");
+        break;
+      case "sessions":
+        setGuideMessage("Time to hit the books together! Schedule study sessions with your groups or partners right here.");
+        break;
+      default:
+        setGuideMessage(initialGuideMessage);
+    }
+  };
 
   const handleEditProfile = () => {
     setIsEditDialogOpen(true);
@@ -198,25 +223,33 @@ export default function StudySpherePage() {
   };
 
   const handleJoinGroup = (groupId: number) => {
+    let groupJoined = false;
+    let groupName = "";
     setStudyGroups(prevGroups =>
-      prevGroups.map(group =>
-        group.id === groupId && !group.isJoinedByCurrentUser
-          ? { ...group, members: group.members + 1, isJoinedByCurrentUser: true }
-          : group
-      )
+      prevGroups.map(group => {
+        if (group.id === groupId && !group.isJoinedByCurrentUser) {
+          groupJoined = true;
+          groupName = group.name;
+          return { ...group, members: group.members + 1, isJoinedByCurrentUser: true };
+        }
+        return group;
+      })
     );
-    const group = studyGroups.find(g => g.id === groupId);
-    if (group && !group.isJoinedByCurrentUser) { 
+    
+    if (groupJoined && groupName) {
         toast({
             title: "Joined Group!",
-            description: `You have successfully joined "${group.name}".`,
+            description: `You have successfully joined "${groupName}".`,
         });
-    } else if (group && group.isJoinedByCurrentUser) { 
-        toast({
-            title: "Already Joined",
-            description: `You are already a member of "${group.name}".`,
-            variant: "default",
-        });
+    } else {
+        const group = studyGroups.find(g => g.id === groupId);
+        if (group && group.isJoinedByCurrentUser) {
+            toast({
+                title: "Already Joined",
+                description: `You are already a member of "${group.name}".`,
+                variant: "default",
+            });
+        }
     }
   };
 
@@ -330,7 +363,7 @@ export default function StudySpherePage() {
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="w-full" onValueChange={(value) => setActiveTab(value)}>
+      <Tabs defaultValue="profile" className="w-full" onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-8">
           <TabsTrigger value="profile" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
             <UserCircle className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform animate-subtle-pulse" />My Profile
@@ -768,7 +801,8 @@ export default function StudySpherePage() {
             </TabsContent>
         </motion.div>
       </Tabs>
-      <AlienGuide message="Welcome to the Study Sphere, Earthling! Customize your profile, find study buddies, join groups, share resources, and schedule sessions all from here. Explore the tabs to get started!" />
+      <AlienGuide message={guideMessage} />
     </div>
   );
 }
+
