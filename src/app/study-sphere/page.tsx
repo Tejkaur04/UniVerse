@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"; // Removed DialogTrigger as it's part of Dialog
+import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -136,7 +136,7 @@ export default function StudySpherePage() {
       matches = matches.filter(match => match.learningStyles.includes(selectedStyleFilter));
     }
     setFilteredMatches(matches);
-  }, [selectedCourseFilter, selectedStyleFilter, initialPotentialMatches]); // Added initialPotentialMatches to dependency array
+  }, [selectedCourseFilter, selectedStyleFilter]); 
 
   const handleEditProfile = () => {
     setIsEditDialogOpen(true);
@@ -176,7 +176,7 @@ export default function StudySpherePage() {
       courses: newGroupCourses.split(',').map(c => c.trim()).filter(c => c),
       members: 1, 
       description: newGroupDescription.trim(),
-      isJoinedByCurrentUser: true, // Creator automatically joins
+      isJoinedByCurrentUser: true, 
     };
     setStudyGroups(prevGroups => [newGroup, ...prevGroups]);
     setIsCreateGroupDialogOpen(false);
@@ -198,12 +198,12 @@ export default function StudySpherePage() {
       )
     );
     const group = studyGroups.find(g => g.id === groupId);
-    if (group && !group.isJoinedByCurrentUser) {
+    if (group && !group.isJoinedByCurrentUser) { // Check if it *wasn't* joined before this action
         toast({
             title: "Joined Group!",
             description: `You have successfully joined "${group.name}".`,
         });
-    } else if (group && group.isJoinedByCurrentUser) {
+    } else if (group && group.isJoinedByCurrentUser) { // This case may not be hit if button is disabled
         toast({
             title: "Already Joined",
             description: `You are already a member of "${group.name}".`,
@@ -254,7 +254,7 @@ export default function StudySpherePage() {
       dateTime: newSessionDateTime.trim(),
       group: newSessionGroup.trim(),
       location: newSessionLocation.trim(),
-      isJoinedByCurrentUser: false, // Or true if the creator auto-joins
+      isJoinedByCurrentUser: false, 
     };
     setStudySessions(prevSessions => [newSession, ...prevSessions]);
     setIsScheduleSessionDialogOpen(false);
@@ -269,20 +269,26 @@ export default function StudySpherePage() {
   };
 
   const handleToggleJoinSession = (sessionId: number) => {
+    let sessionJoined = false;
+    let sessionTopic = "";
+
     setStudySessions(prevSessions =>
-      prevSessions.map(session =>
-        session.id === sessionId
-          ? { ...session, isJoinedByCurrentUser: !session.isJoinedByCurrentUser }
-          : session
-      )
+      prevSessions.map(session => {
+        if (session.id === sessionId) {
+          sessionJoined = !session.isJoinedByCurrentUser; // Store the new state
+          sessionTopic = session.topic;
+          return { ...session, isJoinedByCurrentUser: !session.isJoinedByCurrentUser };
+        }
+        return session;
+      })
     );
-    const session = studySessions.find(s => s.id === sessionId);
-    if (session) {
+    
+    if (sessionTopic) {
         toast({
-            title: session.isJoinedByCurrentUser ? "Left Session" : "Joined Session!",
-            description: session.isJoinedByCurrentUser 
-                ? `You have left "${session.topic}".` 
-                : `You have successfully joined "${session.topic}".`,
+            title: sessionJoined ? "Joined Session!" : "Left Session",
+            description: sessionJoined 
+                ? `You have successfully joined "${sessionTopic}".` 
+                : `You have left "${sessionTopic}".`,
         });
     }
   };
@@ -312,7 +318,7 @@ export default function StudySpherePage() {
           Your cosmic hub for collaborative learning! Find partners, join groups, and share knowledge.
         </p>
          <p className="text-md text-center text-foreground/80 mb-10">
-          Welcome, scholar! Navigate your academic universe by defining your study preferences, connecting with fellow learners, and collaborating on your journey to success.
+          Welcome, scholar! Define your study preferences, connect with fellow learners, and chart your course to academic success.
         </p>
       </div>
 
@@ -359,11 +365,11 @@ export default function StudySpherePage() {
                 </div>
               </div>
               <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <Dialog.Trigger asChild>
+                <DialogTrigger asChild>
                   <Button onClick={handleEditProfile} variant="outline" className="mt-2 border-accent text-accent hover:bg-accent/10">
                     <Pencil className="mr-2 h-4 w-4" /> Edit Profile
                   </Button>
-                </Dialog.Trigger>
+                </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px] bg-card border-accent/50">
                   <DialogHeader>
                     <DialogTitle className="text-primary">Edit Your Study Profile</DialogTitle>
@@ -487,11 +493,11 @@ export default function StudySpherePage() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <Dialog open={isCreateGroupDialogOpen} onOpenChange={setIsCreateGroupDialogOpen}>
-                    <Dialog.Trigger asChild>
+                    <DialogTrigger asChild>
                         <Button onClick={() => setIsCreateGroupDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                             <Users className="mr-2 h-4 w-4" /> Create New Group
                         </Button>
-                    </Dialog.Trigger>
+                    </DialogTrigger>
                     <DialogContent className="sm:max-w-[480px] bg-card border-accent/50">
                         <DialogHeader>
                             <DialogTitle className="text-primary">Create a New Study Group</DialogTitle>
@@ -557,7 +563,7 @@ export default function StudySpherePage() {
                         onClick={() => handleJoinGroup(group.id)} 
                         size="sm" 
                         variant={group.isJoinedByCurrentUser ? "default" : "outline"}
-                        disabled={group.isJoinedByCurrentUser}
+                        disabled={!!group.isJoinedByCurrentUser} // Ensure it's explicitly boolean
                         className={`mt-1 border-accent ${group.isJoinedByCurrentUser ? 'bg-accent text-accent-foreground cursor-not-allowed' : 'text-accent hover:bg-accent/10'} self-start sm:self-center`}
                     >
                       {group.isJoinedByCurrentUser ? <><CheckCircle className="mr-2 h-4 w-4" />Joined</> : "Join Group"}
@@ -580,11 +586,11 @@ export default function StudySpherePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Dialog open={isUploadResourceDialogOpen} onOpenChange={setIsUploadResourceDialogOpen}>
-                <Dialog.Trigger asChild>
+                <DialogTrigger asChild>
                   <Button onClick={() => setIsUploadResourceDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                     <UploadCloud className="mr-2 h-4 w-4" /> Upload Resource
                   </Button>
-                </Dialog.Trigger>
+                </DialogTrigger>
                 <DialogContent className="sm:max-w-[480px] bg-card border-accent/50">
                   <DialogHeader>
                     <DialogTitle className="text-primary">Upload a New Resource</DialogTitle>
@@ -665,11 +671,11 @@ export default function StudySpherePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Dialog open={isScheduleSessionDialogOpen} onOpenChange={setIsScheduleSessionDialogOpen}>
-                <Dialog.Trigger asChild>
+                <DialogTrigger asChild>
                   <Button onClick={() => setIsScheduleSessionDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                     <CalendarPlus className="mr-2 h-4 w-4" /> Schedule New Session
                   </Button>
-                </Dialog.Trigger>
+                </DialogTrigger>
                 <DialogContent className="sm:max-w-[480px] bg-card border-accent/50">
                   <DialogHeader>
                       <DialogTitle className="text-primary">Schedule a New Study Session</DialogTitle>
@@ -755,3 +761,5 @@ export default function StudySpherePage() {
     </div>
   );
 }
+
+    
