@@ -1,21 +1,35 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Bot, MessageSquareText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 interface AlienGuideProps {
-  message?: string;
   className?: string;
+  // Message prop is now fully optional; component will determine message based on path
 }
 
-const DEFAULT_MESSAGE = "Welcome to UniVerse! Explore the features using the icons in the header or scroll down to learn more. I'm here to help you navigate!";
+const DEFAULT_MESSAGES: { [key: string]: string } = {
+  '/': "Welcome to UniVerse! Explore features using the icons in the header or scroll down. I'm here to help you navigate!",
+  '/study-sphere': "You're in the Study Sphere! Set up your profile, find buddies, join groups, share resources, and schedule sessions.",
+  '/event-horizon': "This is Event Horizon! Discover campus events, filter by interests, RSVP, and even create your own peer gatherings.",
+  '/celestial-chats': "Welcome to Celestial Chats! Ask the AI, join AMAs with seniors & alumni, and explore past wisdom.",
+  '/nebula-of-ideas': "Ignite innovation in the Nebula of Ideas! Share projects, find collaborators, and bring visions to life.",
+  'default': "Welcome to UniVerse! Let me know if you need help exploring this section."
+};
 
-const AlienGuide: React.FC<AlienGuideProps> = ({ message = DEFAULT_MESSAGE, className }) => {
+const AlienGuide: React.FC<AlienGuideProps> = ({ className }) => {
   const [isMessageVisible, setIsMessageVisible] = useState(true);
+  const [currentMessage, setCurrentMessage] = useState(DEFAULT_MESSAGES['default']);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setCurrentMessage(DEFAULT_MESSAGES[pathname] || DEFAULT_MESSAGES['default']);
+  }, [pathname]);
 
   const toggleMessageVisibility = () => {
     setIsMessageVisible(prev => !prev);
@@ -26,7 +40,7 @@ const AlienGuide: React.FC<AlienGuideProps> = ({ message = DEFAULT_MESSAGE, clas
       className={cn("fixed bottom-6 right-6 z-50 flex items-end space-x-3", className)}
       initial={{ opacity: 0, y: 50 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.5 }}
+      transition={{ duration: 0.5, delay: 1.5 }} // Added a bit more delay
     >
       <AnimatePresence>
         {isMessageVisible && (
@@ -43,7 +57,7 @@ const AlienGuide: React.FC<AlienGuideProps> = ({ message = DEFAULT_MESSAGE, clas
                   <MessageSquareText className="h-4 w-4 mr-1.5 text-accent" />
                   UniVerse Guide
                 </div>
-                <p className="text-sm text-foreground/90 leading-relaxed">{message}</p>
+                <p className="text-sm text-foreground/90 leading-relaxed">{currentMessage}</p>
               </CardContent>
             </Card>
           </motion.div>
