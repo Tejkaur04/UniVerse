@@ -3,41 +3,178 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Telescope } from 'lucide-react'; // Changed icon to Telescope
+import { ArrowLeft, Telescope, CalendarDays, Search, Tag, Users, Share2, Sparkles as RecommendIcon } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
+import type { LucideIcon } from 'lucide-react';
+
+interface CampusEvent {
+  id: string;
+  type: 'official' | 'peer';
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  description: string;
+  organizer: string;
+  tags: string[];
+  icon: LucideIcon;
+  dataAiHint?: string;
+}
+
+const hardcodedEvents: CampusEvent[] = [
+  {
+    id: "event1",
+    type: 'official',
+    title: "Guest Lecture: The Future of Quantum Computing",
+    date: "November 20, 2024",
+    time: "4:00 PM UTC",
+    location: "Main Auditorium",
+    description: "Join Prof. Anya Sharma as she discusses breakthroughs in quantum computing.",
+    organizer: "Dept. of Physics",
+    tags: ["Academia", "Tech", "Physics"],
+    icon: CalendarDays,
+    dataAiHint: "lecture hall"
+  },
+  {
+    id: "event2",
+    type: 'official',
+    title: "Career Fair: Tech & Engineering",
+    date: "November 25, 2024",
+    time: "10:00 AM - 3:00 PM UTC",
+    location: "University Grand Hall",
+    description: "Connect with leading tech companies and explore internship/job opportunities.",
+    organizer: "Career Services",
+    tags: ["Career", "Tech", "Engineering"],
+    icon: Users,
+    dataAiHint: "career fair"
+  },
+  {
+    id: "event3",
+    type: 'peer',
+    title: "Astro 101 Study Group - Midterm Prep",
+    date: "November 15, 2024",
+    time: "6:00 PM UTC",
+    location: "Library Room 4B / Virtual",
+    description: "Collaborative review session for the upcoming Astrophysics 101 midterm.",
+    organizer: "Alex Cosmo (Student)",
+    tags: ["Study Group", "Astrophysics"],
+    icon: Users,
+    dataAiHint: "students studying"
+  },
+];
+
+const interestTags = ["Academia", "Tech", "Physics", "Career", "Engineering", "Study Group", "Astrophysics", "Arts", "Sports", "Social"];
+
 
 export default function EventHorizonPage() {
+  const { toast } = useToast();
+
+  const handleDemoAction = (message: string) => {
+    toast({
+      title: "Demo Action",
+      description: message,
+      duration: 3000,
+    });
+  };
+  
   return (
-    <div className="container mx-auto px-4 py-12 w-full max-w-4xl text-center">
-      <Button asChild variant="outline" className="mb-10 bg-card hover:bg-accent hover:text-accent-foreground">
-        <Link href="/dashboard">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Dashboard
-        </Link>
-      </Button>
-      <Telescope className="h-24 w-24 text-primary mx-auto mb-8 animate-pulse" />
-      <h1 className="text-5xl font-bold text-primary mb-6">Event Horizon - Charting Your Course!</h1>
-      <p className="text-xl text-muted-foreground mb-4">
-        Get ready to explore a universe of campus happenings and opportunities!
-      </p>
-      <div className="text-lg text-foreground/80 mb-8 max-w-2xl mx-auto space-y-3 text-left">
-        <p>
-          The Event Horizon is currently under construction and will soon be your central telescope for discovering everything exciting happening across UniVerse. Imagine a place where you can:
-        </p>
-        <ul className="list-disc list-inside space-y-2 pl-4 text-foreground/70">
-          <li><strong>Browse a comprehensive calendar:</strong> View all listed campus events, workshops, and seminars in one convenient place.</li>
-          <li><strong>Filter by your cosmic interests:</strong> Select tags like "Astrophysics," "Coding Comets," "Literary Galaxies," or "Entrepreneurial Expeditions" to see events tailored to you.</li>
-          <li><strong>Search for specific stellar events:</strong> Use keywords to pinpoint particular happenings, guest lectures, or career fairs.</li>
-          <li><strong>View detailed event transmissions:</strong> Access all you need to know – date, time, location (or virtual coordinates), event descriptions, and organizers.</li>
-          <li><strong>RSVP or mark your trajectory:</strong> Indicate your intention to attend events and receive updates or reminders.</li>
-          <li><strong>Discover peer-organized star clusters:</strong> Find study sessions, social meetups, and informal gatherings launched by fellow students.</li>
-          <li><strong>Share cosmic signals:</strong> Easily spread the word about interesting opportunities with your friends and study groups.</li>
-          <li><strong>Receive personalized navigation (Future Feature):</strong> Based on your profile and interests, UniVerse might suggest stellar events you won't want to miss!</li>
-        </ul>
-        <p className="pt-3 text-center">
-          We're working hard to calibrate the sensors and polish the lenses. Prepare for a clear view of your university's vibrant event landscape!
+    <div className="container mx-auto px-4 py-12 w-full max-w-4xl">
+      <div className="mb-8 text-center">
+        <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground absolute top-6 left-6">
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to UniVerse Home
+          </Link>
+        </Button>
+        <div className="flex items-center justify-center mb-4 pt-16 sm:pt-0">
+          <Telescope className="h-16 w-16 text-primary mr-4 animate-pulse" />
+          <h1 className="text-4xl font-bold text-primary">Event Horizon</h1>
+        </div>
+        <p className="text-xl text-center text-muted-foreground mb-10">
+          Discover exciting campus events, workshops, and seminars. Your telescope to opportunities!
         </p>
       </div>
-      <p className="text-md text-accent font-semibold">Stay tuned for launch!</p>
+
+      <div className="space-y-10">
+        <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+          <CardHeader>
+            <CardTitle className="text-2xl flex items-center text-primary"><Search className="mr-3 h-7 w-7 text-accent" />Filter Your Cosmos</CardTitle>
+            <CardDescription>Search for specific events or filter by your interests.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input 
+              type="search" 
+              placeholder="Search by keywords (e.g., 'Quantum', 'Career Fair')..." 
+              className="bg-background/70"
+              onChange={(e) => handleDemoAction(`Searching for: ${e.target.value} (Demo)`)}
+            />
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground/90">Filter by Interests:</p>
+              <div className="flex flex-wrap gap-2">
+                {interestTags.map(tag => (
+                  <Button 
+                    key={tag} 
+                    variant="outline" 
+                    size="sm" 
+                    className="border-accent text-accent hover:bg-accent/10"
+                    onClick={() => handleDemoAction(`Filtering by: ${tag} (Demo)`)}
+                  >
+                    <Tag className="mr-1 h-3 w-3" /> {tag}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {hardcodedEvents.map(event => (
+          <Card key={event.id} className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30 overflow-hidden">
+            <CardHeader className="pb-3">
+               <div className="flex items-start space-x-3">
+                  <event.icon className="h-10 w-10 text-accent mt-1 shrink-0" />
+                  <div className="flex-grow">
+                    <CardTitle className="text-2xl text-primary">{event.title}</CardTitle>
+                    <CardDescription className="text-sm">Organized by: {event.organizer} {event.type === 'peer' ? '(Peer Event)' : '(Official)'}</CardDescription>
+                  </div>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-0">
+              <p className="text-sm text-muted-foreground"><CalendarDays className="inline mr-1.5 h-4 w-4 text-accent/80" />{event.date} at {event.time}</p>
+              <p className="text-sm text-muted-foreground"><strong>Location:</strong> {event.location}</p>
+              <p className="text-foreground/80 text-sm">{event.description}</p>
+              <div className="flex flex-wrap gap-1 pt-1">
+                {event.tags.map(tag => <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>)}
+              </div>
+            </CardContent>
+            <CardContent className="pt-2 pb-4 border-t border-border/30">
+              <div className="mt-3 flex flex-wrap gap-2 justify-start">
+                <Button onClick={() => handleDemoAction(`Viewing details for ${event.title} (Demo)`)} size="sm" variant="outline"><Telescope className="mr-1 h-4 w-4" />View Details</Button>
+                <Button onClick={() => handleDemoAction(`RSVPing to ${event.title} (Demo)`)} size="sm" variant="outline"><CalendarDays className="mr-1 h-4 w-4" />RSVP</Button>
+                <Button onClick={() => handleDemoAction(`Marking interest in ${event.title} (Demo)`)} size="sm" variant="ghost" className="text-accent hover:text-accent/80"><Sparkles className="mr-1 h-4 w-4" />Mark Interest</Button>
+                <Button onClick={() => handleDemoAction(`Sharing ${event.title} (Demo)`)} size="sm" variant="ghost" className="text-accent hover:text-accent/80"><Share2 className="mr-1 h-4 w-4" />Share</Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        {hardcodedEvents.length === 0 && (
+            <p className="text-muted-foreground text-center py-6">No events currently listed. Check back soon for cosmic happenings!</p>
+        )}
+        
+        <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+            <CardHeader>
+                <CardTitle className="text-2xl flex items-center text-primary"><RecommendIcon className="mr-3 h-7 w-7 text-accent" />Personalized Navigation (Coming Soon!)</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-muted-foreground">
+                    Soon, UniVerse will analyze your cosmic trajectory (profile and interests) to suggest stellar events you won't want to miss! This feature is currently under construction by our top astro-engineers.
+                </p>
+            </CardContent>
+        </Card>
+
+      </div>
     </div>
   );
 }

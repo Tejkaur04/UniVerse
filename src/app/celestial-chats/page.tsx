@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, MessageCircleQuestion, CalendarClock, Users, Archive, Mic, Send, FileText, Star, Bot } from 'lucide-react'; // Added Bot icon
+import { ArrowLeft, MessageCircleQuestion, CalendarClock, Users, Archive, Mic, Send, FileText, Star, Bot } from 'lucide-react';
 import CelestialChatsClient from '@/components/celestial-chats-client';
 import type { LucideIcon } from 'lucide-react';
 
@@ -114,9 +114,9 @@ export default function CelestialChatsPage() {
     <div className="container mx-auto px-4 py-12 w-full max-w-4xl">
       <div className="mb-8">
         <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground">
-          <Link href="/dashboard">
+          <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
+            Back to UniVerse Home
           </Link>
         </Button>
         <div className="flex items-center justify-center mb-4 text-center">
@@ -218,5 +218,3 @@ export default function CelestialChatsPage() {
     </div>
   );
 }
-
-    

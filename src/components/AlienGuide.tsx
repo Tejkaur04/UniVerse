@@ -1,16 +1,18 @@
 
 "use client";
 
-import { Bot, MessageSquareText } from 'lucide-react'; // Changed Alien to Bot
+import { Bot, MessageSquareText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface AlienGuideProps {
-  message: string;
+  message?: string; // Made message prop optional
   className?: string;
 }
 
-const AlienGuide: React.FC<AlienGuideProps> = ({ message, className }) => {
+const DEFAULT_MESSAGE = "Welcome to UniVerse! Explore the features using the icons in the header or scroll down to learn more. I'm here to help you navigate!";
+
+const AlienGuide: React.FC<AlienGuideProps> = ({ message = DEFAULT_MESSAGE, className }) => {
   return (
     <motion.div
       className={`fixed bottom-6 right-6 z-50 flex items-end space-x-3 ${className}`}
@@ -27,7 +29,6 @@ const AlienGuide: React.FC<AlienGuideProps> = ({ message, className }) => {
           <p className="text-sm text-foreground/90 leading-relaxed">{message}</p>
         </CardContent>
       </Card>
-      {/* Changed Alien to Bot below */}
       <Bot className="h-16 w-16 text-primary drop-shadow-[0_0_10px_hsl(var(--primary))] animate-bounce" />
     </motion.div>
   );
