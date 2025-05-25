@@ -59,22 +59,17 @@ export default function StudySpherePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Temporary state for the edit dialog form
-  const [editCoursesInput, setEditCoursesInput] = useState(studyProfile.courses.join(', '));
-  const [editLearningStyles, setEditLearningStyles] = useState<string[]>(studyProfile.learningStyles);
+  const [editCoursesInput, setEditCoursesInput] = useState('');
+  const [editLearningStyles, setEditLearningStyles] = useState<string[]>([]);
 
   useEffect(() => {
-    // When the dialog is opened, or studyProfile changes, reset the dialog's form fields
-    // to reflect the current studyProfile.
-    if (isEditDialogOpen) { 
+    if (isEditDialogOpen) {
         setEditCoursesInput(studyProfile.courses.join(', '));
         setEditLearningStyles([...studyProfile.learningStyles]);
     }
-  }, [studyProfile, isEditDialogOpen]); 
+  }, [studyProfile, isEditDialogOpen]);
 
   const handleEditProfile = () => {
-    // This ensures the dialog opens with the most current profile data
-    setEditCoursesInput(studyProfile.courses.join(', '));
-    setEditLearningStyles([...studyProfile.learningStyles]);
     setIsEditDialogOpen(true);
   };
 
@@ -91,9 +86,9 @@ export default function StudySpherePage() {
     });
   };
 
-  const handleLearningStyleChange = (style: string, checked: boolean) => {
+  const handleLearningStyleChange = (style: string, checked: boolean | string) => {
     setEditLearningStyles(prevStyles =>
-      checked ? [...prevStyles, style] : prevStyles.filter(s => s !== style)
+      checked === true ? [...prevStyles, style] : prevStyles.filter(s => s !== style)
     );
   };
 
@@ -201,7 +196,7 @@ export default function StudySpherePage() {
                             <Checkbox
                               id={`style-${style}`}
                               checked={editLearningStyles.includes(style)}
-                              onCheckedChange={(checked) => handleLearningStyleChange(style, !!checked)}
+                              onCheckedChange={(checked) => handleLearningStyleChange(style, checked)}
                             />
                             <Label htmlFor={`style-${style}`} className="font-normal text-foreground/80">{style}</Label>
                           </div>
@@ -233,7 +228,7 @@ export default function StudySpherePage() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="course-filter" className="text-base text-foreground/90">Filter by Course:</Label>
-                  <Select onValueChange={(value) => handleDemoClick(\`Filtered by course: \${value} (Demo)\`)}>
+                  <Select onValueChange={(value) => handleDemoClick(`Filtered by course: ${value} (Demo)`)}>
                     <SelectTrigger id="course-filter" className="w-full bg-background/70">
                       <SelectValue placeholder="Select a course to find peers" />
                     </SelectTrigger>
@@ -244,7 +239,7 @@ export default function StudySpherePage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="style-filter" className="text-base text-foreground/90">Filter by Learning Style:</Label>
-                  <Select onValueChange={(value) => handleDemoClick(\`Filtered by style: \${value} (Demo)\`)}>
+                  <Select onValueChange={(value) => handleDemoClick(`Filtered by style: ${value} (Demo)`)}>
                     <SelectTrigger id="style-filter" className="w-full bg-background/70">
                       <SelectValue placeholder="Select a preferred learning style" />
                     </SelectTrigger>
@@ -275,7 +270,7 @@ export default function StudySpherePage() {
                       <p className="text-sm text-muted-foreground">Shared Courses: {match.courses.join(', ')}</p>
                       <p className="text-sm text-muted-foreground">Learning Styles: {match.learningStyles.join(', ')}</p>
                     </div>
-                    <Button onClick={() => handleDemoClick(\`Connection request sent to \${match.name}! (Demo)\`)} size="sm" variant="outline" className="shrink-0 self-start sm:self-center border-accent text-accent hover:bg-accent/10">
+                    <Button onClick={() => handleDemoClick(`Connection request sent to ${match.name}! (Demo)`)} size="sm" variant="outline" className="shrink-0 self-start sm:self-center border-accent text-accent hover:bg-accent/10">
                       <UserPlus className="mr-2 h-4 w-4" /> Connect
                     </Button>
                   </Card>
@@ -309,7 +304,7 @@ export default function StudySpherePage() {
                       <p className="text-sm text-foreground/80 mt-1">{group.description}</p>
                       <Badge variant="secondary" className="mt-2">{group.members} members</Badge>
                     </div>
-                    <Button onClick={() => handleDemoClick(\`Requesting to join \${group.name}... (Demo)\`)} size="sm" variant="outline" className="mt-1 border-accent text-accent hover:bg-accent/10 self-start sm:self-center">
+                    <Button onClick={() => handleDemoClick(`Requesting to join ${group.name}... (Demo)`)} size="sm" variant="outline" className="mt-1 border-accent text-accent hover:bg-accent/10 self-start sm:self-center">
                       Join Group
                     </Button>
                   </div>
@@ -342,7 +337,7 @@ export default function StudySpherePage() {
                     <p className="text-sm text-muted-foreground">Type: {resource.type} | Course: {resource.course}</p>
                     <p className="text-sm text-muted-foreground">Uploaded by: {resource.uploader}</p>
                   </div>
-                  <Button onClick={() => handleDemoClick(\`Downloading \${resource.name}... (Demo)\`)} variant="ghost" size="icon" className="text-accent hover:text-accent/80">
+                  <Button onClick={() => handleDemoClick(`Downloading ${resource.name}... (Demo)`)} variant="ghost" size="icon" className="text-accent hover:text-accent/80">
                     <Download className="h-5 w-5" />
                   </Button>
                 </Card>
@@ -371,7 +366,7 @@ export default function StudySpherePage() {
                   <h4 className="font-semibold text-lg text-foreground">{session.topic}</h4>
                   <p className="text-sm text-muted-foreground">When: {session.dateTime}</p>
                   <p className="text-sm text-muted-foreground">With: {session.group} | Where: {session.location}</p>
-                  <Button onClick={() => handleDemoClick(\`Viewing details for session: \${session.topic} (Demo)\`)} size="sm" variant="link" className="p-0 h-auto text-accent hover:text-accent/80 mt-1">View Details / Join</Button>
+                  <Button onClick={() => handleDemoClick(`Viewing details for session: ${session.topic} (Demo)`)} size="sm" variant="link" className="p-0 h-auto text-accent hover:text-accent/80 mt-1">View Details / Join</Button>
                 </Card>
               ))}
               {studySessions.length === 0 && <p className="text-muted-foreground">No study sessions scheduled yet.</p>}
@@ -383,3 +378,4 @@ export default function StudySpherePage() {
   );
 }
 
+    
