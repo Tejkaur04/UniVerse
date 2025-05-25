@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import React, { useState, useEffect, type ChangeEvent, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Telescope, CalendarDays, Search, Tag, Users, Share2, Sparkles as RecommendIcon, CheckCircle, PlusCircle, ListChecks, Info, Filter } from 'lucide-react';
+import { ArrowLeft, Telescope, CalendarDays, Search, Tag, Users, Share2, Sparkles as RecommendIcon, CheckCircle, PlusCircle, ListChecks, Info, Filter, ListFilter } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -316,12 +316,13 @@ export default function EventHorizonPage() {
                 const interactions = userInteractions[event.id] || {};
                 const isRsvpd = !!interactions.rsvpd;
                 const isInterested = !!interactions.interested;
+                const Icon = event.icon; // Capitalize the icon component
 
                 return (
                   <Card key={event.id} className="bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300 overflow-hidden">
                     <CardHeader className="pb-3">
                       <div className="flex items-start space-x-3">
-                          <event.icon className="h-10 w-10 text-accent mt-1 shrink-0" />
+                          <Icon className="h-10 w-10 text-accent mt-1 shrink-0" />
                           <div className="flex-grow">
                             <CardTitle className="text-2xl text-primary">{event.title}</CardTitle>
                             <CardDescription className="text-sm">Organized by: {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-2 text-xs'>{event.type === 'official' ? 'Official Event' : 'Peer Event'}</Badge></CardDescription>
@@ -442,10 +443,12 @@ export default function EventHorizonPage() {
                 <CardDescription>Event suggestions based on general campus activity. (True personalization coming soon!)</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recommendedEvents.length > 0 ? recommendedEvents.map(event => (
+                {recommendedEvents.length > 0 ? recommendedEvents.map(event => {
+                  const Icon = event.icon; // Capitalize the icon component
+                  return (
                   <Card key={`rec-${event.id}`} className="p-4 bg-background/50 border-border/50">
                     <div className="flex items-start space-x-3">
-                      <event.icon className="h-8 w-8 text-accent mt-1 shrink-0" />
+                      <Icon className="h-8 w-8 text-accent mt-1 shrink-0" />
                       <div className="flex-grow">
                         <h4 className="font-semibold text-lg text-foreground">{event.title}</h4>
                         <p className="text-sm text-muted-foreground">Organized by: {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-1 text-xs'>{event.type === 'official' ? 'Official' : 'Peer Event'}</Badge></p>
@@ -465,7 +468,8 @@ export default function EventHorizonPage() {
                         </Button>
                     </div>
                   </Card>
-                )) : <p className="text-muted-foreground text-center">No specific recommendations right now. Explore all events below!</p>}
+                  );
+                }) : <p className="text-muted-foreground text-center">No specific recommendations right now. Explore all events below!</p>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -477,17 +481,23 @@ export default function EventHorizonPage() {
                 <CardDescription>A comprehensive list of all known happenings in the UniVerse.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 max-h-[400px] overflow-y-auto">
-                {allEvents.length > 0 ? allEvents.map(event => (
+                {allEvents.length > 0 ? allEvents.map(event => {
+                  const Icon = event.icon; // Capitalize the icon component
+                  return (
                   <Card key={`all-${event.id}`} className="p-3 bg-background/40 border-border/40">
                     <div className="flex justify-between items-center">
-                      <div>
-                        <h5 className="font-medium text-foreground">{event.title}</h5>
-                        <p className="text-xs text-muted-foreground">{event.date} - {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-1 text-xs'>{event.type === 'official' ? 'Official' : 'Peer'}</Badge></p>
+                      <div className="flex items-center space-x-3">
+                        <Icon className="h-6 w-6 text-accent shrink-0" />
+                        <div>
+                          <h5 className="font-medium text-foreground">{event.title}</h5>
+                          <p className="text-xs text-muted-foreground">{event.date} - {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-1 text-xs'>{event.type === 'official' ? 'Official' : 'Peer'}</Badge></p>
+                        </div>
                       </div>
                       <Button onClick={() => handleDemoAction(`Viewing details for ${event.title}`)} size="sm" variant="ghost" className="text-accent hover:text-accent/80">Details</Button>
                     </div>
                   </Card>
-                )) : <p className="text-muted-foreground text-center">No events listed. Be the first to create a peer event!</p>}
+                  );
+                }) : <p className="text-muted-foreground text-center">No events listed. Be the first to create a peer event!</p>}
               </CardContent>
             </Card>
           </TabsContent>
@@ -496,4 +506,6 @@ export default function EventHorizonPage() {
     </div>
   );
 }
+    
+
     
