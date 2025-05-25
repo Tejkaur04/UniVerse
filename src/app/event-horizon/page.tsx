@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog"; 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger } from "@/components/ui/dialog"; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext'; 
@@ -53,7 +53,10 @@ const iconMap: { [key: string]: LucideIcon } = {
   PlusCircle: PlusCircle,
   Star: Star,
   ListFilter: ListFilter,
-  Search: Search, // Added Search to map
+  Search: Search,
+  FilterIcon: FilterIcon,
+  Telescope: Telescope,
+  Rocket: Rocket,
 };
 
 const initialHardcodedEvents: CampusEvent[] = [
@@ -64,13 +67,12 @@ const initialHardcodedEvents: CampusEvent[] = [
 
 
 const EventHorizonPage: FC = () => {
-  const { user } = useAuth(); // Using mock auth
+  const { user } = useAuth(); 
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("discover");
 
   const userLocalStorageKey = (dataKey: string) => user ? `uniVerse-eventHorizon-${dataKey}-${user.uid}` : `uniVerse-eventHorizon-${dataKey}-guest`;
 
-  // Load data from localStorage or return fallback
   const loadData = <T,>(keySuffix: string, fallbackData: T): T => {
     if (typeof window === 'undefined') return fallbackData;
     const key = userLocalStorageKey(keySuffix);
@@ -86,7 +88,6 @@ const EventHorizonPage: FC = () => {
     return fallbackData;
   };
 
-  // Helper to save data to localStorage
   const saveData = <T,>(keySuffix: string, data: T) => {
     if (typeof window === 'undefined' || !user) return;
     localStorage.setItem(userLocalStorageKey(keySuffix), JSON.stringify(data));
@@ -98,7 +99,6 @@ const EventHorizonPage: FC = () => {
   const [selectedTag, setSelectedTag] = useState('All');
   const [userInteractions, setUserInteractions] = useState<UserEventInteractions>(() => loadData('userEventInteractions', {}));
 
-  // For Create Event Dialog
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDate, setNewEventDate] = useState('');
@@ -108,12 +108,9 @@ const EventHorizonPage: FC = () => {
   const [newEventOrganizer, setNewEventOrganizer] = useState('');
   const [newEventTags, setNewEventTags] = useState('');
 
-
-  // Save allEvents and userInteractions to localStorage when they change
   useEffect(() => { saveData('allEvents', allEvents); }, [allEvents, user]);
   useEffect(() => { saveData('userEventInteractions', userInteractions); }, [userInteractions, user]);
 
-  // Filtering logic for displayedEvents
   useEffect(() => {
     let filtered = allEvents;
     if (searchTerm) {
@@ -164,9 +161,8 @@ const EventHorizonPage: FC = () => {
     };
     setAllEvents(prev => [newEvent, ...prev]);
     setIsCreateEventDialogOpen(false);
-    // Reset form
     setNewEventTitle(''); setNewEventDate(''); setNewEventTime(''); setNewEventLocation(''); setNewEventDescription(''); setNewEventOrganizer(''); setNewEventTags('');
-    toast({ title: 'New Event Orbit Launched!', description: `${newEvent.title} is now on the horizon. Saved locally.`, action: <CheckCircle className="h-5 w-5 text-green-500" /> });
+    toast({ title: 'New Event Orbit Launched!', description: `${newEvent.title} is now on the horizon. Saved locally in your browser.`, action: <CheckCircle className="h-5 w-5 text-green-500" /> });
   };
   
   const recommendedEvents = useMemo(() => {
@@ -181,11 +177,11 @@ const EventHorizonPage: FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 w-full max-w-6xl">
+    <div className="w-full">
       <div className="mb-8">
         <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground border-primary/30 hover:border-accent">
-          <Link href="/dashboard">
-            <Home className="mr-2 h-4 w-4" /> Back to Dashboard
+          <Link href="/">
+            <Home className="mr-2 h-4 w-4" /> Back to UniVerse Home
           </Link>
         </Button>
         <div className="text-center">
@@ -200,17 +196,17 @@ const EventHorizonPage: FC = () => {
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-1 mb-8 border-b border-border pb-1">
-            <TabsTrigger value="discover" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-                <Search className="mr-2 h-5 w-5" /> Filter & Discover
+            <TabsTrigger value="discover" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
+                <Search className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Filter & Discover
             </TabsTrigger>
-            <TabsTrigger value="create" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-                <PlusCircle className="mr-2 h-5 w-5" /> Create Peer Event
+            <TabsTrigger value="create" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
+                <PlusCircle className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Create Peer Event
             </TabsTrigger>
-            <TabsTrigger value="recommendations" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-                <Star className="mr-2 h-5 w-5" /> Recommendations
+            <TabsTrigger value="recommendations" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
+                <Star className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Recommendations
             </TabsTrigger>
-            <TabsTrigger value="all" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-                <ListFilter className="mr-2 h-5 w-5" /> All Events List
+            <TabsTrigger value="all" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
+                <ListFilter className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> All Events List
             </TabsTrigger>
         </TabsList>
 
@@ -221,8 +217,8 @@ const EventHorizonPage: FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
+            className="min-h-[400px]" 
         >
-        {/* Filter & Discover Tab */}
         {activeTab === "discover" && (
         <TabsContent value="discover" forceMount>
             <Card className="mb-10 shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
@@ -269,7 +265,7 @@ const EventHorizonPage: FC = () => {
                         <div className="flex items-start space-x-3">
                             <Icon className="h-10 w-10 text-accent mt-1 shrink-0" />
                             <div className="flex-grow">
-                            <CardTitle className="text-2xl text-primary">{event.title}</CardTitle>
+                            <CardTitle className="text-xl text-primary">{event.title}</CardTitle> {/* Adjusted size */}
                             <CardDescription className="text-sm">Organized by: {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-2 text-xs bg-primary/20 text-primary-foreground'>{event.type === 'official' ? 'Official Event' : 'Peer Event'}</Badge></CardDescription>
                             </div>
                         </div>
@@ -300,7 +296,6 @@ const EventHorizonPage: FC = () => {
         </TabsContent>
         )}
 
-        {/* Create Peer Event Tab */}
         {activeTab === "create" && (
         <TabsContent value="create" forceMount>
             <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30 max-w-2xl mx-auto">
@@ -312,24 +307,36 @@ const EventHorizonPage: FC = () => {
                     <CardDescription>Organize and list your own study sessions or informal gatherings for others to join.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleCreateEvent} className="space-y-4">
-                        <div><Label htmlFor="newEventTitle">Event Title</Label><Input id="newEventTitle" value={newEventTitle} onChange={e => setNewEventTitle(e.target.value)} placeholder="e.g., Casual Coding Catch-up" /></div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div><Label htmlFor="newEventDate">Date</Label><Input id="newEventDate" type="date" value={newEventDate} onChange={e => setNewEventDate(e.target.value)} /></div>
-                            <div><Label htmlFor="newEventTime">Time</Label><Input id="newEventTime" type="time" value={newEventTime} onChange={e => setNewEventTime(e.target.value)} /></div>
-                        </div>
-                        <div><Label htmlFor="newEventLocation">Location / Platform</Label><Input id="newEventLocation" value={newEventLocation} onChange={e => setNewEventLocation(e.target.value)} placeholder="e.g., Campus Cafe or Discord" /></div>
-                        <div><Label htmlFor="newEventDescription">Description</Label><Textarea id="newEventDescription" value={newEventDescription} onChange={e => setNewEventDescription(e.target.value)} placeholder="Briefly describe your event." /></div>
-                        <div><Label htmlFor="newEventOrganizer">Organizer Name (Optional)</Label><Input id="newEventOrganizer" value={newEventOrganizer} onChange={e => setNewEventOrganizer(e.target.value)} placeholder="Your Name/Group Name (Defaults to your user if empty)" /></div>
-                        <div><Label htmlFor="newEventTags">Tags (comma-separated)</Label><Input id="newEventTags" value={newEventTags} onChange={e => setNewEventTags(e.target.value)} placeholder="e.g., Coding, Social, Casual" /></div>
-                        <Button type="submit" className="w-full bg-primary hover:bg-accent hover:text-accent-foreground">Launch Event</Button>
-                    </form>
+                  <Dialog open={isCreateEventDialogOpen} onOpenChange={setIsCreateEventDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="w-full bg-primary hover:bg-accent hover:text-accent-foreground">
+                        <PlusCircle className="mr-2 h-5 w-5" /> Create New Peer Event
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-card border-primary/50">
+                      <DialogHeader>
+                        <DialogTitle className="font-mono text-primary flex items-center"><PlusCircle className="mr-2 h-5 w-5" />Launch Your Peer Event</DialogTitle>
+                        <DialogDescription>Share the details of your event with the UniVerse community.</DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleCreateEvent} className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-2">
+                          <div><Label htmlFor="newEventTitle">Event Title</Label><Input id="newEventTitle" value={newEventTitle} onChange={e => setNewEventTitle(e.target.value)} placeholder="e.g., Casual Coding Catch-up" /></div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div><Label htmlFor="newEventDate">Date</Label><Input id="newEventDate" type="date" value={newEventDate} onChange={e => setNewEventDate(e.target.value)} /></div>
+                              <div><Label htmlFor="newEventTime">Time</Label><Input id="newEventTime" type="time" value={newEventTime} onChange={e => setNewEventTime(e.target.value)} /></div>
+                          </div>
+                          <div><Label htmlFor="newEventLocation">Location / Platform</Label><Input id="newEventLocation" value={newEventLocation} onChange={e => setNewEventLocation(e.target.value)} placeholder="e.g., Campus Cafe or Discord" /></div>
+                          <div><Label htmlFor="newEventDescription">Description</Label><Textarea id="newEventDescription" value={newEventDescription} onChange={e => setNewEventDescription(e.target.value)} placeholder="Briefly describe your event." /></div>
+                          <div><Label htmlFor="newEventOrganizer">Organizer Name (Optional)</Label><Input id="newEventOrganizer" value={newEventOrganizer} onChange={e => setNewEventOrganizer(e.target.value)} placeholder="Your Name/Group Name (Defaults to your user if empty)" /></div>
+                          <div><Label htmlFor="newEventTags">Tags (comma-separated)</Label><Input id="newEventTags" value={newEventTags} onChange={e => setNewEventTags(e.target.value)} placeholder="e.g., Coding, Social, Casual" /></div>
+                          <DialogFooter className="pt-3"><Button type="button" variant="outline" onClick={() => setIsCreateEventDialogOpen(false)}>Cancel Launch</Button><Button type="submit" className="bg-primary hover:bg-accent hover:text-accent-foreground">Launch Event</Button></DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
                 </CardContent>
             </Card>
         </TabsContent>
         )}
         
-        {/* Recommendations Tab */}
         {activeTab === "recommendations" && (
         <TabsContent value="recommendations" forceMount>
              <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
@@ -382,7 +389,6 @@ const EventHorizonPage: FC = () => {
         </TabsContent>
         )}
 
-        {/* All Events List Tab */}
         {activeTab === "all" && (
         <TabsContent value="all" forceMount>
             <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
@@ -434,5 +440,3 @@ const EventHorizonPage: FC = () => {
 };
 
 export default EventHorizonPage;
-
-    

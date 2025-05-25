@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Inter, Roboto_Mono } from 'next/font/google'; // Reverted from Geist
+import { Inter, Roboto_Mono } from 'next/font/google';
 import {
   Waypoints, // UniVerse Logo
   UsersRound, // Study Sphere
@@ -15,12 +15,13 @@ import {
   UserRound,
   LogOut,
   Loader2,
-  LogInIcon
+  LogInIcon,
+  Home as HomeIcon // For Dashboard link
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
-import { AuthProvider, useAuth } from '@/contexts/AuthContext'; // Mock Auth
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -31,8 +32,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import StarryBackground from '@/components/starry-background'; // UniVerse background
-import AlienGuide from '@/components/AlienGuide'; // UniVerse guide
+import StarryBackground from '@/components/starry-background';
+import AlienGuide from '@/components/AlienGuide';
+import UserStatsSidebar from '@/components/UserStatsSidebar'; // Import the new sidebar
 import {
   Tooltip,
   TooltipContent,
@@ -92,7 +94,6 @@ function AppContent({ children }: { children: ReactNode }) {
   }
 
   if (!user && !loading && !['/login', '/signup'].includes(pathname)) {
-    // This ensures that if not logged in and not on auth pages, user is shown loading then redirected by useEffect
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -101,83 +102,97 @@ function AppContent({ children }: { children: ReactNode }) {
     );
   }
 
-  return (
-    <>
-      <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 max-w-screen-2xl items-center">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Waypoints className="h-7 w-7 text-primary" />
-            <span className="font-bold sm:inline-block text-xl font-mono text-primary">
-              UniVerse
-            </span>
-          </Link>
+  // Determine if sidebar should be shown (e.g., not on login/signup pages)
+  const showSidebarAndGuide = user && !['/login', '/signup'].includes(pathname);
 
-          <nav className="ml-auto flex items-center space-x-1 sm:space-x-2">
-            {navFeatures.map((feature) => (
-              <Tooltip key={feature.label}>
-                <TooltipTrigger asChild>
-                  <Button asChild variant="ghost" size="icon" className="text-foreground/80 hover:text-accent-foreground hover:bg-accent/20 rounded-md overflow-hidden">
-                    <Link href={feature.href}>
-                      <feature.icon className="h-5 w-5" />
-                      <span className="sr-only">{feature.label}</span>
+  return (
+    <div className="flex min-h-screen">
+      {showSidebarAndGuide && <UserStatsSidebar />}
+      <div className="flex flex-col flex-grow">
+        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-16 max-w-screen-2xl items-center">
+            <Link href="/" className="mr-6 flex items-center space-x-2">
+              <Waypoints className="h-7 w-7 text-primary" />
+              <span className="font-bold sm:inline-block text-xl font-mono text-primary">
+                UniVerse
+              </span>
+            </Link>
+
+            <nav className="ml-auto flex items-center space-x-1 sm:space-x-2">
+              {navFeatures.map((feature) => (
+                <Tooltip key={feature.label}>
+                  <TooltipTrigger asChild>
+                    <Button asChild variant="ghost" size="icon" className="text-foreground/80 hover:text-accent-foreground hover:bg-accent/20 rounded-md overflow-hidden">
+                      <Link href={feature.href}>
+                        <feature.icon className="h-5 w-5" />
+                        <span className="sr-only">{feature.label}</span>
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="bg-card border-primary/50 text-foreground">
+                    <p>{feature.label}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 ml-2">
+                      <Avatar className="h-9 w-9 border-2 border-primary">
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {user.email ? user.email.charAt(0).toUpperCase() : <UserRound size={20}/>}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56 bg-card border-primary/50" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none text-foreground">Logged In (Demo)</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-border/50" />
+                    <DropdownMenuItem asChild className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
+                        <Link href="/">
+                            <HomeIcon className="mr-2 h-4 w-4" />
+                            <span>Home / Dashboard</span>
+                        </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={async () => {
+                      await logout(); 
+                      router.push('/login'); 
+                    }} className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out (Demo)</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                (pathname !== '/login' && pathname !== '/signup') && (
+                  <Button asChild variant="outline" size="sm" className="ml-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                    <Link href="/login">
+                      <LogInIcon className="mr-2 h-4 w-4" />
+                      Login/Sign Up
                     </Link>
                   </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="bg-card border-primary/50 text-foreground">
-                  <p>{feature.label}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 ml-2">
-                    <Avatar className="h-9 w-9 border-2 border-primary">
-                      <AvatarFallback className="bg-primary text-primary-foreground">
-                        {user.email ? user.email.charAt(0).toUpperCase() : <UserRound size={20}/>}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-card border-primary/50" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none text-foreground">Logged In (Demo)</p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-border/50" />
-                  <DropdownMenuItem onClick={async () => {
-                    await logout(); 
-                    router.push('/login'); 
-                  }} className="hover:!bg-primary/20 focus:!bg-primary/20">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out (Demo)</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              (pathname !== '/login' && pathname !== '/signup') && (
-                <Button asChild variant="outline" size="sm" className="ml-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                  <Link href="/login">
-                    <LogInIcon className="mr-2 h-4 w-4" />
-                    Login/Sign Up
-                  </Link>
-                </Button>
-              )
-            )}
-          </nav>
-        </div>
-      </header>
-      <main className="flex-1 flex flex-col items-center py-8 px-4 z-10 relative">
-        {children}
-      </main>
-      {/* Render AlienGuide globally if user is logged in and not on auth pages */}
-      {user && !['/login', '/signup'].includes(pathname) && <AlienGuide />}
-    </>
+                )
+              )}
+            </nav>
+          </div>
+        </header>
+        <main className={cn("flex-1 flex flex-col items-center py-8 px-4 z-10 relative", showSidebarAndGuide ? "md:ml-64" : "")}> 
+          {/* Apply margin-left only if sidebar is shown on desktop */}
+          <div className="w-full max-w-7xl"> {/* Ensure content within main is constrained */}
+            {children}
+          </div>
+        </main>
+      </div>
+      {showSidebarAndGuide && <AlienGuide />}
+    </div>
   );
 }
 
@@ -193,7 +208,7 @@ export default function RootLayout({
         className={cn(
           "antialiased min-h-screen flex flex-col relative font-sans" 
       )}>
-        <StarryBackground /> {/* UniVerse Starry Background */}
+        <StarryBackground />
         <AuthProvider>
           <TooltipProvider delayDuration={100}>
              <AppContent>{children}</AppContent>

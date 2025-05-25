@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -21,11 +21,11 @@ import { Separator } from '@/components/ui/separator';
 import {
   ArrowLeft, UserCircle, Search, Users, FileText, CalendarCheck, UsersRound, Home,
   Briefcase, Palette, ThumbsUp, Link2, MessageSquare, XCircle, Pencil, PlusCircle,
-  UploadCloud, BookOpen, CheckCircle as CheckCircleIcon, CalendarPlus, GripVertical, ListFilter, Info, BookUser
+  UploadCloud, BookOpen, CheckCircle as CheckCircleIcon, CalendarPlus, ListFilter, Info, BookUser, GripVertical
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Interfaces
 export interface UserProfile {
@@ -35,6 +35,7 @@ export interface UserProfile {
   year: string;
   department: string;
   profilePictureUrl?: string;
+  dataAiHint?: string;
   skills: string[];
   interests: string[];
   projectAreas: string[];
@@ -100,6 +101,11 @@ const iconMap: { [key: string]: LucideIcon } = {
   BookOpen: BookOpen,
   UploadCloud: UploadCloud,
   PlusCircle: PlusCircle,
+  Pencil: Pencil,
+  ListFilter: ListFilter,
+  Briefcase: Briefcase,
+  Palette: Palette,
+  GripVertical: GripVertical,
 };
 
 // Initial Hardcoded Data (will be loaded from localStorage if available)
@@ -118,9 +124,9 @@ const initialProfileData: UserProfile = {
 };
 
 const initialPotentialMatchesData: MockStudentProfile[] = [
-  { id: 'student1', name: 'Nova Stargazer', year: 'Sophomore', department: 'Xenolinguistics', skills: ['React', 'Node.js', 'UI/UX'], interests: ['AI', 'Web Development', 'Alien Languages'], projectAreas: ['EdTech App'], profilePictureUrl: 'https://placehold.co/80x80.png', dataAiHint: 'student multilingual', learningStyles: ['Auditory', 'Kinesthetic'], courses: ['Alien Civilizations', 'Galactic History'] },
-  { id: 'student2', name: 'Orion Nebula', year: 'Junior', department: 'Starship Engineering', skills: ['CAD', 'Prototyping', '3D Printing'], interests: ['Robotics', 'Sustainable Design', 'FTL Drives'], projectAreas: ['Automated Rover', 'Warp Core Design'], profilePictureUrl: 'https://placehold.co/80x80.png', dataAiHint: 'engineer student space', learningStyles: ['Kinesthetic', 'Visual'], courses: ['Starship Engineering', 'Quantum Mechanics'] },
-  { id: 'student3', name: 'Lyra Pulsar', year: 'Fresher', department: 'Astrobiology', skills: ['Creative Writing', 'Illustration', 'Microscopy'], interests: ['Storytelling', 'Graphic Novels', 'Extremophiles'], projectAreas: ['Campus Zine', 'Life on Mars Simulation'], profilePictureUrl: 'https://placehold.co/80x80.png', dataAiHint: 'artist student biology', learningStyles: ['Visual', 'Reading/Writing'], courses: ['Astrophysics 101', 'Alien Civilizations'] },
+  { id: 'student1', name: 'Nova Stargazer', year: 'Sophomore', department: 'Xenolinguistics', skills: ['React', 'Node.js', 'UI/UX'], interests: ['AI', 'Web Development', 'Alien Languages'], projectAreas: ['EdTech App'], profilePictureUrl: 'https://placehold.co/80x80.png?text=NS', dataAiHint: 'student multilingual', learningStyles: ['Auditory', 'Kinesthetic'], courses: ['Alien Civilizations', 'Galactic History'] },
+  { id: 'student2', name: 'Orion Nebula', year: 'Junior', department: 'Starship Engineering', skills: ['CAD', 'Prototyping', '3D Printing'], interests: ['Robotics', 'Sustainable Design', 'FTL Drives'], projectAreas: ['Automated Rover', 'Warp Core Design'], profilePictureUrl: 'https://placehold.co/80x80.png?text=ON', dataAiHint: 'engineer student space', learningStyles: ['Kinesthetic', 'Visual'], courses: ['Starship Engineering', 'Quantum Mechanics'] },
+  { id: 'student3', name: 'Lyra Pulsar', year: 'Fresher', department: 'Astrobiology', skills: ['Creative Writing', 'Illustration', 'Microscopy'], interests: ['Storytelling', 'Graphic Novels', 'Extremophiles'], projectAreas: ['Campus Zine', 'Life on Mars Simulation'], profilePictureUrl: 'https://placehold.co/80x80.png?text=LP', dataAiHint: 'artist student biology', learningStyles: ['Visual', 'Reading/Writing'], courses: ['Astrophysics 101', 'Alien Civilizations'] },
 ];
 
 const initialStudyGroupsData: StudyGroup[] = [
@@ -140,13 +146,12 @@ const initialStudySessionsData: StudySession[] = [
 
 
 const StudySpherePage: FC = () => {
-  const { user } = useAuth(); // Mock Auth
+  const { user } = useAuth(); 
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("profile");
   
   const userLocalStorageKey = (dataKey: string) => user ? `uniVerse-studySphere-${dataKey}-${user.uid}` : `uniVerse-studySphere-${dataKey}-guest`;
 
-  // Helper to load data from localStorage or return fallback
   const loadData = <T,>(keySuffix: string, fallbackData: T): T => {
     if (typeof window === 'undefined') return fallbackData;
     const key = userLocalStorageKey(keySuffix);
@@ -162,42 +167,36 @@ const StudySpherePage: FC = () => {
     return fallbackData;
   };
 
-  // Helper to save data to localStorage
   const saveData = <T,>(keySuffix: string, data: T) => {
     if (typeof window === 'undefined' || !user) return;
     localStorage.setItem(userLocalStorageKey(keySuffix), JSON.stringify(data));
   };
 
-
-  // My Profile State
   const [studyProfile, setStudyProfile] = useState<UserProfile>(() => loadData('studyProfile', initialProfileData));
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<UserProfile>(studyProfile);
 
-  // Find Buddies State
-  const [potentialMatches, setPotentialMatches] = useState<MockStudentProfile[]>(initialPotentialMatchesData); // This is static mock data
+  const [potentialMatches, setPotentialMatches] = useState<MockStudentProfile[]>(initialPotentialMatchesData);
   const [filteredMatches, setFilteredMatches] = useState<MockStudentProfile[]>(initialPotentialMatchesData);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourseFilter, setSelectedCourseFilter] = useState('All');
   const [selectedStyleFilter, setSelectedStyleFilter] = useState('All');
   const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('All');
   const [sentRequests, setSentRequests] = useState<string[]>(() => loadData('sentRequests', []));
+  const [connections, setConnections] = useState<MockStudentProfile[]>(() => loadData('connections', []));
 
-  // Study Groups State
   const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(() => loadData('studyGroups', initialStudyGroupsData));
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupCourses, setNewGroupCourses] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
 
-  // Shared Resources State
   const [sharedResources, setSharedResources] = useState<SharedResource[]>(() => loadData('sharedResources', initialSharedResourcesData));
   const [isUploadResourceDialogOpen, setIsUploadResourceDialogOpen] = useState(false);
   const [newResourceName, setNewResourceName] = useState('');
   const [newResourceCourse, setNewResourceCourse] = useState('');
   const [newResourceType, setNewResourceType] = useState('');
 
-  // Study Sessions State
   const [studySessions, setStudySessions] = useState<StudySession[]>(() => loadData('studySessions', initialStudySessionsData));
   const [isScheduleSessionDialogOpen, setIsScheduleSessionDialogOpen] = useState(false);
   const [newSessionTopic, setNewSessionTopic] = useState('');
@@ -205,26 +204,25 @@ const StudySpherePage: FC = () => {
   const [newSessionGroup, setNewSessionGroup] = useState('');
   const [newSessionLocation, setNewSessionLocation] = useState('');
   
-  // Stats State
-  const [numConnections, setNumConnections] = useState(0); // Will be derived from actual connections if implemented
-
-  // Load connections for stats
   useEffect(() => {
     if (user) {
-        const connections = loadData<MockStudentProfile[]>(`connections-${user.uid}`, []);
-        setNumConnections(connections.length);
+        setStudyProfile(loadData('studyProfile', { ...initialProfileData, id: user.uid, name: user.email?.split('@')[0] || 'New User' }));
+        setSentRequests(loadData('sentRequests', []));
+        setConnections(loadData('connections', []));
+        setStudyGroups(loadData('studyGroups', initialStudyGroupsData));
+        setSharedResources(loadData('sharedResources', initialSharedResourcesData));
+        setStudySessions(loadData('studySessions', initialStudySessionsData));
     }
   }, [user]);
-
-
-  // Save states to localStorage when they change
+  
   useEffect(() => { saveData('studyProfile', studyProfile); }, [studyProfile, user]);
   useEffect(() => { saveData('studyGroups', studyGroups); }, [studyGroups, user]);
   useEffect(() => { saveData('sharedResources', sharedResources); }, [sharedResources, user]);
   useEffect(() => { saveData('studySessions', studySessions); }, [studySessions, user]);
   useEffect(() => { saveData('sentRequests', sentRequests); }, [sentRequests, user]);
+  useEffect(() => { saveData('connections', connections); }, [connections, user]);
 
-  // My Profile Logic
+
   const handleEditProfile = () => {
     setEditForm({ ...studyProfile }); 
     setIsEditDialogOpen(true);
@@ -248,7 +246,7 @@ const StudySpherePage: FC = () => {
   
   const handleSkillsArrayInputChange = (field: keyof UserProfile, value: string) => {
     const valuesArray = value.split(',').map(s => s.trim()).filter(s => s);
-    setEditForm(prev => ({ ...prev, [field]: valuesArray as any })); // Cast to any if type mismatch
+    setEditForm(prev => ({ ...prev, [field]: valuesArray as any })); 
   };
 
   const handleLearningStylesChange = (style: string, checked: boolean) => {
@@ -261,10 +259,8 @@ const StudySpherePage: FC = () => {
     });
   };
 
-
-  // Find Buddies Logic
   useEffect(() => {
-    let matches = potentialMatches; // Start with the static mock data
+    let matches = potentialMatches; 
     if (searchTerm) {
       matches = matches.filter(student =>
         student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -286,23 +282,16 @@ const StudySpherePage: FC = () => {
 
   const handleConnect = (student: MockStudentProfile) => {
     if (!user) {
-      toast({ variant: 'destructive', title: 'Error', description: 'You must be "logged in" (demo) to connect.' });
+      toast({ variant: 'destructive', title: 'Error', description: 'Mock user session not found.' });
       return;
     }
-    const connectionsKey = userLocalStorageKey('connections');
-    const currentConnections: MockStudentProfile[] = loadData('connections', []);
-    
-    if (!currentConnections.find(c => c.id === student.id)) {
-      const newConnections = [...currentConnections, student];
-      saveData('connections', newConnections);
-      setNumConnections(newConnections.length); 
+    if (!connections.find(c => c.id === student.id)) {
+      setConnections(prev => [...prev, student]);
     }
-    setSentRequests(prev => [...new Set([...prev, student.id])]); // Ensure unique IDs
+    setSentRequests(prev => [...new Set([...prev, student.id])]);
     toast({ title: 'Connection Request Transmitted!', description: `Signal sent to ${student.name}. (Simulated auto-acceptance for demo). Your connections list is updated locally.`, action: <ThumbsUp className="h-5 w-5 text-green-500" />});
   };
 
-
-  // Study Groups Logic
   const handleCreateGroup = (e: FormEvent) => {
     e.preventDefault();
     if (!newGroupName.trim() || !newGroupCourses.trim()) {
@@ -321,7 +310,7 @@ const StudySpherePage: FC = () => {
     setStudyGroups(prev => [newGroup, ...prev]);
     setIsCreateGroupDialogOpen(false);
     setNewGroupName(''); setNewGroupCourses(''); setNewGroupDescription('');
-    toast({ title: 'New Study Orbit Formed!', description: `${newGroup.name} is now active. Progress saved locally.`, action: <CheckCircleIcon className="h-5 w-5 text-green-500"/> });
+    toast({ title: 'New Study Orbit Formed!', description: `${newGroup.name} is now active. Progress saved locally in your browser.`, action: <CheckCircleIcon className="h-5 w-5 text-green-500"/> });
   };
 
   const handleJoinGroup = (groupId: string) => {
@@ -334,7 +323,6 @@ const StudySpherePage: FC = () => {
     }));
   };
 
-  // Shared Resources Logic
   const handleUploadResource = (e: FormEvent) => {
     e.preventDefault();
     if (!newResourceName.trim() || !newResourceCourse.trim() || !newResourceType.trim()) {
@@ -356,7 +344,6 @@ const StudySpherePage: FC = () => {
     toast({ title: 'Resource Transmitted to Nebula!', description: `${newResource.name} is now available. Progress saved locally.`, action: <CheckCircleIcon className="h-5 w-5 text-green-500"/> });
   };
 
-  // Study Sessions Logic
   const handleScheduleSession = (e: FormEvent) => {
     e.preventDefault();
     if (!newSessionTopic.trim() || !newSessionDateTime.trim()) {
@@ -399,19 +386,12 @@ const StudySpherePage: FC = () => {
     exit: { opacity: 0, y: -10, transition: { duration: 0.2, ease: "easeIn" } }
   };
   
-  const stats = useMemo(() => ({
-    connections: numConnections,
-    skills: studyProfile.skills?.length || 0,
-    projectTags: studyProfile.projectAreas?.length || 0,
-  }), [numConnections, studyProfile.skills, studyProfile.projectAreas]);
-
-
   return (
-    <div className="container mx-auto px-4 py-12 w-full max-w-5xl">
+    <div className="w-full">
       <div className="mb-8">
         <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground border-primary/30 hover:border-accent">
-          <Link href="/dashboard">
-            <Home className="mr-2 h-4 w-4" /> Back to Dashboard
+          <Link href="/">
+            <Home className="mr-2 h-4 w-4" /> Back to UniVerse Home
           </Link>
         </Button>
         <div className="text-center">
@@ -420,40 +400,29 @@ const StudySpherePage: FC = () => {
              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Welcome, cosmic voyager! Forge academic alliances, share celestial wisdom, and coordinate your study orbits.
             </p>
-             <p className="text-sm text-muted-foreground mt-2"> (Your profile and other data here are saved locally in your browser for this demo session!)</p>
+             <p className="text-sm text-muted-foreground mt-2"> (Your profile and other progress here is saved in your browser for this demo session!)</p>
         </div>
+        <p className="text-sm text-muted-foreground text-center mt-4">
+          Navigate through your profile, find study buddies, manage groups, share resources, and schedule sessions all in one place.
+        </p>
       </div>
-
-      {/* Stats Section */}
-      <Card className="mb-10 shadow-xl bg-card/70 backdrop-blur-md border-primary/30 p-2">
-        <CardHeader className="pt-4 pb-2">
-            <CardTitle className="text-2xl font-mono text-center text-primary">Your Study Sphere Stats</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-            <div><h3 className="text-3xl font-bold text-accent">{stats.connections}</h3><p className="text-sm text-muted-foreground">Connections Made</p></div>
-            <div><h3 className="text-3xl font-bold text-accent">{stats.skills}</h3><p className="text-sm text-muted-foreground">My Skills</p></div>
-            <div><h3 className="text-3xl font-bold text-accent">{stats.projectTags}</h3><p className="text-sm text-muted-foreground">My Project Areas</p></div>
-          </div>
-        </CardContent>
-      </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 mb-8 border-b border-border pb-1">
           <TabsTrigger value="profile" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-            <UserCircle className="mr-2 h-5 w-5" /> My Profile
+            <UserCircle className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> My Profile
           </TabsTrigger>
           <TabsTrigger value="browse" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-            <Search className="mr-2 h-5 w-5" /> Find Buddies
+            <Search className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Find Buddies
           </TabsTrigger>
           <TabsTrigger value="groups" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-            <Users className="mr-2 h-5 w-5" /> Study Groups
+            <Users className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Study Groups
           </TabsTrigger>
           <TabsTrigger value="resources" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-            <FileText className="mr-2 h-5 w-5" /> Resources
+            <FileText className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Resources
           </TabsTrigger>
           <TabsTrigger value="sessions" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-            <CalendarCheck className="mr-2 h-5 w-5" /> Sessions
+            <CalendarCheck className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Sessions
           </TabsTrigger>
         </TabsList>
         
@@ -464,11 +433,12 @@ const StudySpherePage: FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
+            className="min-h-[400px]" // Ensure content area has some min height
           >
             {/* My Profile Tab */}
             {activeTab === "profile" && (
               <TabsContent value="profile" forceMount>
-                <Card className="w-full max-w-3xl mx-auto shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
+                <Card className="w-full shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                   <CardHeader className="text-center relative">
                     <BookUser className="mx-auto h-20 w-20 text-primary mb-3 animate-subtle-pulse" />
                     <CardTitle className="text-3xl font-bold font-mono text-primary">{studyProfile.name}</CardTitle>
@@ -538,7 +508,7 @@ const StudySpherePage: FC = () => {
                  <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                   <CardHeader>
                     <div className="flex items-center space-x-3"><Search className="h-8 w-8 text-primary animate-subtle-pulse" /><CardTitle className="text-2xl font-mono text-primary">Find Your Constellation</CardTitle></div>
-                    <CardDescription className="text-muted-foreground">Filter and search for potential study partners.</CardDescription>
+                    <CardDescription className="text-muted-foreground">Filter and search for potential study partners. Your connections are saved locally!</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <Input type="search" placeholder="Search by name, skill, interest..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-input placeholder:text-muted-foreground" />
@@ -581,7 +551,7 @@ const StudySpherePage: FC = () => {
                 <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                    <CardHeader>
                      <div className="flex items-center space-x-3"><Users className="h-8 w-8 text-primary animate-subtle-pulse" /><CardTitle className="text-2xl font-mono text-primary">Collaborative Orbits</CardTitle></div>
-                    <CardDescription className="text-muted-foreground">Form or join study constellations.</CardDescription>
+                    <CardDescription className="text-muted-foreground">Form or join study constellations. Groups are saved locally.</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Dialog open={isCreateGroupDialogOpen} onOpenChange={setIsCreateGroupDialogOpen}>
@@ -633,7 +603,7 @@ const StudySpherePage: FC = () => {
                 <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                   <CardHeader>
                     <div className="flex items-center space-x-3"><FileText className="h-8 w-8 text-primary animate-subtle-pulse" /><CardTitle className="text-2xl font-mono text-primary">Knowledge Nebula</CardTitle></div>
-                    <CardDescription className="text-muted-foreground">Share and discover study materials.</CardDescription>
+                    <CardDescription className="text-muted-foreground">Share and discover study materials. Resources are saved locally.</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Dialog open={isUploadResourceDialogOpen} onOpenChange={setIsUploadResourceDialogOpen}>
@@ -682,7 +652,7 @@ const StudySpherePage: FC = () => {
                 <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                   <CardHeader>
                     <div className="flex items-center space-x-3"><CalendarCheck className="h-8 w-8 text-primary animate-subtle-pulse" /><CardTitle className="text-2xl font-mono text-primary">Synchronized Orbits</CardTitle></div>
-                    <CardDescription className="text-muted-foreground">Plan and join study sessions.</CardDescription>
+                    <CardDescription className="text-muted-foreground">Plan and join study sessions. Sessions are saved locally.</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <Dialog open={isScheduleSessionDialogOpen} onOpenChange={setIsScheduleSessionDialogOpen}>
@@ -738,9 +708,4 @@ const StudySpherePage: FC = () => {
   );
 };
 
-// Added missing imports for Select components
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 export default StudySpherePage;
-
-    
