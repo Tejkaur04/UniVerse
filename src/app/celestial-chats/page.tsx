@@ -6,9 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, MessageCircleQuestion, CalendarClock, Users, Archive, Mic, Send, FileText, Star } from 'lucide-react';
+import { ArrowLeft, MessageCircleQuestion, CalendarClock, Users, Archive, Mic, Send, FileText, Star, Bot } from 'lucide-react'; // Added Bot icon
 import CelestialChatsClient from '@/components/celestial-chats-client';
 import type { LucideIcon } from 'lucide-react';
 
@@ -23,7 +22,7 @@ interface Mentor {
 }
 
 interface AmaSession {
-  id: string;
+  id:string;
   mentorName: string;
   topic: string;
   date: string;
@@ -44,7 +43,7 @@ const hardcodedMentors: Mentor[] = [
   {
     id: "mentor1",
     name: "Dr. Orion Nebula",
-    avatarUrl: "https://placehold.co/100x100.png?text=ON",
+    avatarUrl: "https://placehold.co/100x100.png",
     dataAiHint: "scientist portrait",
     avatarFallback: "ON",
     bio: "Astrophysics Alumnus, now researching dark matter. Passionate about guiding students through complex cosmic theories.",
@@ -53,7 +52,7 @@ const hardcodedMentors: Mentor[] = [
   {
     id: "mentor2",
     name: "Cmdr. Lyra Starstrider",
-    avatarUrl: "https://placehold.co/100x100.png?text=LS",
+    avatarUrl: "https://placehold.co/100x100.png",
     dataAiHint: "engineer leader",
     avatarFallback: "LS",
     bio: "Senior Software Engineer at a leading space-tech company. Loves discussing career paths in tech and project management.",
@@ -130,10 +129,19 @@ export default function CelestialChatsPage() {
       </div>
 
       <div className="space-y-10">
-        {/* Upcoming AMA Sessions */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><CalendarClock className="mr-3 h-7 w-7 text-accent" />Upcoming AMA Sessions</CardTitle>
+            <CardTitle className="text-2xl flex items-center text-primary"><Bot className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Stellar Assist AI</CardTitle>
+            <CardDescription>Have a specific question? Get instant, AI-powered advice, drawing from the collective experience of seniors and alumni.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CelestialChatsClient />
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+          <CardHeader>
+            <CardTitle className="text-2xl flex items-center text-primary"><CalendarClock className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Upcoming AMA Sessions</CardTitle>
             <CardDescription>Join live discussions with seniors and alumni. Submit your questions in advance!</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -156,23 +164,10 @@ export default function CelestialChatsPage() {
             {hardcodedUpcomingAmas.length === 0 && <p className="text-muted-foreground">No upcoming AMA sessions scheduled. Check back soon!</p>}
           </CardContent>
         </Card>
-
-        {/* Ask the Collective Wisdom (Existing AI Client) */}
-        <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
-          <CardHeader>
-             <CardTitle className="text-2xl flex items-center text-primary"><Star className="mr-3 h-7 w-7 text-accent" />Ask the Collective Wisdom</CardTitle>
-            <CardDescription>Have a specific question? Get AI-powered advice, drawing from the experience of seniors and alumni.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* CelestialChatsClient is already designed to fit in a card like structure */}
-            <CelestialChatsClient />
-          </CardContent>
-        </Card>
         
-        {/* Meet Our Mentors */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><Users className="mr-3 h-7 w-7 text-accent" />Meet Our Mentors</CardTitle>
+            <CardTitle className="text-2xl flex items-center text-primary"><Users className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Meet Our Mentors</CardTitle>
             <CardDescription>Learn about the seniors and alumni guiding you through UniVerse.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -195,10 +190,9 @@ export default function CelestialChatsPage() {
           </CardContent>
         </Card>
 
-        {/* Stellar Guidance Archives */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><Archive className="mr-3 h-7 w-7 text-accent" />Stellar Guidance Archives</CardTitle>
+            <CardTitle className="text-2xl flex items-center text-primary"><Archive className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Stellar Guidance Archives</CardTitle>
             <CardDescription>Browse transcripts or recordings from past AMA sessions.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

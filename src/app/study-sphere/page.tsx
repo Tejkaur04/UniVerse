@@ -11,11 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, UsersRound, Pencil, SearchIcon, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, Brain } from 'lucide-react';
+import { ArrowLeft, UsersRound, Pencil, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, Brain } from 'lucide-react';
 import Image from 'next/image';
 
 // Hardcoded initial data
@@ -58,7 +58,6 @@ export default function StudySpherePage() {
   const [studyProfile, setStudyProfile] = useState<StudyProfileData>(initialStudyProfile);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // Temporary state for the edit dialog form
   const [editCoursesInput, setEditCoursesInput] = useState('');
   const [editLearningStyles, setEditLearningStyles] = useState<string[]>([]);
 
@@ -109,19 +108,22 @@ export default function StudySpherePage() {
             Back to Dashboard
           </Link>
         </Button>
-        <div className="flex items-center justify-center mb-4 text-center">
+        <div className="flex items-center justify-center mb-2 text-center">
           <UsersRound className="h-16 w-16 text-primary mr-4 animate-pulse" />
           <h1 className="text-4xl font-bold text-primary">Study Sphere</h1>
         </div>
-        <p className="text-xl text-center text-muted-foreground mb-10">
-          Navigate your academic journey. Define your profile, find partners, join groups, share resources, and coordinate sessions.
+        <p className="text-xl text-center text-muted-foreground mb-4">
+          Your cosmic hub for collaborative learning! Define your profile, find partners, join groups, and more.
+        </p>
+        <p className="text-md text-center text-foreground/80 mb-10">
+          Navigate your academic journey by connecting with fellow students. Let's make learning a shared adventure!
         </p>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-8">
           <TabsTrigger value="profile" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
-            <UserCircle className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />My Profile
+            <UserCircle className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform animate-subtle-pulse" />My Profile
           </TabsTrigger>
           <TabsTrigger value="find-buddies" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
             <Search className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Find Buddies
@@ -221,7 +223,7 @@ export default function StudySpherePage() {
             <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
               <CardHeader>
                 <CardTitle className="text-2xl flex items-center text-primary">
-                  <SearchIcon className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Find Your Constellation
+                  <Search className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Find Your Constellation
                 </CardTitle>
                 <CardDescription>Filter by courses and learning preferences to discover compatible study partners.</CardDescription>
               </CardHeader>
@@ -249,7 +251,7 @@ export default function StudySpherePage() {
                   </Select>
                 </div>
                 <Button onClick={() => handleDemoClick("Searching for partners... (Demo - results would appear below)")} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                  <SearchIcon className="mr-2 h-4 w-4" /> Search Partners
+                  <Search className="mr-2 h-4 w-4" /> Search Partners
                 </Button>
               </CardContent>
             </Card>

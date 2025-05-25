@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Lightbulb, Search, Users, Rocket, CheckSquare, MessageSquare, Trophy, Brain, Palette, Code2, Mic, Edit3, Paperclip, Eye, UserPlus, Info } from 'lucide-react';
+import { ArrowLeft, Lightbulb, Search, Users, Rocket, CheckSquare, MessageSquare, Trophy, Brain, Edit3, Paperclip, UserPlus, Info, GalleryVerticalEnd } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface ProjectIdea {
@@ -29,7 +29,7 @@ interface CollaboratorProfile {
   avatarUrl: string;
   avatarFallback: string;
   skills: string[];
-  interestedIn?: string; // e.g., type of projects
+  interestedIn?: string; 
   dataAiHint?: string;
 }
 
@@ -42,7 +42,7 @@ const hardcodedProjectIdeas: ProjectIdea[] = [
     description: "An app to track and promote eco-friendly practices on campus, like waste reduction and energy saving challenges.",
     skillsSought: ["Mobile Dev (React Native)", "Backend (Firebase)", "UI/UX Design"],
     initiator: "Eco Warrior",
-    initiatorAvatar: "https://placehold.co/80x80.png?text=EW",
+    initiatorAvatar: "https://placehold.co/80x80.png",
     dataAiHint: "nature student",
   },
   {
@@ -51,7 +51,7 @@ const hardcodedProjectIdeas: ProjectIdea[] = [
     description: "A tool that uses AI to generate personalized study guides and practice questions based on course materials.",
     skillsSought: ["Python (AI/ML)", "Web Dev (Flask/Django)", "NLP"],
     initiator: "Nova Spark",
-    initiatorAvatar: "https://placehold.co/80x80.png?text=NS",
+    initiatorAvatar: "https://placehold.co/80x80.png",
     dataAiHint: "tech innovator",
   },
   {
@@ -60,7 +60,7 @@ const hardcodedProjectIdeas: ProjectIdea[] = [
     description: "A web app for a self-guided tour of public art installations around campus, with AR features.",
     skillsSought: ["Web AR (A-Frame/AR.js)", "3D Modeling", "Content Curation"],
     initiator: "Art Explorer",
-    initiatorAvatar: "https://placehold.co/80x80.png?text=AE",
+    initiatorAvatar: "https://placehold.co/80x80.png",
     dataAiHint: "artist creative",
   },
 ];
@@ -69,7 +69,7 @@ const hardcodedCollaborators: CollaboratorProfile[] = [
   {
     id: "collab1",
     name: "Alex Cipher",
-    avatarUrl: "https://placehold.co/80x80.png?text=AC",
+    avatarUrl: "https://placehold.co/80x80.png",
     avatarFallback: "AC",
     skills: ["Python", "Data Analysis", "Machine Learning"],
     interestedIn: "AI-driven projects",
@@ -78,7 +78,7 @@ const hardcodedCollaborators: CollaboratorProfile[] = [
   {
     id: "collab2",
     name: "Lyra Canvas",
-    avatarUrl: "https://placehold.co/80x80.png?text=LC",
+    avatarUrl: "https://placehold.co/80x80.png",
     avatarFallback: "LC",
     skills: ["Graphic Design", "Illustration", "Branding"],
     interestedIn: "Visually impactful projects",
@@ -86,8 +86,8 @@ const hardcodedCollaborators: CollaboratorProfile[] = [
   },
 ];
 
-const allAvailableSkills = ["Mobile Dev (React Native)", "Backend (Firebase)", "UI/UX Design", "Python (AI/ML)", "Web Dev (Flask/Django)", "NLP", "Web AR (A-Frame/AR.js)", "3D Modeling", "Content Curation", "Frontend Development (React)", "Node.js", "Creative Writing", "Data Analysis", "Machine Learning", "Illustration", "Branding", "Marketing", "Research"];
-
+// Check if the feature is fully implemented
+const isFeatureImplemented = false; 
 
 export default function NebulaOfIdeasPage() {
   const { toast } = useToast();
@@ -100,6 +100,29 @@ export default function NebulaOfIdeasPage() {
     });
   };
 
+  if (!isFeatureImplemented) {
+    return (
+      <div className="container mx-auto px-4 py-12 w-full max-w-4xl text-center">
+        <Button asChild variant="outline" className="mb-10 bg-card hover:bg-accent hover:text-accent-foreground">
+          <Link href="/dashboard">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </Button>
+        <Rocket className="h-24 w-24 text-primary mx-auto mb-8 animate-pulse" />
+        <h1 className="text-5xl font-bold text-primary mb-6">Nebula of Ideas - Hatching Soon!</h1>
+        <p className="text-xl text-muted-foreground mb-4">
+          Prepare to ignite your innovative projects and discover your dream team!
+        </p>
+        <p className="text-lg text-foreground/80 mb-8 max-w-2xl mx-auto">
+          The Nebula of Ideas will soon be a vibrant hub where you can share your project concepts, showcase your unique skills, find collaborators with the expertise you need, and bring your groundbreaking visions to life. From tech innovations to creative endeavors, this is where campus collaboration will take flight!
+        </p>
+        <p className="text-md text-accent font-semibold">Get your ideas ready for launch!</p>
+      </div>
+    );
+  }
+
+  // Fully implemented feature content (currently unreachable)
   return (
     <div className="container mx-auto px-4 py-12 w-full max-w-4xl">
       <div className="mb-8">
@@ -119,7 +142,6 @@ export default function NebulaOfIdeasPage() {
       </div>
 
       <div className="space-y-10">
-        {/* Launch Your Project Idea */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center text-primary"><Rocket className="mr-3 h-7 w-7 text-accent" />Launch Your Project Idea</CardTitle>
@@ -134,7 +156,6 @@ export default function NebulaOfIdeasPage() {
           </CardContent>
         </Card>
 
-        {/* Showcase Your Skills */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center text-primary"><Brain className="mr-3 h-7 w-7 text-accent" />Showcase Your Skills</CardTitle>
@@ -154,7 +175,6 @@ export default function NebulaOfIdeasPage() {
           </CardContent>
         </Card>
 
-        {/* Explore Project Constellations (Browse & Search) */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center text-primary"><Search className="mr-3 h-7 w-7 text-accent" />Explore Project Constellations</CardTitle>
@@ -198,7 +218,6 @@ export default function NebulaOfIdeasPage() {
           </CardContent>
         </Card>
 
-        {/* Find Your Co-Creators */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center text-primary"><Users className="mr-3 h-7 w-7 text-accent" />Find Your Co-Creators</CardTitle>
@@ -227,7 +246,6 @@ export default function NebulaOfIdeasPage() {
           </CardContent>
         </Card>
 
-        {/* Project Collaboration Hub (Placeholder) */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center text-primary"><MessageSquare className="mr-3 h-7 w-7 text-accent" />Project Collaboration Hub</CardTitle>
@@ -240,10 +258,9 @@ export default function NebulaOfIdeasPage() {
           </CardContent>
         </Card>
 
-        {/* Galaxy of Achievements (Placeholder) */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><Trophy className="mr-3 h-7 w-7 text-accent" />Galaxy of Achievements</CardTitle>
+            <CardTitle className="text-2xl flex items-center text-primary"><GalleryVerticalEnd className="mr-3 h-7 w-7 text-accent" />Galaxy of Achievements</CardTitle> {/* Changed icon from Trophy */}
           </CardHeader>
           <CardContent>
             <div className="text-foreground/90">
@@ -257,3 +274,5 @@ export default function NebulaOfIdeasPage() {
     </div>
   );
 }
+
+    

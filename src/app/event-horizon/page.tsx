@@ -7,9 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CalendarDays, Search, Filter, Users, Share2, CalendarPlus, CheckCircle, Info, Wand2, Star } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Search, Filter, Users, Share2, CalendarPlus, CheckCircle, Info, Wand2, Star, Telescope } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 interface CampusEvent {
@@ -36,7 +35,7 @@ const hardcodedEvents: CampusEvent[] = [
     organizer: "Computer Science Club",
     tags: ["Coding", "Workshop", "Technology"],
     type: "official",
-    icon: Users, // Default icon, can be specific
+    icon: Users, 
   },
   {
     id: "evt2",
@@ -92,6 +91,32 @@ export default function EventHorizonPage() {
   const officialEvents = hardcodedEvents.filter(event => event.type === 'official');
   const peerEvents = hardcodedEvents.filter(event => event.type === 'peer');
 
+  // Check if the feature is fully implemented
+  const isFeatureImplemented = false; 
+
+  if (!isFeatureImplemented) {
+    return (
+      <div className="container mx-auto px-4 py-12 w-full max-w-4xl text-center">
+        <Button asChild variant="outline" className="mb-10 bg-card hover:bg-accent hover:text-accent-foreground">
+          <Link href="/dashboard">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </Button>
+        <Telescope className="h-24 w-24 text-primary mx-auto mb-8 animate-pulse" />
+        <h1 className="text-5xl font-bold text-primary mb-6">Event Horizon - Coming Soon!</h1>
+        <p className="text-xl text-muted-foreground mb-4">
+          Get ready to explore a universe of campus happenings!
+        </p>
+        <p className="text-lg text-foreground/80 mb-8 max-w-2xl mx-auto">
+          Soon, Event Horizon will be your go-to telescope for discovering exciting academic workshops, career fairs, social gatherings, peer-led study sessions, and guest lectures. You'll be able to filter by your interests, RSVP, and never miss an opportunity to enrich your university experience.
+        </p>
+        <p className="text-md text-accent font-semibold">Stay tuned for launch!</p>
+      </div>
+    );
+  }
+
+  // Fully implemented feature content (currently unreachable due to the check above)
   return (
     <div className="container mx-auto px-4 py-12 w-full max-w-4xl">
       <div className="mb-8">
@@ -111,7 +136,6 @@ export default function EventHorizonPage() {
       </div>
 
       <div className="space-y-10">
-        {/* Search and Filter */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center text-primary"><Search className="mr-3 h-7 w-7 text-accent" />Navigate the Cosmos</CardTitle>
@@ -142,7 +166,6 @@ export default function EventHorizonPage() {
           </CardContent>
         </Card>
 
-        {/* Official Campus Events */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center text-primary"><CalendarDays className="mr-3 h-7 w-7 text-accent" />Official Campus Constellations</CardTitle>
@@ -176,7 +199,6 @@ export default function EventHorizonPage() {
           </CardContent>
         </Card>
         
-        {/* Peer-Organized Gatherings */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center text-primary"><Users className="mr-3 h-7 w-7 text-accent" />Student-Led Star Clusters</CardTitle>
@@ -209,7 +231,6 @@ export default function EventHorizonPage() {
           </CardContent>
         </Card>
 
-        {/* Personalized Recommendations */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
             <CardTitle className="text-2xl flex items-center text-primary"><Wand2 className="mr-3 h-7 w-7 text-accent" />Cosmic Compass (Recommendations)</CardTitle>
@@ -221,7 +242,6 @@ export default function EventHorizonPage() {
             </p>
           </CardContent>
         </Card>
-
       </div>
     </div>
   );
