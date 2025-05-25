@@ -11,14 +11,14 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogTrigger, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, UsersRound, Pencil, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, CheckCircle, Info, Bot, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import AlienGuide from '@/components/AlienGuide';
+// AlienGuide is now global, no need to import here directly if it's in layout.
 
 const ALL_AVAILABLE_COURSES = ["Astrophysics 101", "Quantum Mechanics", "Calculus II", "Organic Chemistry", "Literary Theory", "Computer Science 101", "History of Art"];
 const ALL_LEARNING_STYLES = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
@@ -95,44 +95,22 @@ const tabContentVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeInOut" } },
 };
 
-const getLocalStorageKey = (baseKey: string, userId?: string) => {
-  return userId ? `${baseKey}-${userId}` : `${baseKey}-guest`; 
+const getLocalStorageKey = (baseKey: string) => {
+  // In a real app, you'd use the actual logged-in user's ID.
+  // For this demo with mock auth, we'll use a static ID or a mock one.
+  const mockUserId = "demoUser123"; // Or retrieve from your mock AuthContext if available
+  return `uniVerse-${baseKey}-${mockUserId}`;
 };
 
 
 export default function StudySpherePage() {
   const { toast } = useToast();
-  const mockUserId = "demoUser123"; 
-
-  const [studyProfile, setStudyProfile] = useState<StudyProfileData>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(getLocalStorageKey('uniVerseStudyProfile', mockUserId));
-      return saved ? JSON.parse(saved) : initialStudyProfileData;
-    }
-    return initialStudyProfileData;
-  });
+  
+  const [studyProfile, setStudyProfile] = useState<StudyProfileData>(initialStudyProfileData);
   const [potentialMatches, setPotentialMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData);
-  const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(() => {
-     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(getLocalStorageKey('uniVerseStudyGroups', mockUserId));
-      return saved ? JSON.parse(saved) : initialStudyGroupsData;
-    }
-    return initialStudyGroupsData;
-  });
-  const [sharedResources, setSharedResources] = useState<SharedResource[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(getLocalStorageKey('uniVerseSharedResources', mockUserId));
-      return saved ? JSON.parse(saved) : initialSharedResourcesData;
-    }
-    return initialSharedResourcesData;
-  });
-  const [studySessions, setStudySessions] = useState<StudySession[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(getLocalStorageKey('uniVerseStudySessions', mockUserId));
-      return saved ? JSON.parse(saved) : initialStudySessionsData;
-    }
-    return initialStudySessionsData;
-  });
+  const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(initialStudyGroupsData);
+  const [sharedResources, setSharedResources] = useState<SharedResource[]>(initialSharedResourcesData);
+  const [studySessions, setStudySessions] = useState<StudySession[]>(initialStudySessionsData);
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editCoursesInput, setEditCoursesInput] = useState('');
@@ -140,7 +118,7 @@ export default function StudySpherePage() {
 
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('');
   const [selectedStyleFilter, setSelectedStyleFilter] = useState<string>('');
-  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(potentialMatches); 
+  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData); 
 
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -159,32 +137,34 @@ export default function StudySpherePage() {
   const [newSessionLocation, setNewSessionLocation] = useState('');
   
   const [activeTab, setActiveTab] = useState("profile");
-  const [guideMessage, setGuideMessage] = useState("Welcome to the Study Sphere! Start by setting up your profile.");
-
-
+  
+  // Load data from localStorage on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(getLocalStorageKey('uniVerseStudyProfile', mockUserId), JSON.stringify(studyProfile));
-    }
-  }, [studyProfile, mockUserId]);
+    const savedProfile = localStorage.getItem(getLocalStorageKey('studyProfile'));
+    if (savedProfile) setStudyProfile(JSON.parse(savedProfile));
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(getLocalStorageKey('uniVerseStudyGroups', mockUserId), JSON.stringify(studyGroups));
-    }
-  }, [studyGroups, mockUserId]);
+    const savedGroups = localStorage.getItem(getLocalStorageKey('studyGroups'));
+    if (savedGroups) setStudyGroups(JSON.parse(savedGroups)); else setStudyGroups(initialStudyGroupsData);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(getLocalStorageKey('uniVerseSharedResources', mockUserId), JSON.stringify(sharedResources));
-    }
-  }, [sharedResources, mockUserId]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(getLocalStorageKey('uniVerseStudySessions', mockUserId), JSON.stringify(studySessions));
-    }
-  }, [studySessions, mockUserId]);
+    const savedResources = localStorage.getItem(getLocalStorageKey('sharedResources'));
+    if (savedResources) setSharedResources(JSON.parse(savedResources)); else setSharedResources(initialSharedResourcesData);
+
+    const savedSessions = localStorage.getItem(getLocalStorageKey('studySessions'));
+    if (savedSessions) setStudySessions(JSON.parse(savedSessions)); else setStudySessions(initialStudySessionsData);
+    
+    // Initialize potential matches (not typically saved this way but for demo consistency)
+    setPotentialMatches(initialPotentialMatchesData);
+    setFilteredMatches(initialPotentialMatchesData);
+
+
+  }, []);
+
+  // Save data to localStorage when it changes
+  useEffect(() => {localStorage.setItem(getLocalStorageKey('studyProfile'), JSON.stringify(studyProfile));}, [studyProfile]);
+  useEffect(() => {localStorage.setItem(getLocalStorageKey('studyGroups'), JSON.stringify(studyGroups));}, [studyGroups]);
+  useEffect(() => {localStorage.setItem(getLocalStorageKey('sharedResources'), JSON.stringify(sharedResources));}, [sharedResources]);
+  useEffect(() => {localStorage.setItem(getLocalStorageKey('studySessions'), JSON.stringify(studySessions));}, [studySessions]);
 
 
   useEffect(() => {
@@ -195,7 +175,7 @@ export default function StudySpherePage() {
   }, [studyProfile, isEditDialogOpen]);
 
   useEffect(() => {
-    let matches = [...potentialMatches]; 
+    let matches = [...initialPotentialMatchesData]; 
     if (selectedCourseFilter && selectedCourseFilter !== 'all') {
       matches = matches.filter(match => match.courses.includes(selectedCourseFilter));
     }
@@ -203,7 +183,7 @@ export default function StudySpherePage() {
       matches = matches.filter(match => match.learningStyles.includes(selectedStyleFilter));
     }
     setFilteredMatches(matches);
-  }, [selectedCourseFilter, selectedStyleFilter, potentialMatches]); 
+  }, [selectedCourseFilter, selectedStyleFilter]); 
 
   const handleEditProfile = () => setIsEditDialogOpen(true);
 
@@ -213,7 +193,7 @@ export default function StudySpherePage() {
     setIsEditDialogOpen(false);
     toast({
         title: "Profile Updated (Locally)",
-        description: "Your study profile has been saved in your browser for this session. This progress will be remembered next time you visit on this browser!",
+        description: "Your study profile has been saved in your browser! This progress will be remembered next time you visit.",
     });
   };
 
@@ -252,7 +232,7 @@ export default function StudySpherePage() {
     });
   };
 
-  const handleJoinGroup = (groupId: number) => {
+ const handleJoinGroup = (groupId: number) => {
     let groupJoinedSuccessfully = false;
     let groupName = "";
     setStudyGroups(prevGroups =>
@@ -277,7 +257,7 @@ export default function StudySpherePage() {
             toast({
                 title: "Already Joined",
                 description: `You are already a member of "${group.name}".`,
-                variant: "default",
+                variant: "default", // Or remove variant for default toast
             });
         }
     }
@@ -339,14 +319,14 @@ export default function StudySpherePage() {
     });
   };
 
-  const handleToggleJoinSession = (sessionId: number) => {
-    let sessionJoined = false;
+ const handleToggleJoinSession = (sessionId: number) => {
+    let sessionJoinedInitially = false;
     let sessionTopic = "";
 
     setStudySessions(prevSessions =>
       prevSessions.map(session => {
         if (session.id === sessionId) {
-          sessionJoined = !session.isJoinedByCurrentUser; 
+          sessionJoinedInitially = !!session.isJoinedByCurrentUser; 
           sessionTopic = session.topic;
           return { ...session, isJoinedByCurrentUser: !session.isJoinedByCurrentUser };
         }
@@ -355,14 +335,16 @@ export default function StudySpherePage() {
     );
     
     if (sessionTopic) {
+      const nowJoined = !sessionJoinedInitially;
         toast({
-            title: sessionJoined ? "Joined Session! (Locally)" : "Left Session (Locally)",
-            description: (sessionJoined 
+            title: nowJoined ? "Joined Session! (Locally)" : "Left Session (Locally)",
+            description: (nowJoined 
                 ? `You have successfully joined "${sessionTopic}".` 
                 : `You have left "${sessionTopic}".`) + " Status saved in your browser.",
         });
     }
   };
+
 
   const handleDemoClick = (message: string) => {
     toast({
@@ -374,34 +356,11 @@ export default function StudySpherePage() {
   
   const motionKey = activeTab;
 
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    switch (value) {
-      case "profile":
-        setGuideMessage("Here's your study profile! Keep your courses and learning styles up-to-date.");
-        break;
-      case "find-buddies":
-        setGuideMessage("Looking for study partners? Use the filters to find students with similar interests!");
-        break;
-      case "groups":
-        setGuideMessage("Collaborate in groups! Join an existing one or create your own cosmic crew.");
-        break;
-      case "resources":
-        setGuideMessage("Share your knowledge! Upload notes or find helpful resources from others.");
-        break;
-      case "sessions":
-        setGuideMessage("Time to sync up! Schedule study sessions or join ones already planned.");
-        break;
-      default:
-        setGuideMessage("Welcome to the Study Sphere! Explore the tabs to get started.");
-    }
-  };
-
 
   return (
     <div className="container mx-auto px-4 py-12 w-full max-w-4xl">
       <div className="mb-8">
-        <Button asChild variant="outline" className="mb-6">
+        <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground">
           <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to UniVerse Home
@@ -415,26 +374,26 @@ export default function StudySpherePage() {
           Your cosmic hub for collaborative learning! Find partners, join groups, and share knowledge.
         </p>
          <p className="text-md text-center text-foreground/80 mb-10">
-          Welcome, scholar! Shape your study profile, explore connections, and launch your academic journey to new heights. Your progress here is saved in your browser for this session!
+            Welcome, scholar! Shape your study profile and launch your academic journey. Your progress here is saved locally in your browser!
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="w-full" onValueChange={handleTabChange} value={activeTab}>
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-8">
-          <TabsTrigger value="profile" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
-            <UserCircle className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform animate-subtle-pulse" />My Profile
+      <Tabs defaultValue="profile" className="w-full" onValueChange={setActiveTab} value={activeTab}>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 mb-8 border-b border-border pb-1">
+          <TabsTrigger value="profile" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold hover:text-primary">
+            <UserCircle className="mr-2 h-4 w-4" />My Profile
           </TabsTrigger>
-          <TabsTrigger value="find-buddies" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
-            <Search className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Find Buddies
+          <TabsTrigger value="find-buddies" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold hover:text-primary">
+            <Search className="mr-2 h-4 w-4" />Find Buddies
           </TabsTrigger>
-          <TabsTrigger value="groups" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
-            <Users className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Study Groups
+          <TabsTrigger value="groups" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold hover:text-primary">
+            <Users className="mr-2 h-4 w-4" />Study Groups
           </TabsTrigger>
-          <TabsTrigger value="resources" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
-            <FileText className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Resources
+          <TabsTrigger value="resources" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold hover:text-primary">
+            <FileText className="mr-2 h-4 w-4" />Resources
           </TabsTrigger>
-          <TabsTrigger value="sessions" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
-            <Clock className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Sessions
+          <TabsTrigger value="sessions" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold hover:text-primary">
+            <Clock className="mr-2 h-4 w-4" />Sessions
           </TabsTrigger>
         </TabsList>
 
@@ -861,8 +820,7 @@ export default function StudySpherePage() {
             </TabsContent>
         </motion.div>
       </Tabs>
-      {/* <AlienGuide message={guideMessage} /> */}
+      {/* AlienGuide is now global and takes care of its own messaging */}
     </div>
   );
 }
-
