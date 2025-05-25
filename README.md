@@ -1,162 +1,223 @@
+# 🌌 UniVerse – Your Cosmic Campus Companion
 
-# UniVerse 🌌✨ - Your Cosmic Campus Companion
-
-**Navigate your university journey like never before! UniVerse is a feature-rich, space-themed web application designed to be the ultimate hub for students seeking academic collaboration, event discovery, insightful guidance, and innovative project development, fostering connections with peers, seniors, and alumni.**
+**Navigate your university journey like never before!** UniVerse is a space-themed, feature-rich platform designed to be your central hub for collaboration, events, mentorship, and innovation – all through an immersive, celestial interface.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Overview 🌠
-
-UniVerse is an immersive platform built to enhance the student experience by providing a centralized **dashboard and interactive hub** for all campus needs, all within an engaging and thematically exciting space environment. From finding the perfect study buddy and discovering campus events to gaining wisdom from AI and peers, or launching your next big project, UniVerse aims to connect, support, and inspire students by facilitating meaningful interactions with fellow students, experienced seniors, and guiding alumni (professors can be considered part of this "alumni/mentor" group).
-
-This project showcases a highly interactive frontend experience, leveraging modern web technologies to simulate a dynamic and personalized platform. Core features are currently implemented with client-side persistence (`localStorage`) for a seamless single-user demo experience, laying a strong foundation for a fully-fledged, collaborative application with real-time connections.
-
 ---
 
-<!--
-**🚀 Live Demo (Optional)**
-[Link to your live demo if you have one]
+## 🌠 Overview
 
-**📸 Screenshots (Optional)**
-[Consider adding screenshots here to showcase the UI]
--->
+UniVerse brings together students, seniors, and alumni in one platform, offering features like peer finding, study group creation, AI guidance, and project matchmaking – all stored locally for a demo experience using `localStorage`.
+This frontend-focused application is visually stunning and highly interactive, simulating a fully connected campus environment.
 
-## Core Features 🪐
+---
+## Workflow-Flowchart :
+<details>
+<summary>📊 Flowchart Placeholder (Click to expand)</summary>
 
-UniVerse is built around four primary constellations of functionality, all accessible via a persistent sidebar acting as your main navigation dashboard:
+```mermaid
+flowchart TD
+    A[Landing Page - root] --> B[Welcome Hero Section with Starry Background]
+    B --> C[Alien Guide Intro and Tips]
+    B --> D[Feature Cards: Study Sphere, Event Horizon, Celestial Chats, Nebula of Ideas]
+    D --> E[Detailed Explanations of Features]
 
-1.  **Study Sphere 🧑‍🚀🤝🧑‍🚀 (Interactive Demo with Local Persistence)**
-    *   **Detailed Study Profiles:** Customize your academic persona by specifying courses, skills, interests, project areas, and preferred learning styles (Visual, Auditory, Kinesthetic, Reading/Writing). Profile data is saved locally.
-    *   **Dynamic Buddy Finder:** Discover and connect with potential study partners by filtering based on courses, learning styles, and other profile attributes.
-    *   **Peer Connections:** Initiate connections with peers. Interactions and connections are currently managed locally. (Future: Real-time connection requests and shared profiles).
-    *   **Group Collaboration:** Create new study groups or join existing ones (data saved locally).
-    *   **Resource Sharing:** "Upload" and browse study materials (notes, summaries) within your local session.
-    *   **Session Coordination:** Schedule and join study sessions (saved locally).
+    A --> F[User clicks User Icon]
+    F --> G{Is Logged In?}
+    G -- No --> H[Go to login or signup]
+    H --> I[Signup Page]
+    H --> J[Login Page]
+    I --> K[Enter Email and Password]
+    J --> L[Enter Email and Password]
+    K --> M[Create Mock Session and Redirect to root]
+    L --> M
 
-2.  **Event Horizon 🗓️🔭 (Interactive Demo with Local Persistence)**
-    *   **Comprehensive Event Discovery:** Browse official campus events and peer-organized gatherings.
-    *   **Advanced Filtering:** Search by keywords or filter events by interest tags.
-    *   **Interactive RSVPs & Interest Marking:** Mark your attendance or interest, with choices saved locally.
-    *   **Peer Event Creation:** Launch your own study sessions or informal meetups for others to see (within your local session).
-    *   **Simulated Recommendations:** Get a glimpse of potential event recommendations based on locally available data.
+    G -- Yes --> M[Main Page with Sidebar]
 
-3.  **Celestial Chats 🤖💬 (Functional AI Feature & Simulated Mentor Interaction)**
-    *   **Stellar Assist AI:** Engage with an AI (powered by Genkit) trained to provide guidance and answer questions, embodying the collective wisdom of seniors and alumni.
-    *   **Meet Mentors & AMAs:** View profiles of (hardcoded) senior students and alumni mentors. Explore upcoming (hardcoded) "Ask Me Anything" sessions.
-    *   **Mentor Connections:** Reach out to mentors and alumni. Connection requests are currently simulated and managed locally. (Future: Direct messaging and confirmed connections with real mentors/professors).
+    M --> N[User Stats Sidebar]
+    N --> O[Navigation: Study Sphere, Event Horizon, Chats, Ideas, Connections]
+    N --> P[Stats: Connections, Skills, Projects]
+    N --> Q[Edit My Profile Button]
 
-4.  **Nebula of Ideas 💡🚀 (Conceptual Feature with Partial Interactivity)**
-    *   **Showcase for Innovation:** A hub for students to share project ideas and find collaborators.
-    *   **Collaborator Connections:** Connect with project initiators to join innovative ventures. Connection requests are currently simulated and managed locally. (Future: Team formation tools and shared project spaces).
-    *   *(Currently, this feature primarily showcases project ideas with basic connection simulation. Enhanced interactivity like submitting ideas to `localStorage` and dynamic filtering is a planned enhancement.)*
+    Q --> R[Open Profile Dialog]
+    R --> S[Update Personal Info and Preferences]
+    S --> T[Save to LocalStorage]
 
-**Unique UniVerse Elements:**
+    O --> U[Study Sphere]
+    O --> V[Event Horizon]
+    O --> W[Celestial Chats]
+    O --> X[Nebula of Ideas]
+    O --> Y[My Connections]
 
-*   **Immersive Space Theme:** A visually stunning interface with a dynamic starry background, cosmic color palette, and thematic icons and animations.
-*   **Global Alien Guide 👽:** A friendly, animated bot that provides contextual tips and guidance throughout the application, enhancing user onboarding and engagement.
-*   **Persistent User Stats & Navigation Sidebar:** An always-visible sidebar (your main **dashboard for easy access**) displaying key user statistics (connections, skills, project areas) and providing quick navigation to all core features, including a dedicated "My Connections" page.
-*   **Mock Authentication:** A simulated login/signup system allowing for a personalized demo experience and `localStorage` data scoping.
+    U --> U1[Alien Guide Tips]
+    U --> U2[Tabs: Buddies, Groups, Resources, Sessions]
 
-## Tech Stack 🛠️
+    U2 --> U3[Find Buddies and Connect]
+    U2 --> U4[Join or Create Study Groups]
+    U2 --> U5[Upload and View Resources]
+    U2 --> U6[Schedule or Join Study Sessions]
 
-*   **Frontend:**
-    *   **Next.js 15+ (App Router):** For server-side rendering, client-side navigation, and a modern React framework.
-    *   **React 18+:** For building dynamic user interfaces.
-    *   **TypeScript:** For type safety and improved code quality.
-    *   **ShadCN UI:** Beautifully designed, accessible, and customizable UI components.
-    *   **Tailwind CSS:** For utility-first styling and rapid UI development.
-    *   **Lucide Icons:** A comprehensive and clean icon library.
-    *   **Framer Motion:** For smooth and engaging animations (used for some UI elements).
-    *   **`react-tsparticles` & `tsparticles-slim`:** For the dynamic starry background effect.
-    *   **Browser `localStorage`:** For client-side data persistence to simulate a dynamic and personalized experience for individual users.
-*   **Artificial Intelligence:**
-    *   **Genkit (by Google):** Powers the "Stellar Assist AI" in Celestial Chats.
-*   **State Management:**
-    *   React Context API (for mock authentication).
-    *   Component-level state (`useState`, `useEffect`) for UI interactivity and `localStorage` management.
+    V --> V1[Alien Guide Tips]
+    V --> V2[Tabs: Discover Events, Create Event, Recommendations, All Events]
+    V2 --> V3[RSVP or Mark Interest]
+    V2 --> V4[Create Peer Event]
 
-## Getting Started 🚀
+    W --> W1[Alien Guide Tips]
+    W --> W2[AI Chat, AMAs, Mentors, Archives]
+    W2 --> W3[Connect to Mentor]
 
-To run UniVerse locally:
+    X --> X1[Alien Guide Tips]
+    X --> X2[View Project Ideas]
+    X2 --> X3[Connect to Project Starters]
 
-1.  **Prerequisites:**
-    *   Node.js (v18.x or later recommended)
-    *   npm, yarn, or pnpm
+    Y --> Y1[Alien Guide Tips]
+    Y --> Y2[View All Connections]
+    Y2 --> Y3[Message - Toast]
+    Y2 --> Y4[Disconnect]
 
-2.  **Clone the Repository (if applicable):**
-    ```bash
-    git clone <repository-url>
-    cd <project-directory>
-    ```
-
-3.  **Install Dependencies:**
-    ```bash
-    npm install
-    # or
-    # yarn install
-    # or
-    # pnpm install
-    ```
-
-4.  **Environment Variables (Mock Setup):**
-    *   The project is currently set up for mock authentication and does not require external API keys for its core demo functionality.
-    *   If Genkit AI features are to be used with live models, a `.env` file with appropriate API keys (e.g., `GOOGLE_API_KEY`) would be needed.
-
-5.  **Run the Development Server:**
-    ```bash
-    npm run dev
-    ```
-    The application will typically be available at `http://localhost:3000` (or the port specified in your `package.json` if changed from default).
-
-## Project Structure (Simplified) 📁
+    M --> Z[Header Avatar Dropdown]
+    Z --> AA[Log Out]
+    AA --> AB[Clear Session and Hide Sidebar]
 
 ```
+
+</details>
+
+## 🪐 Core Features
+
+UniVerse is organized into four primary feature modules, all navigable via a persistent sidebar:
+
+### 1\. Study Sphere 🧑‍🚀🤝🧑‍🚀
+
+* Customizable academic profiles (learning styles, skills, courses)
+* Buddy Finder with filterable matching
+* Local peer connections
+* Group creation/joining
+* Resource upload & sharing
+* Study session scheduling
+    *(All data stored locally)*
+
+### 2\. Event Horizon 🗓️🔭
+
+* Campus-wide and peer-hosted event discovery
+* Keyword and tag-based filtering
+* RSVP and mark interest features (persisted locally)
+* Peer event creation with form validation
+* Simulated event recommendations
+
+### 3\. Celestial Chats 🤖💬
+
+* Stellar Assist AI powered by Genkit (Google)
+* Mentor/Alumni profiles and AMA sessions (mocked)
+* Simulated mentor connection flows (local-only)
+
+### 4\. Nebula of Ideas 💡🚀
+
+* Browse student-led project ideas
+* Simulated requests to connect and collaborate
+* *(WIP) Form to submit and filter project ideas*
+* *(Future) Real-time project team spaces*
+
+## 👽 Unique Elements
+
+* **Animated Starry Background** – Powered by `react-tsparticles`
+* **Global Alien Guide** – Contextual animated helper across the app
+* **Persistent Navigation Sidebar** – Shows user stats and access to all features
+* **Mock Authentication System** – Simulates signup/login using `localStorage`
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+* [Next.js](https://nextjs.org/) 15+ (App Router)
+* [React](https://react.dev/) 18+ with [TypeScript](https://www.typescriptlang.org/)
+* [Tailwind CSS](https://tailwindcss.com/) + [ShadCN UI](https://ui.shadcn.com/)
+* [Lucide Icons](https://lucide.dev/) + [Framer Motion](https://www.framer.com/motion/)
+* [`react-tsparticles`](https://www.google.com/search?q=https://github.com/tsparticles/react-tsparticles) for starry background
+
+### State & Persistence
+
+* [React Context API](https://react.dev/learn/passing-data-deeply-with-context) for authentication
+* `useState`, `useEffect` (React Hooks) for component-level state
+* [`localStorage`](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) for user data persistence
+
+### AI Integration
+
+* [Genkit (Google)](https://genkit.dev/) – Powers the AI mentor/study assistant
+
+## 🚀 Getting Started
+
+### 1\. Prerequisites
+
+* [Node.js](https://nodejs.org/en/) v18+
+* [npm](https://www.npmjs.com/) / [yarn](https://yarnpkg.com/) / [pnpm](https://pnpm.io/)
+
+### 2\. Clone & Install
+
+```bash
+git clone <repository-url>
+cd <project-directory>
+npm install  # or yarn / pnpm install
+```
+
+### 3\. Run Locally
+
+```bash
+npm run dev
+# App usually runs at http://localhost:3000
+```
+
+### 4\. Environment Variables (Optional)
+
+To enable live Genkit AI features, create a `.env` file:
+
+```ini
+GOOGLE_API_KEY=your_key_here
+```
+
+## 📁 Project Structure (Simplified)
+
+```bash
 uni-verse/
 ├── src/
-│   ├── app/                # Core application pages and layouts
-│   │   ├── (feature-pages)/ # Folders for Study Sphere, Event Horizon, etc.
-│   │   ├── my-connections/ # Dedicated page for user connections
-│   │   ├── layout.tsx      # Root layout (includes sidebar and main content structure)
-│   │   ├── page.tsx        # Main landing page / unified dashboard
-│   │   └── globals.css     # Global styles
-│   ├── components/         # Reusable UI components
+│   ├── app/
+│   │   ├── (feature-pages)/      # Feature routes: Study Sphere, Event Horizon, etc.
+│   │   ├── my-connections/        # Connections dashboard
+│   │   ├── layout.tsx             # Root layout with sidebar
+│   │   └── page.tsx               # Main landing/dashboard
+│   ├── components/
 │   │   ├── AlienGuide.tsx
-│   │   ├── UserStatsSidebar.tsx # Main navigation and stats dashboard
-│   │   ├── AnimatedHeroText.tsx
-│   │   ├── StarryBackground.tsx
-│   │   └── ui/             # ShadCN UI components
-│   ├── contexts/           # React contexts (e.g., AuthContext for mock auth)
-│   ├── hooks/              # Custom React hooks
-│   ├── lib/                # Utility functions, (mock) Firebase setup
-│   └── ai/                 # Genkit AI flows
-├── public/                 # Static assets
-├── package.json
-└── tailwind.config.ts
+│   │   ├── UserStatsSidebar.tsx
+│   │   └── StarryBackground.tsx
+│   ├── contexts/                # Auth and other React contexts
+│   ├── hooks/                   # Custom hooks
+│   ├── lib/                     # Utility functions
+│   └── ai/                      # Genkit AI flows
+├── public/                      # Static assets
+├── tailwind.config.ts
+└── package.json
 ```
 
-## Current State & Future Scope 🔮
+## 🔮 Roadmap & Future Scope
 
-**Current State:**
-*   UniVerse offers a highly interactive and visually polished **frontend-focused demo**.
-*   **Mock Authentication:** Simulates user login/signup for a personalized experience.
-*   **Client-Side Persistence:** Core features like "Study Sphere" (profiles, groups, resources, sessions, connections), "Event Horizon" (RSVPs, created events), and "My Connections" save user data and interactions to browser `localStorage`. This makes the experience persistent for a single user across sessions on the same browser.
-*   **Functional AI:** The "Stellar Assist AI" in Celestial Chats is operational.
-*   **Interactive UI for Core Features:** Study Sphere and Event Horizon have dynamic client-side forms, filtering, and list updates.
-*   **"Nebula of Ideas"** is currently conceptual with basic connection simulation.
+### ✅ Current
 
-**Future Enhancements:**
-*   **Full Backend Integration & Real-Time Connections:** Transition from `localStorage` and mock authentication to a robust backend solution (e.g., Firebase Authentication for users, Firestore/Supabase for database) to enable:
-    *   Secure user accounts.
-    *   **Real-time peer, mentor, and professor connections:** Implement systems for actual connection requests, shared profiles, and direct communication.
-    *   Persistent data across devices for all users.
-*   **Dynamic "Nebula of Ideas":** Implement full functionality for users to submit, browse, search, and collaborate on project ideas with real-time updates.
-*   **Real-Time Chat/Messaging:** Integrate direct messaging between connected peers or within study groups.
-*   **Notifications System:** For event reminders, new connection requests, group updates, etc.
-*   **Advanced Personalization:** More sophisticated event and peer recommendations based on user activity and profile data.
-*   **Mobile Responsiveness Polish:** Continued refinement for optimal viewing on all device sizes.
+* Frontend demo with mock login/signup
+* Persistent profiles, events, connections (via `localStorage`)
+* Functional AI assistant
+* Space-themed polished UI
 
----
+### 🛸 Coming Soon
 
-## Thank you for exploring UniVerse! We believe in its potential to transform the student experience by truly connecting its users.
+* Full backend integration (Firebase / Supabase)
+* Real-time messaging, group collaboration, mentor chats
+* Full "Nebula of Ideas" implementation
+* Notifications system
+* Improved mobile responsiveness
+* AI-driven recommendations
 
----
+## 🙏 Acknowledgements
+
+Thank you for exploring UniVerse\! 🌌
+We believe in transforming campus life by building connected, inspiring, and intelligent digital spaces for every student.
