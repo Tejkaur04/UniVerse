@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, LogIn, Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast"; // Import toast
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.push('/'); 
+      router.push('/dashboard'); // Redirect to dashboard on successful login
     }
   }, [user, authLoading, router]);
 
@@ -50,7 +51,7 @@ export default function LoginPage() {
       return;
     }
     if (password.length < 6) {
-        setPageError("Password must be at least 6 characters.");
+        setPageError("Password must be at least 6 characters (mock validation).");
         setIsLoading(false);
         return;
     }
@@ -61,8 +62,8 @@ export default function LoginPage() {
     if (result && 'error' in result && result.error) {
         setPageError(result.error);
     } else if (result && 'uid' in result) {
-      // Successful mock login, useEffect will handle redirect
-      toast({ title: "Login Successful (Demo)", description: `Welcome back, ${result.email}!`});
+      toast({ title: "Login Successful (Demo)", description: `Welcome back to UniVerse, ${result.email}!`});
+      // useEffect will handle redirect to /dashboard
     }
     setIsLoading(false);
   };
@@ -144,5 +145,4 @@ export default function LoginPage() {
   );
 }
 
-// Added missing import for toast
-import { toast } from "@/hooks/use-toast";
+    

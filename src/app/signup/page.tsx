@@ -35,7 +35,7 @@ export default function SignupPage() {
 
  useEffect(() => {
     if (!authLoading && user) {
-      router.push('/'); 
+      router.push('/dashboard'); // Redirect to dashboard on successful signup
     }
   }, [user, authLoading, router]);
 
@@ -68,7 +68,7 @@ export default function SignupPage() {
         setPageError(result.error);
     } else if (result && 'uid' in result) {
         toast({ title: "Account Created (Demo)", description: `Welcome to UniVerse, ${result.email}!`});
-        // Successful mock signup, useEffect will handle redirect
+        // useEffect will handle redirect to /dashboard
     }
     setIsLoading(false);
   };
@@ -160,3 +160,5 @@ export default function SignupPage() {
     </div>
   );
 }
+
+    

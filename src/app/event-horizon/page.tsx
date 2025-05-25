@@ -8,18 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog"; // DialogFooter removed as it's not used here.
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog"; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/contexts/AuthContext'; // Mock Auth
+import { useAuth } from '@/contexts/AuthContext'; 
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft, CalendarDays, Search, Tags, CheckCircle, Star, Share2, PlusCircle, Telescope, Rocket, Users, ListFilter,
-  CalendarCheck, Info, Filter as FilterIcon, Eye, Compass, CalendarPlus // Added CalendarPlus
+  CalendarCheck, Info, Filter as FilterIcon, Eye, Compass, CalendarPlus, Home
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 interface CampusEvent {
@@ -49,6 +50,10 @@ const iconMap: { [key: string]: LucideIcon } = {
   CalendarDays: CalendarDays,
   Users: Users,
   DefaultEventIcon: Info,
+  PlusCircle: PlusCircle,
+  Star: Star,
+  ListFilter: ListFilter,
+  Search: Search, // Added Search to map
 };
 
 const initialHardcodedEvents: CampusEvent[] = [
@@ -65,21 +70,33 @@ const EventHorizonPage: FC = () => {
 
   const userLocalStorageKey = (dataKey: string) => user ? `uniVerse-eventHorizon-${dataKey}-${user.uid}` : `uniVerse-eventHorizon-${dataKey}-guest`;
 
-  const [allEvents, setAllEvents] = useState<CampusEvent[]>(() => {
-    if (typeof window === 'undefined' || !user) return initialHardcodedEvents;
-    const savedEvents = localStorage.getItem(userLocalStorageKey('allEvents'));
-    return savedEvents ? JSON.parse(savedEvents) : initialHardcodedEvents;
-  });
+  // Load data from localStorage or return fallback
+  const loadData = <T,>(keySuffix: string, fallbackData: T): T => {
+    if (typeof window === 'undefined') return fallbackData;
+    const key = userLocalStorageKey(keySuffix);
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        return JSON.parse(saved) as T;
+      } catch (error) {
+        console.error(`Failed to parse ${keySuffix} from localStorage`, error);
+        return fallbackData;
+      }
+    }
+    return fallbackData;
+  };
 
+  // Helper to save data to localStorage
+  const saveData = <T,>(keySuffix: string, data: T) => {
+    if (typeof window === 'undefined' || !user) return;
+    localStorage.setItem(userLocalStorageKey(keySuffix), JSON.stringify(data));
+  };
+
+  const [allEvents, setAllEvents] = useState<CampusEvent[]>(() => loadData('allEvents', initialHardcodedEvents));
   const [displayedEvents, setDisplayedEvents] = useState<CampusEvent[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('All');
-
-  const [userInteractions, setUserInteractions] = useState<UserEventInteractions>(() => {
-    if (typeof window === 'undefined' || !user) return {};
-    const savedInteractions = localStorage.getItem(userLocalStorageKey('userInteractions'));
-    return savedInteractions ? JSON.parse(savedInteractions) : {};
-  });
+  const [userInteractions, setUserInteractions] = useState<UserEventInteractions>(() => loadData('userEventInteractions', {}));
 
   // For Create Event Dialog
   const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
@@ -92,30 +109,9 @@ const EventHorizonPage: FC = () => {
   const [newEventTags, setNewEventTags] = useState('');
 
 
-  // Load data from localStorage on initial mount if user is available
-  useEffect(() => {
-    if (typeof window !== 'undefined' && user) {
-      const savedEvents = localStorage.getItem(userLocalStorageKey('allEvents'));
-      if (savedEvents) setAllEvents(JSON.parse(savedEvents));
-      
-      const savedInteractions = localStorage.getItem(userLocalStorageKey('userInteractions'));
-      if (savedInteractions) setUserInteractions(JSON.parse(savedInteractions));
-    }
-  }, [user]); // Re-run if user changes (e.g., after mock login)
-
-  // Save allEvents to localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined' && user) {
-      localStorage.setItem(userLocalStorageKey('allEvents'), JSON.stringify(allEvents));
-    }
-  }, [allEvents, user]);
-
-  // Save userInteractions to localStorage
-  useEffect(() => {
-    if (typeof window !== 'undefined' && user) {
-      localStorage.setItem(userLocalStorageKey('userInteractions'), JSON.stringify(userInteractions));
-    }
-  }, [userInteractions, user]);
+  // Save allEvents and userInteractions to localStorage when they change
+  useEffect(() => { saveData('allEvents', allEvents); }, [allEvents, user]);
+  useEffect(() => { saveData('userEventInteractions', userInteractions); }, [userInteractions, user]);
 
   // Filtering logic for displayedEvents
   useEffect(() => {
@@ -174,7 +170,6 @@ const EventHorizonPage: FC = () => {
   };
   
   const recommendedEvents = useMemo(() => {
-    if (!allEvents || !userInteractions) return [];
     const uninteractedEvents = allEvents.filter(event => !(userInteractions[event.id]?.rsvpd || userInteractions[event.id]?.interested));
     return uninteractedEvents.slice(0, 2);
   }, [allEvents, userInteractions]);
@@ -189,8 +184,8 @@ const EventHorizonPage: FC = () => {
     <div className="container mx-auto px-4 py-12 w-full max-w-6xl">
       <div className="mb-8">
         <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground border-primary/30 hover:border-accent">
-          <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to UniVerse Home
+          <Link href="/dashboard">
+            <Home className="mr-2 h-4 w-4" /> Back to Dashboard
           </Link>
         </Button>
         <div className="text-center">
@@ -204,18 +199,18 @@ const EventHorizonPage: FC = () => {
       </div>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-1 mb-10 border-b border-border pb-1">
-            <TabsTrigger value="discover" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:scale-[1.03] data-[state=active]:shadow-lg data-[state=active]:bg-accent/5 hover:text-accent group">
-                <Compass className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" /> Filter & Discover
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-1 mb-8 border-b border-border pb-1">
+            <TabsTrigger value="discover" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
+                <Search className="mr-2 h-5 w-5" /> Filter & Discover
             </TabsTrigger>
-            <TabsTrigger value="create" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:scale-[1.03] data-[state=active]:shadow-lg data-[state=active]:bg-accent/5 hover:text-accent group">
-                <PlusCircle className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" /> Create Peer Event
+            <TabsTrigger value="create" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
+                <PlusCircle className="mr-2 h-5 w-5" /> Create Peer Event
             </TabsTrigger>
-            <TabsTrigger value="recommendations" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:scale-[1.03] data-[state=active]:shadow-lg data-[state=active]:bg-accent/5 hover:text-accent group">
-                <Star className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" /> Recommendations
+            <TabsTrigger value="recommendations" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
+                <Star className="mr-2 h-5 w-5" /> Recommendations
             </TabsTrigger>
-            <TabsTrigger value="all" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold data-[state=active]:scale-[1.03] data-[state=active]:shadow-lg data-[state=active]:bg-accent/5 hover:text-accent group">
-                <ListFilter className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" /> All Events List
+            <TabsTrigger value="all" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-all duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
+                <ListFilter className="mr-2 h-5 w-5" /> All Events List
             </TabsTrigger>
         </TabsList>
 
@@ -325,7 +320,7 @@ const EventHorizonPage: FC = () => {
                         </div>
                         <div><Label htmlFor="newEventLocation">Location / Platform</Label><Input id="newEventLocation" value={newEventLocation} onChange={e => setNewEventLocation(e.target.value)} placeholder="e.g., Campus Cafe or Discord" /></div>
                         <div><Label htmlFor="newEventDescription">Description</Label><Textarea id="newEventDescription" value={newEventDescription} onChange={e => setNewEventDescription(e.target.value)} placeholder="Briefly describe your event." /></div>
-                        <div><Label htmlFor="newEventOrganizer">Organizer Name (Optional)</Label><Input id="newEventOrganizer" value={newEventOrganizer} onChange={e => setNewEventOrganizer(e.target.value)} placeholder="Your Name/Group Name" /></div>
+                        <div><Label htmlFor="newEventOrganizer">Organizer Name (Optional)</Label><Input id="newEventOrganizer" value={newEventOrganizer} onChange={e => setNewEventOrganizer(e.target.value)} placeholder="Your Name/Group Name (Defaults to your user if empty)" /></div>
                         <div><Label htmlFor="newEventTags">Tags (comma-separated)</Label><Input id="newEventTags" value={newEventTags} onChange={e => setNewEventTags(e.target.value)} placeholder="e.g., Coding, Social, Casual" /></div>
                         <Button type="submit" className="w-full bg-primary hover:bg-accent hover:text-accent-foreground">Launch Event</Button>
                     </form>
@@ -439,3 +434,5 @@ const EventHorizonPage: FC = () => {
 };
 
 export default EventHorizonPage;
+
+    

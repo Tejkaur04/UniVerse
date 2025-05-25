@@ -11,13 +11,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/contexts/AuthContext'; // Mock Auth
+import { useAuth } from '@/contexts/AuthContext'; 
 import { Badge } from '@/components/ui/badge';
 import {
-  ArrowLeft, Lightbulb, Users, Search, MessageSquare, PlusCircle, Brain, Sparkles, CheckCircle, Filter as FilterIcon
+  ArrowLeft, Lightbulb, Users, Search, MessageSquare, PlusCircle, Brain, Sparkles, CheckCircle, Filter as FilterIcon, Rocket, Home
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Image from 'next/image';
+import { Pencil, Info } from 'lucide-react';
+
 
 // Interfaces
 interface ProjectIdea {
@@ -27,14 +29,14 @@ interface ProjectIdea {
   goals: string;
   skillsSought: string[];
   tags: string[];
-  initiatorName: string; // User's name or ID
-  initiatorId?: string; // User's ID
+  initiatorName: string; 
+  initiatorId?: string; 
   timestamp: string;
-  iconName?: string; // For a thematic icon per project
+  iconName?: string; 
 }
 
 interface UserSkills {
-  id: string; // user id
+  id: string; 
   skills: string[];
 }
 
@@ -58,12 +60,17 @@ const iconMap: { [key: string]: LucideIcon } = {
 const NebulaOfIdeasPage: FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<string>("browse"); // Default to browse
+  const [activeTab, setActiveTab] = useState<string>("browse"); 
 
   const userLocalStorageKey = (dataKey: string) => user ? `uniVerse-nebula-${dataKey}-${user.uid}` : `uniVerse-nebula-${dataKey}-guest`;
 
   // State for project ideas
-  const [projectIdeas, setProjectIdeas] = useState<ProjectIdea[]>(initialProjectIdeas);
+  const [projectIdeas, setProjectIdeas] = useState<ProjectIdea[]>(() => {
+    if (typeof window === 'undefined') return initialProjectIdeas;
+    const saved = localStorage.getItem(userLocalStorageKey('projectIdeas'));
+    return saved ? JSON.parse(saved) : initialProjectIdeas;
+  });
+
   const [displayedIdeas, setDisplayedIdeas] = useState<ProjectIdea[]>([]);
   const [isSubmitIdeaDialogOpen, setIsSubmitIdeaDialogOpen] = useState(false);
   const [newIdeaTitle, setNewIdeaTitle] = useState('');
@@ -73,7 +80,15 @@ const NebulaOfIdeasPage: FC = () => {
   const [newIdeaTags, setNewIdeaTags] = useState('');
 
   // State for user skills
-  const [mySkills, setMySkills] = useState<string[]>(initialUserSkills);
+  const [mySkills, setMySkills] = useState<string[]>(() => {
+     if (typeof window === 'undefined' || !user) return initialUserSkills;
+     const saved = localStorage.getItem(userLocalStorageKey('userSkills'));
+     try {
+        return saved ? (JSON.parse(saved) as UserSkills).skills : initialUserSkills;
+     } catch {
+        return initialUserSkills;
+     }
+  });
   const [isEditSkillsDialogOpen, setIsEditSkillsDialogOpen] = useState(false);
   const [editSkillsInput, setEditSkillsInput] = useState('');
 
@@ -82,30 +97,16 @@ const NebulaOfIdeasPage: FC = () => {
   const [skillFilter, setSkillFilter] = useState('');
 
 
-  // Load data from localStorage
-  useEffect(() => {
-    if (!user) return;
-    const loadData = <T,>(key: string, fallbackData: T): T => {
-      try {
-        const saved = localStorage.getItem(userLocalStorageKey(key));
-        return saved ? JSON.parse(saved) as T : fallbackData;
-      } catch (error) { console.error(`Failed to load ${key}`, error); return fallbackData; }
-    };
-    setProjectIdeas(loadData<ProjectIdea[]>('projectIdeas', initialProjectIdeas));
-    setMySkills(loadData<UserSkills>('userSkills', { id: user.uid, skills: initialUserSkills }).skills);
-
-  }, [user]);
-
   // Save data to localStorage
   useEffect(() => {
-    if (!user) return;
+    if (!user || typeof window === 'undefined') return;
     try {
         localStorage.setItem(userLocalStorageKey('projectIdeas'), JSON.stringify(projectIdeas));
     } catch (error) { console.error("Failed to save projectIdeas", error); }
   }, [projectIdeas, user]);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || typeof window === 'undefined') return;
     try {
         localStorage.setItem(userLocalStorageKey('userSkills'), JSON.stringify({ id: user.uid, skills: mySkills }));
     } catch (error) { console.error("Failed to save userSkills", error); }
@@ -147,7 +148,7 @@ const NebulaOfIdeasPage: FC = () => {
       initiatorName: user?.email?.split('@')[0] || 'Anonymous Astronaut',
       initiatorId: user?.uid,
       timestamp: new Date().toISOString(),
-      iconName: 'Lightbulb' // Default for new ideas
+      iconName: 'Lightbulb' 
     };
     setProjectIdeas(prev => [newIdea, ...prev]);
     setIsSubmitIdeaDialogOpen(false);
@@ -173,16 +174,17 @@ const NebulaOfIdeasPage: FC = () => {
     <div className="container mx-auto px-4 py-12 w-full max-w-6xl">
       <div className="mb-8">
         <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground border-primary/30 hover:border-accent">
-          <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to UniVerse Home
+          <Link href="/dashboard">
+            <Home className="mr-2 h-4 w-4" /> Back to Dashboard
           </Link>
         </Button>
         <div className="text-center">
-            <Lightbulb className="h-16 w-16 text-primary mx-auto mb-3 animate-subtle-pulse" />
+            <Rocket className="h-16 w-16 text-primary mx-auto mb-3 animate-subtle-pulse" />
             <h1 className="text-4xl font-bold font-mono mb-2 bg-gradient-to-r from-primary via-accent to-primary text-transparent bg-clip-text">Nebula of Ideas</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Ignite collaboration. Share your brilliant project concepts, discover ongoing missions, and find your co-pilots.
-                All data here is saved locally in your browser for this demo.
+             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                Ignite collaboration in the Nebula of Ideas! This is your launchpad to share groundbreaking project concepts, discover ongoing student missions, and find your co-pilots to bring innovations to life. 
+                Showcase your unique skills, browse ideas, and connect with peers who share your vision. Let's build the future, one project at a time! 
+                (All ideas and skills are saved locally in your browser for this demo.)
             </p>
         </div>
       </div>
@@ -308,7 +310,6 @@ const NebulaOfIdeasPage: FC = () => {
           </CardContent>
         </Card>
         
-        {/* Placeholder for Project Collaboration Hub & Achievements - aligned with PeerConnect (less detailed for now) */}
          <Card className="shadow-xl bg-card/70 backdrop-blur-md border-primary/30 text-center py-10">
           <CardHeader>
             <div className="flex items-center justify-center space-x-3">
@@ -329,8 +330,6 @@ const NebulaOfIdeasPage: FC = () => {
   );
 };
 
-// Added missing imports
-import { Pencil, Info } from 'lucide-react';
-
-
 export default NebulaOfIdeasPage;
+
+    

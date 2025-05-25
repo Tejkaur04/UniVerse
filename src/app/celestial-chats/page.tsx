@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MessageCircleQuestion, Users, Mic, Video, Bot, Archive, UserCheck } from 'lucide-react';
+import { ArrowLeft, MessageCircleQuestion, Users, Mic, Video, Bot, Archive, UserCheck, Home } from 'lucide-react';
 import CelestialChatsClient from '@/components/celestial-chats-client'; // The AI Chat component
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
@@ -35,8 +35,8 @@ const CelestialChatsPage: FC = () => {
     <div className="container mx-auto px-4 py-12 w-full max-w-5xl">
       <div className="mb-8">
         <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground border-primary/30 hover:border-accent">
-          <Link href="/">
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to UniVerse Home
+          <Link href="/dashboard">
+            <Home className="mr-2 h-4 w-4" /> Back to Dashboard
           </Link>
         </Button>
         <div className="text-center">
@@ -87,8 +87,8 @@ const CelestialChatsPage: FC = () => {
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full sm:w-auto">
-                    <Button variant="outline" size="sm" className="w-full sm:w-auto border-accent text-accent hover:bg-accent/10" onClick={() => toast({title: "Submitting Question (Demo)", description: "Your question for Dr. Nebula will be routed."})}>Submit Question</Button>
-                    <Button size="sm" className="w-full sm:w-auto bg-primary hover:bg-accent hover:text-accent-foreground" onClick={() => toast({title: "Joining Transmission (Demo)", description: "Connecting to Holo-Conference Room Alpha..."})}>Join Transmission</Button>
+                    <Button variant="outline" size="sm" className="w-full sm:w-auto border-accent text-accent hover:bg-accent/10" onClick={() => toast({title: "Submitting Question (Demo)", description: `Your question for ${ama.mentorName} will be routed.`})}>Submit Question</Button>
+                    <Button size="sm" className="w-full sm:w-auto bg-primary hover:bg-accent hover:text-accent-foreground" onClick={() => toast({title: "Joining Transmission (Demo)", description: `Connecting to ${ama.platform}...`})}>Join Transmission</Button>
                 </div>
               </Card>
             )) : <p className="text-muted-foreground">No upcoming AMA transmissions. Stay tuned!</p>}
@@ -165,3 +165,5 @@ const CelestialChatsPage: FC = () => {
 };
 
 export default CelestialChatsPage;
+
+    

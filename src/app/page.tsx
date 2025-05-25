@@ -4,79 +4,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { ArrowRight, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Telescope, Orbit } from 'lucide-react';
-import AnimatedHeroText from '@/components/AnimatedHeroText'; // UniVerse component
+import AnimatedHeroText from '@/components/AnimatedHeroText';
 import type { FC } from 'react';
-
-// UniVerse Landing Page / Dashboard
-
-// For "UniVerse Command Center" - a section of the landing page that acts as a dashboard
-interface FeatureCardProps {
-  title: string;
-  description: string;
-  href: string;
-  icon: FC<React.ComponentProps<typeof ArrowRight>>; // Lucide icons are FCs
-  cta: string;
-  animationDelay?: string;
-}
-
-const commandCenterFeatures: FeatureCardProps[] = [
-  {
-    title: "Study Sphere",
-    description: "Connect with study buddies, form groups, and share resources.",
-    href: "/study-sphere",
-    icon: UsersRound,
-    cta: "Enter Sphere",
-    animationDelay: "0.1s",
-  },
-  {
-    title: "Event Horizon",
-    description: "Discover campus events, workshops, and seminars.",
-    href: "/event-horizon",
-    icon: CalendarDays,
-    cta: "Explore Events",
-    animationDelay: "0.2s",
-  },
-  {
-    title: "Celestial Chats",
-    description: "Gain wisdom from AI, seniors, and alumni mentors.",
-    href: "/celestial-chats",
-    icon: MessageCircleQuestion,
-    cta: "Join Chats",
-    animationDelay: "0.3s",
-  },
-  {
-    title: "Nebula of Ideas",
-    description: "Launch projects and find collaborators for your innovations.",
-    href: "/nebula-of-ideas",
-    icon: Lightbulb,
-    cta: "Ignite Ideas",
-    animationDelay: "0.4s",
-  },
-];
-
-const FeatureCard: FC<FeatureCardProps> = ({ title, description, href, icon: Icon, cta, animationDelay }) => {
-  return (
-    <Card 
-      className="bg-card/70 backdrop-blur-md shadow-xl border-primary/30 hover:border-accent/80 hover:shadow-accent/30 hover:shadow-2xl transition-all duration-300 flex flex-col animate-fade-in-up"
-      style={{ animationDelay }}
-    >
-      <CardHeader className="pb-4">
-        <div className="flex items-center space-x-3 mb-2">
-          <Icon className="h-8 w-8 text-accent animate-subtle-pulse" />
-          <CardTitle className="text-2xl font-mono text-primary">{title}</CardTitle>
-        </div>
-        <CardDescription className="text-foreground/80 h-16">{description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex-grow flex flex-col justify-end">
-        <Button asChild className="w-full bg-primary hover:bg-accent hover:text-accent-foreground transition-colors group">
-          <Link href={href}>
-            {cta} <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
-  );
-};
+import { motion } from 'framer-motion';
 
 // For "What Awaits You" - full-width feature descriptions
 interface FullFeatureInfo {
@@ -110,7 +40,7 @@ const detailedFeatures: FullFeatureInfo[] = [
     shortDescription: "Gain insights from experienced navigators – seniors, alumni, and our Stellar Assist AI.",
     detailedDescription: "Engage with our AI for quick guidance, view schedules for upcoming AMA sessions with seniors and alumni, submit questions, participate in live Q&As, and browse archives of past wisdom. Connect with mentors and explore diverse perspectives.",
     icon: MessageCircleQuestion,
-    iconColor: "text-green-400", // Example color
+    iconColor: "text-green-400", 
     href: "/celestial-chats",
   },
   {
@@ -118,7 +48,7 @@ const detailedFeatures: FullFeatureInfo[] = [
     shortDescription: "Launch your project ideas into the cosmos and find co-creators to bring them to life.",
     detailedDescription: "Share your innovative project concepts, outline your goals, and specify the skills you need. Tag your own expertise, browse projects shared by others, search by keywords or skills, express interest, and connect with potential teammates to collaborate.",
     icon: Lightbulb,
-    iconColor: "text-sky-400", // Example color
+    iconColor: "text-sky-400", 
     href: "/nebula-of-ideas",
   },
 ];
@@ -156,36 +86,17 @@ export default function LandingPage() {
           transition={{ duration: 0.5, delay: 1.2, type: "spring", stiffness: 100 }}
         >
           <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/80 px-8 py-6 text-lg group" asChild>
-            <Link href="#command-center"> {/* Link to the command center section */}
-              Explore Your Universe <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            <Link href="/dashboard"> {/* Link to the dashboard page */}
+              Go to Dashboard <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
         </motion.div>
       </section>
 
-      {/* UniVerse Command Center (Dashboard Cards) Section */}
-      <section id="command-center" className="py-16 md:py-24 bg-background/30 rounded-xl shadow-2xl my-16 md:my-24 p-6 md:p-10 border border-primary/20">
-        <h2 
-          className="text-3xl sm:text-4xl font-bold text-center mb-4 font-mono 
-                     bg-gradient-to-r from-primary via-accent to-primary text-transparent bg-clip-text animate-text-shimmer"
-           style={{ animationDelay: '0s' }}
-        >
-          UniVerse Command Center
-        </h2>
-        <p className="text-center text-foreground/70 mb-12 md:mb-16 max-w-xl mx-auto">
-          Quickly navigate to the core modules of UniVerse. Each sphere is designed to enhance a different aspect of your student life.
-        </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {commandCenterFeatures.map((feature) => (
-            <FeatureCard key={feature.title} {...feature} />
-          ))}
-        </div>
-      </section>
-
       {/* What Awaits You (Detailed Feature Explanations) Section */}
       <section className="py-16 md:py-24">
          <div className="text-center mb-16 md:mb-20">
-          <Telescope className="h-16 w-16 text-primary mx-auto mb-4 animate-bounce hover:animate-none hover:scale-110 transition-transform" />
+          <Telescope className="h-16 w-16 text-primary mx-auto mb-4 hover:animate-none hover:scale-110 transition-transform animate-subtle-pulse" />
           <h2 
             className="text-3xl sm:text-4xl font-bold font-mono 
                        bg-gradient-to-r from-primary via-accent to-primary text-transparent bg-clip-text animate-text-shimmer"
@@ -263,5 +174,5 @@ export default function LandingPage() {
     </div>
   );
 }
-// Added framer-motion import
-import { motion } from 'framer-motion';
+
+    
