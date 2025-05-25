@@ -2,7 +2,7 @@
 "use client";
 
 import type { FC } from 'react';
-import { useEffect, useState, type FormEvent, type ChangeEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ChangeEvent, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,8 +18,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import {
-  Brain, FlaskConical, Link as LinkIconLucide, Loader2, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle, Waypoints, Pencil, CheckCircle as CheckCircleIcon, Link2 as ConnectionsIcon
+  Brain, FlaskConical, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle, Waypoints, Pencil, CheckCircle as CheckCircleIcon, Link2 as ConnectionsIcon, Home as HomeIcon
 } from 'lucide-react';
+import type { MockStudentProfile } from '@/app/study-sphere/page'; // For connection object structure
+
 
 // Define UserProfile interface
 export interface UserProfile {
@@ -55,6 +57,7 @@ const initialProfileData: UserProfile = {
 };
 
 const navFeatures = [
+  { href: "/", label: "UniVerse Home", icon: HomeIcon },
   { href: "/study-sphere", label: "Study Sphere", icon: UsersRound },
   { href: "/event-horizon", label: "Event Horizon", icon: CalendarDays },
   { href: "/celestial-chats", label: "Celestial Chats", icon: MessageCircleQuestion },
@@ -66,23 +69,24 @@ const UserStatsSidebar: FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const userLocalStorageKey = (dataKey: string): string | null => {
+  const userLocalStorageKey = useCallback((dataKey: string): string | null => {
     return user ? `uniVerse-${dataKey}-${user.uid}` : null;
-  };
+  }, [user]);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [connectionsCount, setConnectionsCount] = useState<number>(0); // State for connections count
+  const [connectionsCount, setConnectionsCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<UserProfile>(initialProfileData);
 
-  useEffect(() => {
+  const fetchUserData = useCallback(() => {
     if (user && user.uid) {
       setIsLoading(true);
       const profileKey = userLocalStorageKey('studyProfile');
-      const connectionsKey = userLocalStorageKey('connections'); // Key for connections
+      const connectionsKey = userLocalStorageKey('connections');
 
+      // Load Profile
       if (profileKey) {
         const savedProfile = localStorage.getItem(profileKey);
         if (savedProfile) {
@@ -103,11 +107,12 @@ const UserStatsSidebar: FC = () => {
         }
       }
 
+      // Load Connections Count
       if (connectionsKey) {
         const savedConnections = localStorage.getItem(connectionsKey);
         if (savedConnections) {
           try {
-            const parsedConnections = JSON.parse(savedConnections) as any[];
+            const parsedConnections = JSON.parse(savedConnections) as MockStudentProfile[];
             setConnectionsCount(parsedConnections.length);
           } catch (e) {
             console.error("Error parsing connections from localStorage", e);
@@ -126,12 +131,42 @@ const UserStatsSidebar: FC = () => {
       setProfile(null);
       setConnectionsCount(0);
     }
-  }, [user, isEditDialogOpen]); // Re-fetch if dialog closes, in case profile affects what's shown (e.g., if user updates and connects elsewhere)
+  }, [user, userLocalStorageKey]);
+
+  useEffect(() => {
+    fetchUserData(); // Initial fetch
+
+    const handleConnectionsUpdate = () => {
+      // Re-fetch connections count when event is dispatched
+      const connectionsKey = userLocalStorageKey('connections');
+      if (connectionsKey) {
+        const savedConnections = localStorage.getItem(connectionsKey);
+        if (savedConnections) {
+          try {
+            const parsedConnections = JSON.parse(savedConnections) as MockStudentProfile[];
+            setConnectionsCount(parsedConnections.length);
+          } catch (e) {
+            console.error("Error parsing connections from localStorage on event", e);
+            setConnectionsCount(0);
+          }
+        } else {
+          setConnectionsCount(0);
+        }
+      }
+    };
+
+    window.addEventListener('connectionsUpdated', handleConnectionsUpdate);
+
+    return () => {
+      window.removeEventListener('connectionsUpdated', handleConnectionsUpdate);
+    };
+  }, [user, isEditDialogOpen, fetchUserData, userLocalStorageKey]); // Added isEditDialogOpen to re-fetch when profile dialog interaction happens
+
 
   const handleEditProfile = () => {
     if (profile) {
       setEditForm({ ...profile }); 
-    } else if (user) { // Should not happen if profile is initialized, but as a fallback
+    } else if (user) { 
       const newProfile: UserProfile = {
         ...initialProfileData,
         id: user.uid,
@@ -150,7 +185,6 @@ const UserStatsSidebar: FC = () => {
       toast({ variant: 'destructive', title: 'Missing Information', description: 'Name and College ID are required.'});
       return;
     }
-    // Ensure all array fields are indeed arrays before saving
     const profileToSave: UserProfile = {
         ...editForm,
         skills: Array.isArray(editForm.skills) ? editForm.skills : [],
@@ -188,16 +222,15 @@ const UserStatsSidebar: FC = () => {
     });
   };
 
-  if (isLoading && !profile) { // Show loader only if truly loading and no profile yet
+  if (isLoading && !profile && !user) { 
     return (
-      <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border bg-card/50 p-4 space-y-4 sticky top-0 overflow-y-auto items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Loading Your UniVerse Stats...</p>
+      <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border/70 bg-card/70 backdrop-blur-sm p-6 sticky top-0 overflow-y-auto shadow-lg items-center justify-center">
+       {/* Minimal loader or nothing during very initial load if user state isn't resolved */}
       </aside>
     );
   }
   
-  if (!user) { // Should be caught by AppContent, but as a safeguard for sidebar
+  if (!user) { 
     return null; 
   }
 
@@ -206,11 +239,11 @@ const UserStatsSidebar: FC = () => {
 
   return (
     <>
-    <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border/70 bg-card/70 backdrop-blur-sm p-4 sticky top-0 overflow-y-auto shadow-lg">
+    <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border/70 bg-card/70 backdrop-blur-sm p-6 sticky top-0 overflow-y-auto shadow-lg">
       <div className="flex-grow space-y-6">
          <Link href="/" className="flex items-center space-x-2 mb-6 group">
-            <Waypoints className="h-7 w-7 text-primary group-hover:text-accent transition-colors" />
-            <span className="font-bold text-xl font-mono text-primary group-hover:text-accent transition-colors">
+            <Waypoints className="h-8 w-8 text-primary group-hover:text-accent transition-colors" />
+            <span className="font-bold text-2xl font-mono text-primary group-hover:text-accent transition-colors">
               UniVerse
             </span>
         </Link>
@@ -225,7 +258,7 @@ const UserStatsSidebar: FC = () => {
               asChild
             >
               <Link href={item.href}>
-                <item.icon className="mr-3 h-4 w-4" />
+                <item.icon className="mr-3 h-5 w-5" />
                 {item.label}
               </Link>
             </Button>
@@ -244,7 +277,7 @@ const UserStatsSidebar: FC = () => {
                 </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0 pb-2.5">
-                <p className="text-xl font-bold text-accent">{connectionsCount}</p>
+                <p className="text-2xl font-bold text-accent">{connectionsCount}</p>
                 </CardContent>
             </Card>
 
@@ -296,7 +329,7 @@ const UserStatsSidebar: FC = () => {
               className="w-full justify-start text-sm py-2.5 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
               onClick={handleEditProfile} 
             >
-              <Pencil className="mr-3 h-4 w-4" />
+              <Pencil className="mr-3 h-5 w-5" />
               Edit My Profile
           </Button>
          <Button
@@ -304,7 +337,7 @@ const UserStatsSidebar: FC = () => {
               className="w-full justify-start text-sm py-2.5 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
               onClick={() => toast({title: "Settings (Demo)", description: "This would open application settings."})} 
             >
-              <Settings className="mr-3 h-4 w-4" />
+              <Settings className="mr-3 h-5 w-5" />
               Settings
           </Button>
           <Button
@@ -312,7 +345,7 @@ const UserStatsSidebar: FC = () => {
               className="w-full justify-start text-sm py-2.5 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
               onClick={() => toast({title: "Help & Support (Demo)", description: "This would open a help center."})} 
             >
-              <HelpCircle className="mr-3 h-4 w-4" />
+              <HelpCircle className="mr-3 h-5 w-5" />
               Help & Support
           </Button>
       </div>
@@ -322,7 +355,7 @@ const UserStatsSidebar: FC = () => {
         <DialogContent className="bg-card border-primary/50 sm:max-w-[525px]">
         <DialogHeader>
             <DialogTitle className="font-mono text-primary flex items-center"><Pencil className="mr-2 h-5 w-5"/>Edit Your UniVerse Coordinates</DialogTitle>
-            <DialogDescription>Update your profile. Changes are saved locally to your browser for this demo.</DialogDescription>
+            <DialogDescription>Update your profile. Changes are saved locally to your browser for this mock demo.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSaveProfile} className="space-y-3 py-2 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
             <div><Label htmlFor="edit-name">Name</Label><Input id="edit-name" name="name" value={editForm.name || ''} onChange={handleProfileInputChange} /></div>
@@ -373,5 +406,4 @@ const UserStatsSidebar: FC = () => {
 };
 
 export default UserStatsSidebar;
-
     

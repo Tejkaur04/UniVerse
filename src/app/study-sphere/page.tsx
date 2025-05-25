@@ -2,7 +2,7 @@
 "use client";
 
 import type { FC, FormEvent, ChangeEvent } from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog"; // Removed DialogFooter as it's not used
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +21,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   Home, UsersRound, Search as SearchIcon, Users as UsersIcon, FileText, CalendarCheck, CalendarPlus, Star,
   Briefcase, Palette, ThumbsUp, Link2, MessageSquare, XCircle, Pencil, PlusCircle, Filter as FilterIcon,
-  UploadCloud, BookOpen, CheckCircle as CheckCircleIcon, ListFilter, Info, BookUser, GripVertical, UserCircle, LinkIcon, Settings, HelpCircle, Waypoints
+  UploadCloud, BookOpen, CheckCircle as CheckCircleIcon, ListFilter, Info, BookUser, GripVertical, UserCircle, Settings, HelpCircle, Waypoints
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,8 +41,8 @@ export interface MockStudentProfile {
   interests: string[];
   projectAreas: string[];
   learningStyles: string[];
-  role?: 'Student' | 'Mentor' | 'Initiator'; // Added role for My Connections
-  courses?: string[]; // Added courses
+  role?: 'Student' | 'Mentor' | 'Initiator'; 
+  courses?: string[]; 
 }
 
 export interface StudyGroup {
@@ -75,11 +75,10 @@ export interface StudySession {
   isJoinedByCurrentUser?: boolean;
 }
 
-// Re-declare LEARNING_STYLES_OPTIONS here
-const LEARNING_STYLES_OPTIONS = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
 
+const LEARNING_STYLES_OPTIONS = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
 const COURSES_OPTIONS = ["All", "Astrophysics 101", "Quantum Mechanics", "Alien Civilizations", "Starship Engineering", "Cosmic Economics"];
-const LEARNING_STYLES_OPTIONS_FILTER = ["All", ...LEARNING_STYLES_OPTIONS]; // For filter dropdown
+const LEARNING_STYLES_OPTIONS_FILTER = ["All", ...LEARNING_STYLES_OPTIONS]; 
 const DEPARTMENTS_OPTIONS = ["All", "Computer Science", "Quantum Engineering", "Astrobiology", "Xenolinguistics", "Galactic History", "Business Administration", "Undeclared", "Starship Engineering"];
 
 
@@ -100,7 +99,6 @@ const iconMap: { [key: string]: LucideIcon } = {
   GripVertical: GripVertical,
 };
 
-// Initial Data (Fallbacks) - For when localStorage is empty or user is new
 const initialPotentialMatchesData: MockStudentProfile[] = [
   { id: 'student1', name: 'Nova Stargazer', year: 'Sophomore', department: 'Xenolinguistics', skills: ['React', 'Node.js', 'UI/UX'], interests: ['AI', 'Web Development', 'Alien Languages'], projectAreas: ['EdTech App'], profilePictureUrl: 'https://placehold.co/80x80.png?text=NS', dataAiHint: 'student multilingual', learningStyles: ['Auditory', 'Kinesthetic'], courses: ['Alien Civilizations', 'Galactic History'] },
   { id: 'student2', name: 'Orion Nebula', year: 'Junior', department: 'Starship Engineering', skills: ['CAD', 'Prototyping', '3D Printing'], interests: ['Robotics', 'Sustainable Design', 'FTL Drives'], projectAreas: ['Automated Rover', 'Warp Core Design'], profilePictureUrl: 'https://placehold.co/80x80.png?text=ON', dataAiHint: 'engineer student space', learningStyles: ['Kinesthetic', 'Visual'], courses: ['Starship Engineering', 'Quantum Mechanics'] },
@@ -126,44 +124,38 @@ const initialStudySessionsData: StudySession[] = [
 const StudySpherePage: FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<string>("browse"); // Default to "Find Buddies"
+  const [activeTab, setActiveTab] = useState<string>("browse");
 
-  const userLocalStorageKey = (baseKey: string): string | null => {
+  const userLocalStorageKey = useCallback((baseKey: string): string | null => {
     return user ? `uniVerse-${baseKey}-${user.uid}` : null;
-  };
+  }, [user]);
 
-  // Helper to load data from localStorage or fallback
-  const loadData = <T,>(keySuffix: string, fallbackData: T): T => {
+  const loadData = useCallback(<T,>(keySuffix: string, fallbackData: T): T => {
     if (typeof window === 'undefined') return fallbackData;
     const key = userLocalStorageKey(keySuffix);
-    if (!key) return fallbackData; // No user, return fallback
+    if (!key) return fallbackData;
     const saved = localStorage.getItem(key);
     if (saved) {
-      try {
-        return JSON.parse(saved) as T;
-      } catch (error) {
-        console.error(`Failed to parse ${keySuffix} from localStorage`, error);
-        return fallbackData; // Parse error, return fallback
-      }
+      try { return JSON.parse(saved) as T; } 
+      catch (error) { console.error(`Failed to parse ${keySuffix} from localStorage`, error); return fallbackData; }
     }
-    return fallbackData; // Nothing saved, return fallback
-  };
+    return fallbackData;
+  }, [userLocalStorageKey]);
 
-  // Helper to save data to localStorage
-  const saveData = <T,>(keySuffix: string, data: T) => {
-    if (typeof window === 'undefined' || !user) return; // Don't save if no window or user
+  const saveData = useCallback(<T,>(keySuffix: string, data: T) => {
+    if (typeof window === 'undefined' || !user) return;
     const key = userLocalStorageKey(keySuffix);
     if (!key) return;
     localStorage.setItem(key, JSON.stringify(data));
-  };
+  }, [user, userLocalStorageKey]);
 
-  // Profile State (read-only for this page, edited in sidebar)
+  // Profile State (now only for context/display if needed, main editing is in sidebar)
   const [studyProfile, setStudyProfile] = useState<UserProfile | null>(null);
    useEffect(() => {
     if (user) {
-      setStudyProfile(loadData('studyProfile', null)); // Load profile for context (e.g. uploader name)
+      setStudyProfile(loadData('studyProfile', null)); 
     }
-  }, [user]);
+  }, [user, loadData]);
 
 
   // Find Buddies State
@@ -174,11 +166,10 @@ const StudySpherePage: FC = () => {
   const [selectedStyleFilter, setSelectedStyleFilter] = useState('All');
   const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('All');
   
-  // Centralized Connections State (read for "sent requests", write for new connections)
+  // Centralized Connections State
   const [sentRequests, setSentRequests] = useState<string[]>(() => loadData('sentRequests', []));
-  // connections are managed via localStorage directly in handleConnect, no need for separate state here if My Connections is a separate page
 
-  useEffect(() => { saveData('sentRequests', sentRequests); }, [sentRequests, user]);
+  useEffect(() => { saveData('sentRequests', sentRequests); }, [sentRequests, saveData]);
 
   // Study Groups State
   const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(() => loadData('studyGroups', initialStudyGroupsData));
@@ -187,7 +178,7 @@ const StudySpherePage: FC = () => {
   const [newGroupCourses, setNewGroupCourses] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
 
-  useEffect(() => { saveData('studyGroups', studyGroups); }, [studyGroups, user]);
+  useEffect(() => { saveData('studyGroups', studyGroups); }, [studyGroups, saveData]);
 
   // Shared Resources State
   const [sharedResources, setSharedResources] = useState<SharedResource[]>(() => loadData('sharedResources', initialSharedResourcesData));
@@ -196,7 +187,7 @@ const StudySpherePage: FC = () => {
   const [newResourceCourse, setNewResourceCourse] = useState('');
   const [newResourceType, setNewResourceType] = useState('');
 
-  useEffect(() => { saveData('sharedResources', sharedResources); }, [sharedResources, user]);
+  useEffect(() => { saveData('sharedResources', sharedResources); }, [sharedResources, saveData]);
 
   // Study Sessions State
   const [studySessions, setStudySessions] = useState<StudySession[]>(() => loadData('studySessions', initialStudySessionsData));
@@ -206,10 +197,8 @@ const StudySpherePage: FC = () => {
   const [newSessionGroup, setNewSessionGroup] = useState('');
   const [newSessionLocation, setNewSessionLocation] = useState('');
 
-  useEffect(() => { saveData('studySessions', studySessions); }, [studySessions, user]);
+  useEffect(() => { saveData('studySessions', studySessions); }, [studySessions, saveData]);
 
-
-  // Filter logic for "Find Buddies"
   useEffect(() => {
     let matches = potentialMatches;
     if (searchTerm) {
@@ -242,17 +231,17 @@ const StudySpherePage: FC = () => {
       return newSentRequests;
     });
     
-    // Update connections in localStorage
     const connectionsKey = userLocalStorageKey('connections');
     if (connectionsKey) {
         const currentConnections: MockStudentProfile[] = loadData('connections', []);
         if (!currentConnections.find(c => c.id === student.id)) {
-            const newConnections = [...currentConnections, {...student, role: 'Student'}]; // Add role for My Connections page
+            const newConnections = [...currentConnections, {...student, role: 'Student'}]; 
             saveData('connections', newConnections);
+            window.dispatchEvent(new CustomEvent('connectionsUpdated')); // Dispatch event
         }
     }
 
-    toast({ title: 'Connection Request Transmitted!', description: `Signal sent to ${student.name}. (Simulated auto-acceptance). Your connections list is updated locally. Real connections coming soon!`, action: <ThumbsUp className="h-5 w-5 text-green-500" /> });
+    toast({ title: 'Connection Signal Sent!', description: `Request transmitted to ${student.name}. (Simulated auto-acceptance). Your connections list is updated locally. Real connections coming soon!`, action: <ThumbsUp className="h-5 w-5 text-green-500" /> });
   };
 
 
@@ -283,9 +272,7 @@ const StudySpherePage: FC = () => {
                 toast({ title: "Joined Study Orbit!", description: `You've joined ${group.name}. Progress saved locally.`, action: <CheckCircleIcon className="h-5 w-5 text-green-500" /> });
                 return { ...group, members: group.members + 1, isJoinedByCurrentUser: true };
             } else if (group.id === groupId && group.isJoinedByCurrentUser) {
-                // Optionally allow leaving, or just keep it as joined for demo simplicity
-                // toast({ title: "Already in Orbit", description: `You are already part of ${group.name}.` });
-                return group; // No change if already joined
+                return group; 
             }
             return group;
         });
@@ -377,12 +364,12 @@ const StudySpherePage: FC = () => {
             Navigate using the tabs below to find partners, join groups, share resources, and schedule study sessions.
           </p>
            <p className="text-sm text-muted-foreground mt-1">
-            Your profile info is saved to your UniVerse account! Other progress here (groups, resources, sessions) is saved locally in your browser for this demo.
+            Your profile info is saved to your UniVerse account (mock demo)! Other progress here (groups, resources, sessions) is saved locally in your browser for this demo.
           </p>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" defaultValue="browse">
       <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-1 mb-8 border-b border-border pb-1">
             <TabsTrigger value="browse" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
                 <SearchIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Find Buddies
@@ -616,6 +603,4 @@ const StudySpherePage: FC = () => {
 };
 
 export default StudySpherePage;
-
-
     

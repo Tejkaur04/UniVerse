@@ -2,18 +2,18 @@
 "use client";
 
 import type { FC } from 'react';
-import { useState, useEffect } from 'react'; // Added useState, useEffect
+import { useState, useEffect, useCallback } from 'react'; 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'; // Removed AvatarImage
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'; 
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MessageCircleQuestion, Users, Mic, Video, Bot, Archive, UserCheck, Home, Link2, ThumbsUp, XCircle } from 'lucide-react'; // Added Link2, ThumbsUp, XCircle
+import { ArrowLeft, MessageCircleQuestion, Users, Mic, Video, Bot, Archive, UserCheck, Home, Link2, ThumbsUp, XCircle } from 'lucide-react'; 
 import CelestialChatsClient from '@/components/celestial-chats-client';
 import { useToast } from "@/hooks/use-toast";
 import Image from 'next/image';
-import { useAuth } from '@/contexts/AuthContext'; // For user ID
-import type { MockStudentProfile } from '@/app/study-sphere/page'; // For connection object structure
+import { useAuth } from '@/contexts/AuthContext'; 
+import type { MockStudentProfile } from '@/app/study-sphere/page'; 
 
 // Mock Data for Celestial Chats
 const initialMentors = [
@@ -37,30 +37,35 @@ const CelestialChatsPage: FC = () => {
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const userSpecificKey = (baseKey: string) => user ? `${baseKey}-${user.uid}` : `${baseKey}-guest`;
+  const userLocalStorageKey = useCallback((baseKey: string): string | null => {
+    return user ? `uniVerse-${baseKey}-${user.uid}` : null;
+  }, [user]);
 
-  const loadData = <T,>(baseKey: string, fallbackData: T): T => {
+  const loadData = useCallback(<T,>(baseKey: string, fallbackData: T): T => {
     if (typeof window === 'undefined') return fallbackData;
-    const key = userSpecificKey(baseKey);
+    const key = userLocalStorageKey(baseKey);
+    if (!key) return fallbackData;
     const saved = localStorage.getItem(key);
     if (saved) {
       try { return JSON.parse(saved) as T; }
       catch (error) { console.error(`Failed to parse ${key} from localStorage`, error); return fallbackData; }
     }
     return fallbackData;
-  };
+  }, [userLocalStorageKey]);
 
-  const saveData = <T,>(baseKey: string, data: T) => {
+  const saveData = useCallback(<T,>(baseKey: string, data: T) => {
     if (typeof window === 'undefined' || !user) return;
-    const key = userSpecificKey(baseKey);
+    const key = userLocalStorageKey(baseKey);
+    if(!key) return;
     localStorage.setItem(key, JSON.stringify(data));
-  };
+  }, [user, userLocalStorageKey]);
   
-  const [sentRequests, setSentRequests] = useState<string[]>(() => loadData('uniVerse-sentRequests', []));
-  const [connections, setConnections] = useState<MockStudentProfile[]>(() => loadData('uniVerse-connections', []));
+  const [sentRequests, setSentRequests] = useState<string[]>(() => loadData('sentRequests', []));
+  // connections state is not directly used here for displaying, but we'll update it
+  // const [connections, setConnections] = useState<MockStudentProfile[]>(() => loadData('connections', []));
 
-  useEffect(() => { saveData('uniVerse-sentRequests', sentRequests); }, [sentRequests, user]);
-  useEffect(() => { saveData('uniVerse-connections', connections); }, [connections, user]);
+  useEffect(() => { saveData('sentRequests', sentRequests); }, [sentRequests, user, saveData]);
+  // useEffect(() => { saveData('connections', connections); }, [connections, user, saveData]);
 
 
   const handleConnectMentor = (mentor: typeof initialMentors[0]) => {
@@ -69,25 +74,30 @@ const CelestialChatsPage: FC = () => {
       return;
     }
     setSentRequests(prev => [...new Set([...prev, mentor.id])]);
-    setConnections(prev => {
-      if (!prev.find(c => c.id === mentor.id)) {
+
+    const connectionsKey = userLocalStorageKey('connections');
+    if (connectionsKey) {
+      const currentConnections: MockStudentProfile[] = loadData('connections', []);
+      if (!currentConnections.find(c => c.id === mentor.id)) {
         const newConnection: MockStudentProfile = {
           id: mentor.id,
           name: mentor.name,
-          department: mentor.expertise.join(', '), // Use expertise as department/role
-          year: 'Mentor', // Fixed role
+          department: mentor.expertise.join(', '), 
+          year: 'Mentor', 
           profilePictureUrl: mentor.avatar,
           dataAiHint: mentor.dataAiHint,
-          skills: mentor.expertise, // Use expertise as skills
-          interests: [], // Mentors might not list interests this way
-          projectAreas: [], // Mentors might not list project areas
-          learningStyles: [], // N/A for mentors
+          skills: mentor.expertise, 
+          interests: [], 
+          projectAreas: [], 
+          learningStyles: [], 
           role: 'Mentor',
         };
-        return [...prev, newConnection];
+        const newConnections = [...currentConnections, newConnection];
+        saveData('connections', newConnections);
+        window.dispatchEvent(new CustomEvent('connectionsUpdated')); // Dispatch event
       }
-      return prev;
-    });
+    }
+    
     toast({ title: 'Connection Signal Sent!', description: `Request transmitted to ${mentor.name}. (Simulated auto-acceptance). Your connections list is updated locally.`, action: <ThumbsUp className="h-5 w-5 text-green-500" />});
   }
 
@@ -208,11 +218,11 @@ const CelestialChatsPage: FC = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             {pastSessions.map(session => {
-              const Icon = session.icon || Archive;
+              const IconComponent = session.icon || Archive;
               return (
               <Card key={session.id} className="p-3 flex items-center justify-between bg-background/50 border-border/50 shadow-sm hover:shadow-md transition-shadow duration-300">
                 <div className="flex items-center space-x-3">
-                    <Icon className="h-6 w-6 text-accent shrink-0"/>
+                    <IconComponent className="h-6 w-6 text-accent shrink-0"/>
                     <div>
                         <h4 className="font-medium text-primary text-sm">{session.topic}</h4>
                         <p className="text-xs text-muted-foreground">With: {session.mentorName} | Date: {session.date}</p>

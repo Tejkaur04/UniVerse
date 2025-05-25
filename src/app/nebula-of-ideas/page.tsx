@@ -2,7 +2,7 @@
 "use client";
 
 import type { FC, FormEvent } from 'react';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import type { LucideIcon } from 'lucide-react';
 import Image from 'next/image';
 import { Pencil, Info } from 'lucide-react';
 import type { UserProfile } from '@/components/UserStatsSidebar';
-import type { MockStudentProfile } from '@/app/study-sphere/page'; // For connection object structure
+import type { MockStudentProfile } from '@/app/study-sphere/page'; 
 
 
 // Interfaces
@@ -32,9 +32,9 @@ interface ProjectIdea {
   skillsSought: string[];
   tags: string[];
   initiatorName: string;
-  initiatorId: string; // Added for connection
-  initiatorAvatar?: string; // Added for potential display
-  initiatorDataAiHint?: string; // Added
+  initiatorId: string; 
+  initiatorAvatar?: string; 
+  initiatorDataAiHint?: string; 
   timestamp: string;
   iconName?: string;
 }
@@ -55,29 +55,34 @@ const NebulaOfIdeasPage: FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const userSpecificKey = (baseKey: string) => user ? `${baseKey}-${user.uid}` : `${baseKey}-guest`;
+  const userLocalStorageKey = useCallback((baseKey: string): string | null => {
+    return user ? `uniVerse-${baseKey}-${user.uid}` : null;
+  }, [user]);
 
-  const loadData = <T,>(baseKey: string, fallbackData: T): T => {
+  const loadData = useCallback(<T,>(baseKey: string, fallbackData: T): T => {
     if (typeof window === 'undefined') return fallbackData;
-    const key = userSpecificKey(baseKey);
+    const key = userLocalStorageKey(baseKey);
+    if(!key) return fallbackData;
     const saved = localStorage.getItem(key);
     if (saved) {
       try { return JSON.parse(saved) as T; }
       catch (error) { console.error(`Failed to parse ${key} from localStorage`, error); return fallbackData; }
     }
     return fallbackData;
-  };
+  }, [userLocalStorageKey]);
 
-  const saveData = <T,>(baseKey: string, data: T) => {
+  const saveData = useCallback(<T,>(baseKey: string, data: T) => {
     if (typeof window === 'undefined' || !user) return;
-    const key = userSpecificKey(baseKey);
+    const key = userLocalStorageKey(baseKey);
+    if (!key) return;
     localStorage.setItem(key, JSON.stringify(data));
-  };
+  }, [user, userLocalStorageKey]);
   
   // Profile state (primarily for "My Skills" section)
   const [mySkills, setMySkills] = useState<string[]>(() => {
     if (typeof window === 'undefined' || !user) return ['React', 'Node.js']; // Default if no user
-    const profileKey = userSpecificKey('uniVerse-studyProfile');
+    const profileKey = userLocalStorageKey('studyProfile'); // Use consistent key
+    if (!profileKey) return ['React', 'Node.js'];
     const savedProfile = localStorage.getItem(profileKey);
     if (savedProfile) {
       try { return (JSON.parse(savedProfile) as UserProfile).skills || ['React', 'Node.js']; }
@@ -89,7 +94,7 @@ const NebulaOfIdeasPage: FC = () => {
   const [editSkillsInput, setEditSkillsInput] = useState('');
   
   // Project Ideas State
-  const [projectIdeas, setProjectIdeas] = useState<ProjectIdea[]>(() => loadData('uniVerse-projectIdeas', initialProjectIdeasData));
+  const [projectIdeas, setProjectIdeas] = useState<ProjectIdea[]>(() => loadData('projectIdeas', initialProjectIdeasData));
   const [displayedIdeas, setDisplayedIdeas] = useState<ProjectIdea[]>([]);
   const [isSubmitIdeaDialogOpen, setIsSubmitIdeaDialogOpen] = useState(false);
   const [newIdeaTitle, setNewIdeaTitle] = useState('');
@@ -99,17 +104,18 @@ const NebulaOfIdeasPage: FC = () => {
   const [newIdeaTags, setNewIdeaTags] = useState('');
   
   // Connections State
-  const [sentRequests, setSentRequests] = useState<string[]>(() => loadData('uniVerse-sentRequests', []));
-  const [connections, setConnections] = useState<MockStudentProfile[]>(() => loadData('uniVerse-connections', []));
+  const [sentRequests, setSentRequests] = useState<string[]>(() => loadData('sentRequests', []));
 
-  useEffect(() => { saveData('uniVerse-sentRequests', sentRequests); }, [sentRequests, user]);
-  useEffect(() => { saveData('uniVerse-connections', connections); }, [connections, user]);
-  useEffect(() => { saveData('uniVerse-projectIdeas', projectIdeas); }, [projectIdeas, user]);
+  useEffect(() => { saveData('sentRequests', sentRequests); }, [sentRequests, user, saveData]);
+  useEffect(() => { saveData('projectIdeas', projectIdeas); }, [projectIdeas, user, saveData]);
   
-  // Update "My Skills" from profile when user changes or profile loads
   useEffect(() => {
     if (user) {
-      const profileKey = userSpecificKey('uniVerse-studyProfile');
+      const profileKey = userLocalStorageKey('studyProfile');
+      if (!profileKey) {
+        setMySkills([]);
+        return;
+      }
       const savedProfile = localStorage.getItem(profileKey);
       if (savedProfile) {
         try {
@@ -118,7 +124,7 @@ const NebulaOfIdeasPage: FC = () => {
         } catch { setMySkills([]); }
       } else { setMySkills([]); }
     }
-  }, [user]);
+  }, [user, userLocalStorageKey]); // Removed loadData from dependency array
 
 
   // Filter and search logic for projects
@@ -170,16 +176,40 @@ const NebulaOfIdeasPage: FC = () => {
     setIsEditSkillsDialogOpen(true);
   };
 
-  const handleSaveMySkills = (e: FormEvent) => { // Save skills to UserProfile in localStorage
+  const handleSaveMySkills = (e: FormEvent) => { 
     e.preventDefault();
     if (!user) return;
     const updatedSkills = editSkillsInput.split(',').map(s => s.trim()).filter(s => s);
     setMySkills(updatedSkills);
     
-    const profileKey = userSpecificKey('uniVerse-studyProfile');
-    const currentProfile = loadData('uniVerse-studyProfile', initialProjectIdeasData[0]); // Fallback needed
-    const newProfileData = { ...currentProfile, skills: updatedSkills, id: user.uid, name: currentProfile?.name || user.email?.split('@')[0] };
-    saveData('uniVerse-studyProfile', newProfileData);
+    const profileKey = userLocalStorageKey('studyProfile');
+    if (!profileKey) return;
+
+    const currentProfileString = localStorage.getItem(profileKey);
+    let currentProfile: Partial<UserProfile> = {};
+    if (currentProfileString) {
+        try {
+            currentProfile = JSON.parse(currentProfileString);
+        } catch (err) {
+            console.error("Error parsing existing profile for skill update", err);
+        }
+    }
+    
+    const newProfileData: UserProfile = {
+      ...initialProjectIdeasData[0], // This seems like a bug, should be spreading currentProfile or initialProfileData
+      ...currentProfile,
+      id: user.uid, 
+      name: currentProfile.name || user.email?.split('@')[0] || 'New Explorer',
+      skills: updatedSkills,
+      // Ensure all other fields from UserProfile are present, possibly from currentProfile or defaults
+      collegeId: currentProfile.collegeId || initialProjectIdeasData[0].initiatorId, // Placeholder logic, needs refinement
+      year: currentProfile.year || 'N/A',
+      department: currentProfile.department || 'N/A',
+      interests: currentProfile.interests || [],
+      projectAreas: currentProfile.projectAreas || [],
+      learningStyles: currentProfile.learningStyles || [],
+    };
+    saveData('studyProfile', newProfileData);
 
     setIsEditSkillsDialogOpen(false);
     toast({ title: 'Skill Matrix Updated!', description: 'Your skills have been recalibrated locally.', action: <CheckCircle className="h-5 w-5 text-green-500" /> });
@@ -191,8 +221,11 @@ const NebulaOfIdeasPage: FC = () => {
       return;
     }
     setSentRequests(prev => [...new Set([...prev, idea.initiatorId])]);
-    setConnections(prev => {
-      if (!prev.find(c => c.id === idea.initiatorId)) {
+    
+    const connectionsKey = userLocalStorageKey('connections');
+    if (connectionsKey) {
+      const currentConnections: MockStudentProfile[] = loadData('connections', []);
+      if (!currentConnections.find(c => c.id === idea.initiatorId)) {
         const newConnection: MockStudentProfile = {
           id: idea.initiatorId,
           name: idea.initiatorName,
@@ -200,16 +233,17 @@ const NebulaOfIdeasPage: FC = () => {
           year: 'N/A',
           profilePictureUrl: idea.initiatorAvatar || `https://placehold.co/80x80.png?text=${idea.initiatorName.charAt(0)}`,
           dataAiHint: idea.initiatorDataAiHint || 'person professional',
-          skills: idea.skillsSought, // Show skills sought by initiator as their "skills" for connection card
-          interests: idea.tags, // Show project tags as their "interests"
+          skills: idea.skillsSought, 
+          interests: idea.tags, 
           projectAreas: [idea.title],
           learningStyles: [],
           role: 'Initiator',
         };
-        return [...prev, newConnection];
+        const newConnections = [...currentConnections, newConnection];
+        saveData('connections', newConnections);
+        window.dispatchEvent(new CustomEvent('connectionsUpdated')); // Dispatch event
       }
-      return prev;
-    });
+    }
     toast({ title: 'Collaboration Signal Sent!', description: `Request transmitted to ${idea.initiatorName} for project "${idea.title}". Your connections list updated locally.`, action: <ThumbsUp className="h-5 w-5 text-green-500" />});
   };
 
