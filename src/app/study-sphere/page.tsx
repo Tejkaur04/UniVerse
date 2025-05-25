@@ -11,11 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"; // Removed DialogTrigger as it's part of Dialog
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, UsersRound, Pencil, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, Brain, Telescope, MessageCircleQuestion, Lightbulb, Bot, Rocket, Orbit, Sparkles } from 'lucide-react';
+import { ArrowLeft, UsersRound, Pencil, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 
 // Hardcoded initial data
@@ -42,6 +42,7 @@ interface StudyGroup {
   courses: string[];
   members: number;
   description: string;
+  isJoinedByCurrentUser?: boolean;
 }
 
 interface SharedResource {
@@ -58,6 +59,7 @@ interface StudySession {
   dateTime: string;
   group: string;
   location: string;
+  isJoinedByCurrentUser?: boolean;
 }
 
 const initialStudyProfile: StudyProfileData = {
@@ -74,8 +76,8 @@ const initialPotentialMatches: PotentialMatch[] = [
 ];
 
 const initialStudyGroups: StudyGroup[] = [
-  { id: 1, name: "Quantum Leapsters", courses: ["Quantum Mechanics"], members: 3, description: "Mastering the quantum realm together." },
-  { id: 2, name: "Astro Alliance", courses: ["Astrophysics 101"], members: 5, description: "Exploring the cosmos, one equation at a time." },
+  { id: 1, name: "Quantum Leapsters", courses: ["Quantum Mechanics"], members: 3, description: "Mastering the quantum realm together.", isJoinedByCurrentUser: false },
+  { id: 2, name: "Astro Alliance", courses: ["Astrophysics 101"], members: 5, description: "Exploring the cosmos, one equation at a time.", isJoinedByCurrentUser: false },
 ];
 
 const initialSharedResources: SharedResource[] = [
@@ -84,8 +86,8 @@ const initialSharedResources: SharedResource[] = [
 ];
 
 const initialStudySessions: StudySession[] = [
-  { id: 1, topic: "Astrophysics Midterm Review", dateTime: "October 28, 2024, 2:00 PM", group: "Astro Alliance", location: "Virtual via UniMeet" },
-  { id: 2, topic: "Quantum Entanglement Workshop", dateTime: "November 5, 2024, 5:00 PM", group: "Quantum Leapsters", location: "Library Room 3B" },
+  { id: 1, topic: "Astrophysics Midterm Review", dateTime: "October 28, 2024, 2:00 PM", group: "Astro Alliance", location: "Virtual via UniMeet", isJoinedByCurrentUser: false },
+  { id: 2, topic: "Quantum Entanglement Workshop", dateTime: "November 5, 2024, 5:00 PM", group: "Quantum Leapsters", location: "Library Room 3B", isJoinedByCurrentUser: false },
 ];
 
 export default function StudySpherePage() {
@@ -134,7 +136,7 @@ export default function StudySpherePage() {
       matches = matches.filter(match => match.learningStyles.includes(selectedStyleFilter));
     }
     setFilteredMatches(matches);
-  }, [selectedCourseFilter, selectedStyleFilter]);
+  }, [selectedCourseFilter, selectedStyleFilter, initialPotentialMatches]); // Added initialPotentialMatches to dependency array
 
   const handleEditProfile = () => {
     setIsEditDialogOpen(true);
@@ -174,6 +176,7 @@ export default function StudySpherePage() {
       courses: newGroupCourses.split(',').map(c => c.trim()).filter(c => c),
       members: 1, 
       description: newGroupDescription.trim(),
+      isJoinedByCurrentUser: true, // Creator automatically joins
     };
     setStudyGroups(prevGroups => [newGroup, ...prevGroups]);
     setIsCreateGroupDialogOpen(false);
@@ -184,6 +187,29 @@ export default function StudySpherePage() {
       title: "Study Group Created!",
       description: `The group "${newGroup.name}" has been successfully created.`,
     });
+  };
+
+  const handleJoinGroup = (groupId: number) => {
+    setStudyGroups(prevGroups =>
+      prevGroups.map(group =>
+        group.id === groupId && !group.isJoinedByCurrentUser
+          ? { ...group, members: group.members + 1, isJoinedByCurrentUser: true }
+          : group
+      )
+    );
+    const group = studyGroups.find(g => g.id === groupId);
+    if (group && !group.isJoinedByCurrentUser) {
+        toast({
+            title: "Joined Group!",
+            description: `You have successfully joined "${group.name}".`,
+        });
+    } else if (group && group.isJoinedByCurrentUser) {
+        toast({
+            title: "Already Joined",
+            description: `You are already a member of "${group.name}".`,
+            variant: "default",
+        });
+    }
   };
 
   const handleUploadResource = () => {
@@ -200,7 +226,7 @@ export default function StudySpherePage() {
       name: newResourceName.trim(),
       course: newResourceCourse.trim(),
       type: newResourceType.trim(),
-      uploader: "You (Demo User)", // Hardcoded for now
+      uploader: "You (Demo User)", 
     };
     setSharedResources(prevResources => [newResource, ...prevResources]);
     setIsUploadResourceDialogOpen(false);
@@ -228,6 +254,7 @@ export default function StudySpherePage() {
       dateTime: newSessionDateTime.trim(),
       group: newSessionGroup.trim(),
       location: newSessionLocation.trim(),
+      isJoinedByCurrentUser: false, // Or true if the creator auto-joins
     };
     setStudySessions(prevSessions => [newSession, ...prevSessions]);
     setIsScheduleSessionDialogOpen(false);
@@ -239,6 +266,25 @@ export default function StudySpherePage() {
       title: "Study Session Scheduled!",
       description: `"${newSession.topic}" has been added to upcoming sessions.`,
     });
+  };
+
+  const handleToggleJoinSession = (sessionId: number) => {
+    setStudySessions(prevSessions =>
+      prevSessions.map(session =>
+        session.id === sessionId
+          ? { ...session, isJoinedByCurrentUser: !session.isJoinedByCurrentUser }
+          : session
+      )
+    );
+    const session = studySessions.find(s => s.id === sessionId);
+    if (session) {
+        toast({
+            title: session.isJoinedByCurrentUser ? "Left Session" : "Joined Session!",
+            description: session.isJoinedByCurrentUser 
+                ? `You have left "${session.topic}".` 
+                : `You have successfully joined "${session.topic}".`,
+        });
+    }
   };
 
   const handleDemoClick = (message: string) => {
@@ -265,8 +311,8 @@ export default function StudySpherePage() {
         <p className="text-xl text-center text-muted-foreground mb-4">
           Your cosmic hub for collaborative learning! Find partners, join groups, and share knowledge.
         </p>
-        <p className="text-md text-center text-foreground/80 mb-10">
-          Welcome to your personal constellation for academic success! Define your study preferences and connect with fellow learners on a shared journey through the stars of knowledge.
+         <p className="text-md text-center text-foreground/80 mb-10">
+          Welcome, scholar! Navigate your academic universe by defining your study preferences, connecting with fellow learners, and collaborating on your journey to success.
         </p>
       </div>
 
@@ -313,11 +359,11 @@ export default function StudySpherePage() {
                 </div>
               </div>
               <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                <DialogTrigger asChild>
+                <Dialog.Trigger asChild>
                   <Button onClick={handleEditProfile} variant="outline" className="mt-2 border-accent text-accent hover:bg-accent/10">
                     <Pencil className="mr-2 h-4 w-4" /> Edit Profile
                   </Button>
-                </DialogTrigger>
+                </Dialog.Trigger>
                 <DialogContent className="sm:max-w-[425px] bg-card border-accent/50">
                   <DialogHeader>
                     <DialogTitle className="text-primary">Edit Your Study Profile</DialogTitle>
@@ -441,11 +487,11 @@ export default function StudySpherePage() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <Dialog open={isCreateGroupDialogOpen} onOpenChange={setIsCreateGroupDialogOpen}>
-                    <DialogTrigger asChild>
+                    <Dialog.Trigger asChild>
                         <Button onClick={() => setIsCreateGroupDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                             <Users className="mr-2 h-4 w-4" /> Create New Group
                         </Button>
-                    </DialogTrigger>
+                    </Dialog.Trigger>
                     <DialogContent className="sm:max-w-[480px] bg-card border-accent/50">
                         <DialogHeader>
                             <DialogTitle className="text-primary">Create a New Study Group</DialogTitle>
@@ -507,8 +553,14 @@ export default function StudySpherePage() {
                       <p className="text-sm text-foreground/80 mt-1">{group.description}</p>
                       <Badge variant="secondary" className="mt-2">{group.members} members</Badge>
                     </div>
-                    <Button onClick={() => handleDemoClick(`Requesting to join ${group.name}... (Demo)`)} size="sm" variant="outline" className="mt-1 border-accent text-accent hover:bg-accent/10 self-start sm:self-center">
-                      Join Group
+                    <Button 
+                        onClick={() => handleJoinGroup(group.id)} 
+                        size="sm" 
+                        variant={group.isJoinedByCurrentUser ? "default" : "outline"}
+                        disabled={group.isJoinedByCurrentUser}
+                        className={`mt-1 border-accent ${group.isJoinedByCurrentUser ? 'bg-accent text-accent-foreground cursor-not-allowed' : 'text-accent hover:bg-accent/10'} self-start sm:self-center`}
+                    >
+                      {group.isJoinedByCurrentUser ? <><CheckCircle className="mr-2 h-4 w-4" />Joined</> : "Join Group"}
                     </Button>
                   </div>
                 </Card>
@@ -528,11 +580,11 @@ export default function StudySpherePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Dialog open={isUploadResourceDialogOpen} onOpenChange={setIsUploadResourceDialogOpen}>
-                <DialogTrigger asChild>
+                <Dialog.Trigger asChild>
                   <Button onClick={() => setIsUploadResourceDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                     <UploadCloud className="mr-2 h-4 w-4" /> Upload Resource
                   </Button>
-                </DialogTrigger>
+                </Dialog.Trigger>
                 <DialogContent className="sm:max-w-[480px] bg-card border-accent/50">
                   <DialogHeader>
                     <DialogTitle className="text-primary">Upload a New Resource</DialogTitle>
@@ -613,11 +665,11 @@ export default function StudySpherePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <Dialog open={isScheduleSessionDialogOpen} onOpenChange={setIsScheduleSessionDialogOpen}>
-                <DialogTrigger asChild>
+                <Dialog.Trigger asChild>
                   <Button onClick={() => setIsScheduleSessionDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
                     <CalendarPlus className="mr-2 h-4 w-4" /> Schedule New Session
                   </Button>
-                </DialogTrigger>
+                </Dialog.Trigger>
                 <DialogContent className="sm:max-w-[480px] bg-card border-accent/50">
                   <DialogHeader>
                       <DialogTitle className="text-primary">Schedule a New Study Session</DialogTitle>
@@ -685,7 +737,14 @@ export default function StudySpherePage() {
                   <h4 className="font-semibold text-lg text-foreground">{session.topic}</h4>
                   <p className="text-sm text-muted-foreground">When: {session.dateTime}</p>
                   <p className="text-sm text-muted-foreground">With: {session.group} | Where: {session.location}</p>
-                  <Button onClick={() => handleDemoClick(`Viewing details for session: ${session.topic} (Demo)`)} size="sm" variant="link" className="p-0 h-auto text-accent hover:text-accent/80 mt-1">View Details / Join</Button>
+                  <Button 
+                    onClick={() => handleToggleJoinSession(session.id)} 
+                    size="sm" 
+                    variant={session.isJoinedByCurrentUser ? "default" : "outline"}
+                    className={`mt-2 border-accent ${session.isJoinedByCurrentUser ? 'bg-accent text-accent-foreground' : 'text-accent hover:bg-accent/10'}`}
+                  >
+                    {session.isJoinedByCurrentUser ? <><CheckCircle className="mr-2 h-4 w-4" />Joined</> : <><CalendarPlus className="mr-2 h-4 w-4" />Join Session</>}
+                  </Button>
                 </Card>
               ))}
               {studySessions.length === 0 && <p className="text-muted-foreground text-center py-4">No study sessions scheduled yet.</p>}
