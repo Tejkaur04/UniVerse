@@ -28,7 +28,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
-  display: 'swap', // Added display: 'swap' for better font loading
+  display: 'swap', 
 });
 
 
@@ -131,11 +131,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("dark", geistSans.variable)}> {/* Added geistSans.variable here */}
+    <html lang="en" className={cn("dark", geistSans.variable)}>
+      <head>
+        {/* Next.js will automatically inject other head elements here from metadata or child components */}
+      </head>
       <body
         className={cn(
-          // geistSans.variable, // Removed from here, applied to html
-          "antialiased min-h-screen flex flex-col relative font-sans" // Added font-sans
+          "antialiased min-h-screen flex flex-col relative font-sans"
       )}>
         <StarryBackground />
         <AuthProvider>
