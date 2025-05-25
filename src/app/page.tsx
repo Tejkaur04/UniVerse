@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Rocket, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Orbit, Sparkles, Telescope } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import AnimatedHeroText from '@/components/AnimatedHeroText'; // Import the new component
+import AnimatedHeroText from '@/components/AnimatedHeroText'; 
 
 interface FeatureInfo {
   icon: LucideIcon;
@@ -16,7 +16,6 @@ interface FeatureInfo {
   iconColor: string;
 }
 
-// For the dashboard-like cards section
 interface DashboardFeatureCardProps {
   title: string;
   description: string;
@@ -33,7 +32,7 @@ const DashboardFeatureCard = ({ title, description, icon: Icon, href, animationD
     )}
     style={{ animationDelay, animationFillMode: 'forwards' }}
   >
-    <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-accent/50 hover:border-accent/80 hover:scale-[1.02] transition-all duration-300 ease-in-out flex flex-col h-full overflow-hidden">
+    <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-accent/40 hover:scale-[1.02] hover:border-accent/50 transition-all duration-300 ease-in-out flex flex-col h-full overflow-hidden">
       <CardHeader className="items-center text-center pt-8">
         <Icon className="h-16 w-16 text-accent mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]" />
         <CardTitle className="text-2xl font-bold text-primary group-hover:text-accent transition-colors duration-300">{title}</CardTitle>
@@ -116,12 +115,12 @@ export default function LandingPage() {
         <Orbit className="h-20 w-20 sm:h-24 sm:w-24 text-primary mx-auto mb-6 animate-pulse" />
         <AnimatedHeroText 
           text="Welcome to UniVerse"
-          className="font-mono text-5xl sm:text-6xl md:text-7xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-accent"
+          className="font-mono text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-accent"
           el="h1"
         />
         <p 
           className="text-lg sm:text-xl md:text-2xl text-foreground/90 font-medium mb-10 max-w-2xl mx-auto animate-fade-in-up"
-          style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }} // Adjusted delay for hero text animation
+          style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}
         >
           Your all-in-one cosmic portal to navigate university life, connect with peers, discover events, and launch your brightest ideas.
         </p>
@@ -129,7 +128,7 @@ export default function LandingPage() {
           asChild 
           size="lg" 
           className="bg-accent hover:bg-accent/90 text-accent-foreground text-base sm:text-lg px-6 py-3 sm:px-8 sm:py-6 shadow-lg hover:shadow-accent/40 transition-all duration-300 ease-in-out transform hover:scale-105 animate-fade-in-up"
-          style={{ animationDelay: '1s', animationFillMode: 'forwards' }} // Adjusted delay
+          style={{ animationDelay: '1s', animationFillMode: 'forwards' }}
         >
           <Link href="/">
             <Rocket className="mr-2 h-5 w-5" />
@@ -145,8 +144,8 @@ export default function LandingPage() {
       >
         <div className="text-center mb-12 sm:mb-16">
             <h2
-              className="text-3xl sm:text-4xl font-bold text-primary mb-3 tracking-tight bg-gradient-to-r from-primary via-purple-300 to-accent bg-clip-text text-transparent animate-text-shimmer"
-              style={{ backgroundSize: '200% auto' }} // Required for shimmer effect
+              className="text-3xl sm:text-4xl font-bold text-primary mb-3 tracking-tight bg-gradient-to-r from-primary via-purple-300 to-accent bg-clip-text text-transparent animate-text-shimmer font-mono"
+              style={{ backgroundSize: '200% auto' }} 
             >
             UniVerse Command Center
             </h2>
@@ -176,7 +175,7 @@ export default function LandingPage() {
       {/* Features Overview Section (Full-width explanations) */}
       <section className="w-full max-w-7xl mb-20 sm:mb-24 md:mb-32">
         <h2 
-          className="text-3xl sm:text-4xl font-bold mb-12 sm:mb-16 md:mb-20 text-primary flex items-center justify-center animate-fade-in-up bg-gradient-to-r from-accent via-yellow-300 to-primary bg-clip-text text-transparent animate-text-shimmer"
+          className="text-3xl sm:text-4xl font-bold mb-12 sm:mb-16 md:mb-20 text-primary flex items-center justify-center animate-fade-in-up bg-gradient-to-r from-accent via-yellow-300 to-primary bg-clip-text text-transparent animate-text-shimmer font-mono"
           style={{ animationDelay: '1.8s', animationFillMode: 'forwards', backgroundSize: '200% auto' }} 
         >
           <Telescope className="mr-3 h-8 w-8 sm:h-10 sm:w-10 text-accent transition-transform duration-300 group-hover:rotate-[-5deg]" />
