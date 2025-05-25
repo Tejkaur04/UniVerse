@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, UsersRound, Pencil, SearchIcon, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, Brain, Share2, MessageSquare } from 'lucide-react';
-import Image from 'next/image'; // Import next/image
+import Image from 'next/image';
 
 const hardcodedCourses = ["Astrophysics 101", "Quantum Mechanics", "Calculus II", "Organic Chemistry", "Literary Theory"];
 const learningStyles = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
@@ -73,17 +73,29 @@ export default function StudySpherePage() {
 
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-8">
-          <TabsTrigger value="profile" className="text-sm py-2.5"><UserCircle className="mr-2 h-4 w-4" />My Profile</TabsTrigger>
-          <TabsTrigger value="find-buddies" className="text-sm py-2.5"><Search className="mr-2 h-4 w-4" />Find Buddies</TabsTrigger>
-          <TabsTrigger value="groups" className="text-sm py-2.5"><Users className="mr-2 h-4 w-4" />Study Groups</TabsTrigger>
-          <TabsTrigger value="resources" className="text-sm py-2.5"><FileText className="mr-2 h-4 w-4" />Resources</TabsTrigger>
-          <TabsTrigger value="sessions" className="text-sm py-2.5"><Clock className="mr-2 h-4 w-4" />Sessions</TabsTrigger>
+          <TabsTrigger value="profile" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
+            <UserCircle className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />My Profile
+          </TabsTrigger>
+          <TabsTrigger value="find-buddies" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
+            <Search className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Find Buddies
+          </TabsTrigger>
+          <TabsTrigger value="groups" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
+            <Users className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Study Groups
+          </TabsTrigger>
+          <TabsTrigger value="resources" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
+            <FileText className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Resources
+          </TabsTrigger>
+          <TabsTrigger value="sessions" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
+            <Clock className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Sessions
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
-          <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+          <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center text-primary"><BookOpen className="mr-3 h-7 w-7 text-accent" />Your Study Profile</CardTitle>
+              <CardTitle className="text-2xl flex items-center text-primary">
+                <BookOpen className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Your Study Profile
+              </CardTitle>
               <CardDescription>Define your academic focus and learning preferences to find the perfect study mates.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -110,9 +122,11 @@ export default function StudySpherePage() {
 
         <TabsContent value="find-buddies">
           <div className="space-y-10">
-            <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+            <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
               <CardHeader>
-                <CardTitle className="text-2xl flex items-center text-primary"><SearchIcon className="mr-3 h-7 w-7 text-accent" />Find Your Constellation</CardTitle>
+                <CardTitle className="text-2xl flex items-center text-primary">
+                  <SearchIcon className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Find Your Constellation
+                </CardTitle>
                 <CardDescription>Filter by courses and learning preferences to discover compatible study partners.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -144,9 +158,11 @@ export default function StudySpherePage() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+            <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
               <CardHeader>
-                <CardTitle className="text-2xl flex items-center text-primary"><Handshake className="mr-3 h-7 w-7 text-accent" />Potential Study Buddies</CardTitle>
+                <CardTitle className="text-2xl flex items-center text-primary">
+                    <Handshake className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Potential Study Buddies
+                </CardTitle>
                 <CardDescription>Discover students who align with your academic journey (results from search/recommendations).</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -170,9 +186,11 @@ export default function StudySpherePage() {
         </TabsContent>
         
         <TabsContent value="groups">
-          <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+          <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center text-primary"><Group className="mr-3 h-7 w-7 text-accent" />Collaborative Orbits (Study Groups)</CardTitle>
+              <CardTitle className="text-2xl flex items-center text-primary">
+                <Group className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Collaborative Orbits (Study Groups)
+              </CardTitle>
               <CardDescription>Launch your own study group or join an existing constellation of learners.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -202,9 +220,11 @@ export default function StudySpherePage() {
         </TabsContent>
 
         <TabsContent value="resources">
-          <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+          <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center text-primary"><FileText className="mr-3 h-7 w-7 text-accent" />Knowledge Nebula (Shared Resources)</CardTitle>
+              <CardTitle className="text-2xl flex items-center text-primary">
+                <FileText className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Knowledge Nebula (Shared Resources)
+              </CardTitle>
               <CardDescription>Exchange notes, summaries, and helpful materials with your connections and groups.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -232,9 +252,11 @@ export default function StudySpherePage() {
         </TabsContent>
 
         <TabsContent value="sessions">
-          <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+          <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
             <CardHeader>
-              <CardTitle className="text-2xl flex items-center text-primary"><Clock className="mr-3 h-7 w-7 text-accent" />Synchronized Orbits (Study Sessions)</CardTitle>
+              <CardTitle className="text-2xl flex items-center text-primary">
+                <Clock className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Synchronized Orbits (Study Sessions)
+              </CardTitle>
               <CardDescription>Plan and schedule study times with your partners or groups.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -259,4 +281,3 @@ export default function StudySpherePage() {
     </div>
   );
 }
-
