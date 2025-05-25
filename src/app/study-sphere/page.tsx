@@ -96,23 +96,43 @@ const tabContentVariants = {
 };
 
 const getLocalStorageKey = (baseKey: string, userId?: string) => {
-  // For mock auth, we'll use a generic key if no userId, or a user-specific one if available.
-  // This part might need adjustment depending on your actual mock auth user object structure.
-  // Assuming `userId` might be from a mock `user.uid`
   return userId ? `${baseKey}-${userId}` : `${baseKey}-guest`; 
 };
 
 
 export default function StudySpherePage() {
   const { toast } = useToast();
-  // Mock user ID for localStorage key differentiation - replace with actual from AuthContext if re-integrated
   const mockUserId = "demoUser123"; 
 
-  const [studyProfile, setStudyProfile] = useState<StudyProfileData>(initialStudyProfileData);
+  const [studyProfile, setStudyProfile] = useState<StudyProfileData>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(getLocalStorageKey('uniVerseStudyProfile', mockUserId));
+      return saved ? JSON.parse(saved) : initialStudyProfileData;
+    }
+    return initialStudyProfileData;
+  });
   const [potentialMatches, setPotentialMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData);
-  const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(initialStudyGroupsData);
-  const [sharedResources, setSharedResources] = useState<SharedResource[]>(initialSharedResourcesData);
-  const [studySessions, setStudySessions] = useState<StudySession[]>(initialStudySessionsData);
+  const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(() => {
+     if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(getLocalStorageKey('uniVerseStudyGroups', mockUserId));
+      return saved ? JSON.parse(saved) : initialStudyGroupsData;
+    }
+    return initialStudyGroupsData;
+  });
+  const [sharedResources, setSharedResources] = useState<SharedResource[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(getLocalStorageKey('uniVerseSharedResources', mockUserId));
+      return saved ? JSON.parse(saved) : initialSharedResourcesData;
+    }
+    return initialSharedResourcesData;
+  });
+  const [studySessions, setStudySessions] = useState<StudySession[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(getLocalStorageKey('uniVerseStudySessions', mockUserId));
+      return saved ? JSON.parse(saved) : initialStudySessionsData;
+    }
+    return initialStudySessionsData;
+  });
   
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editCoursesInput, setEditCoursesInput] = useState('');
@@ -139,46 +159,27 @@ export default function StudySpherePage() {
   const [newSessionLocation, setNewSessionLocation] = useState('');
   
   const [activeTab, setActiveTab] = useState("profile");
+  const [guideMessage, setGuideMessage] = useState("Welcome to the Study Sphere! Start by setting up your profile.");
 
-  // Load data from localStorage on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedProfile = localStorage.getItem(getLocalStorageKey('uniVerseStudyProfile', mockUserId));
-      if (savedProfile) setStudyProfile(JSON.parse(savedProfile));
 
-      const savedGroups = localStorage.getItem(getLocalStorageKey('uniVerseStudyGroups', mockUserId));
-      if (savedGroups) setStudyGroups(JSON.parse(savedGroups));
-      
-      const savedResources = localStorage.getItem(getLocalStorageKey('uniVerseSharedResources', mockUserId));
-      if (savedResources) setSharedResources(JSON.parse(savedResources));
-      
-      const savedSessions = localStorage.getItem(getLocalStorageKey('uniVerseStudySessions', mockUserId));
-      if (savedSessions) setStudySessions(JSON.parse(savedSessions));
-    }
-  }, [mockUserId]); // mockUserId won't change, so this runs once on mount essentially
-
-  // Save studyProfile to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(getLocalStorageKey('uniVerseStudyProfile', mockUserId), JSON.stringify(studyProfile));
     }
   }, [studyProfile, mockUserId]);
 
-  // Save studyGroups to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(getLocalStorageKey('uniVerseStudyGroups', mockUserId), JSON.stringify(studyGroups));
     }
   }, [studyGroups, mockUserId]);
 
-  // Save sharedResources to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(getLocalStorageKey('uniVerseSharedResources', mockUserId), JSON.stringify(sharedResources));
     }
   }, [sharedResources, mockUserId]);
 
-  // Save studySessions to localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(getLocalStorageKey('uniVerseStudySessions', mockUserId), JSON.stringify(studySessions));
@@ -212,7 +213,7 @@ export default function StudySpherePage() {
     setIsEditDialogOpen(false);
     toast({
         title: "Profile Updated (Locally)",
-        description: "Your study profile has been saved in your browser for this session. Real saving to your UniVerse account coming soon!",
+        description: "Your study profile has been saved in your browser for this session. This progress will be remembered next time you visit on this browser!",
     });
   };
 
@@ -247,7 +248,7 @@ export default function StudySpherePage() {
     setNewGroupDescription('');
     toast({
       title: "Study Group Created! (Locally)",
-      description: `The group "${newGroup.name}" has been successfully created and saved in your browser for this session.`,
+      description: `The group "${newGroup.name}" has been successfully created and saved in your browser.`,
     });
   };
 
@@ -268,7 +269,7 @@ export default function StudySpherePage() {
     if (groupJoinedSuccessfully && groupName) {
         toast({
             title: "Joined Group! (Locally)",
-            description: `You have successfully joined "${groupName}". Status saved in your browser for this session.`,
+            description: `You have successfully joined "${groupName}". This is saved in your browser.`,
         });
     } else {
         const group = studyGroups.find(g => g.id === groupId);
@@ -305,7 +306,7 @@ export default function StudySpherePage() {
     setNewResourceType('');
     toast({
       title: "Resource Uploaded! (Locally)",
-      description: `"${newResource.name}" has been added and saved in your browser for this session.`,
+      description: `"${newResource.name}" has been added and saved in your browser.`,
     });
   };
 
@@ -334,7 +335,7 @@ export default function StudySpherePage() {
     setNewSessionLocation('');
     toast({
       title: "Study Session Scheduled! (Locally)",
-      description: `"${newSession.topic}" has been added and saved in your browser for this session.`,
+      description: `"${newSession.topic}" has been added and saved in your browser.`,
     });
   };
 
@@ -358,7 +359,7 @@ export default function StudySpherePage() {
             title: sessionJoined ? "Joined Session! (Locally)" : "Left Session (Locally)",
             description: (sessionJoined 
                 ? `You have successfully joined "${sessionTopic}".` 
-                : `You have left "${sessionTopic}".`) + " Status saved in your browser for this session.",
+                : `You have left "${sessionTopic}".`) + " Status saved in your browser.",
         });
     }
   };
@@ -366,18 +367,41 @@ export default function StudySpherePage() {
   const handleDemoClick = (message: string) => {
     toast({
       title: "Demo Action",
-      description: message + " (Real connections coming soon! Data is local for now.)",
+      description: message + " (Connections and real-time sharing coming soon! Your data is local for now.)",
       duration: 3000,
     });
   };
   
   const motionKey = activeTab;
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    switch (value) {
+      case "profile":
+        setGuideMessage("Here's your study profile! Keep your courses and learning styles up-to-date.");
+        break;
+      case "find-buddies":
+        setGuideMessage("Looking for study partners? Use the filters to find students with similar interests!");
+        break;
+      case "groups":
+        setGuideMessage("Collaborate in groups! Join an existing one or create your own cosmic crew.");
+        break;
+      case "resources":
+        setGuideMessage("Share your knowledge! Upload notes or find helpful resources from others.");
+        break;
+      case "sessions":
+        setGuideMessage("Time to sync up! Schedule study sessions or join ones already planned.");
+        break;
+      default:
+        setGuideMessage("Welcome to the Study Sphere! Explore the tabs to get started.");
+    }
+  };
+
 
   return (
     <div className="container mx-auto px-4 py-12 w-full max-w-4xl">
       <div className="mb-8">
-        <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground">
+        <Button asChild variant="outline" className="mb-6">
           <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to UniVerse Home
@@ -395,7 +419,7 @@ export default function StudySpherePage() {
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="w-full" onValueChange={setActiveTab} value={activeTab}>
+      <Tabs defaultValue="profile" className="w-full" onValueChange={handleTabChange} value={activeTab}>
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-8">
           <TabsTrigger value="profile" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
             <UserCircle className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform animate-subtle-pulse" />My Profile
@@ -416,7 +440,7 @@ export default function StudySpherePage() {
 
         <motion.div key={motionKey} variants={tabContentVariants} initial="hidden" animate="visible">
             <TabsContent value="profile">
-            <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
+            <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                 <CardHeader>
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <BookOpen className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Your Study Profile
@@ -500,7 +524,7 @@ export default function StudySpherePage() {
 
             <TabsContent value="find-buddies">
             <div className="space-y-10">
-                <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
+                <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                 <CardHeader>
                     <CardTitle className="text-2xl flex items-center text-primary">
                     <Search className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Find Your Constellation
@@ -535,7 +559,7 @@ export default function StudySpherePage() {
                 </CardContent>
                 </Card>
 
-                <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
+                <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                 <CardHeader>
                     <CardTitle className="text-2xl flex items-center text-primary">
                         <Handshake className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Potential Study Buddies
@@ -544,7 +568,7 @@ export default function StudySpherePage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {filteredMatches.length > 0 ? filteredMatches.map(match => (
-                    <Card key={match.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 bg-background/70 backdrop-blur-xs border-border/60 shadow-md">
+                    <Card key={match.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                         <Image src={match.avatar} alt={match.name} data-ai-hint={match.dataAiHint} className="h-16 w-16 rounded-full object-cover" width={64} height={64} />
                         <div className="flex-grow">
                         <h4 className="font-semibold text-lg text-foreground">{match.name}</h4>
@@ -562,7 +586,7 @@ export default function StudySpherePage() {
             </TabsContent>
             
             <TabsContent value="groups">
-            <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
+            <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                 <CardHeader>
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <Group className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Collaborative Orbits (Study Groups)
@@ -629,7 +653,7 @@ export default function StudySpherePage() {
                 <Separator className="my-6 bg-border/50" />
                 <h3 className="font-semibold text-lg mb-2 text-foreground">Join Existing Groups:</h3>
                 {studyGroups.map(group => (
-                    <Card key={group.id} className="p-4 bg-background/70 backdrop-blur-xs border-border/60 shadow-md">
+                    <Card key={group.id} className="p-4 bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
                         <div className="flex-grow mb-3 sm:mb-0">
                         <h4 className="font-semibold text-lg text-foreground">{group.name}</h4>
@@ -655,7 +679,7 @@ export default function StudySpherePage() {
             </TabsContent>
 
             <TabsContent value="resources">
-            <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
+            <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                 <CardHeader>
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <FileText className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Knowledge Nebula (Shared Resources)
@@ -722,7 +746,7 @@ export default function StudySpherePage() {
                 <Separator className="my-6 bg-border/50" />
                 <h3 className="font-semibold text-lg mb-2 text-foreground">Available Resources:</h3>
                 {sharedResources.map(resource => (
-                    <Card key={resource.id} className="p-4 flex items-center space-x-4 bg-background/70 backdrop-blur-xs border-border/60 shadow-md">
+                    <Card key={resource.id} className="p-4 flex items-center space-x-4 bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                     <FileText className="h-8 w-8 text-accent shrink-0" />
                     <div className="flex-grow">
                         <h4 className="font-semibold text-lg text-foreground">{resource.name}</h4>
@@ -740,7 +764,7 @@ export default function StudySpherePage() {
             </TabsContent>
 
             <TabsContent value="sessions">
-            <Card className="shadow-xl bg-card/90 backdrop-blur-md border-accent/40">
+            <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                 <CardHeader>
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <Clock className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Synchronized Orbits (Study Sessions)
@@ -817,7 +841,7 @@ export default function StudySpherePage() {
                 <Separator className="my-6 bg-border/50" />
                 <h3 className="font-semibold text-lg mb-2 text-foreground">Upcoming Sessions:</h3>
                 {studySessions.map(session => (
-                    <Card key={session.id} className="p-4 bg-background/70 backdrop-blur-xs border-border/60 shadow-md">
+                    <Card key={session.id} className="p-4 bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                     <h4 className="font-semibold text-lg text-foreground">{session.topic}</h4>
                     <p className="text-sm text-muted-foreground">When: {session.dateTime}</p>
                     <p className="text-sm text-muted-foreground">With: {session.group} | Where: {session.location}</p>
@@ -837,6 +861,8 @@ export default function StudySpherePage() {
             </TabsContent>
         </motion.div>
       </Tabs>
+      {/* <AlienGuide message={guideMessage} /> */}
     </div>
   );
 }
+
