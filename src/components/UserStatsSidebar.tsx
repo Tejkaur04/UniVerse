@@ -18,10 +18,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import {
-  Users, Brain, FlaskConical, Link as LinkIconLucide, Loader2, Home as HomeIcon, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle, Waypoints, UserCircle, Pencil, CheckCircle as CheckCircleIcon
+  Brain, FlaskConical, Link as LinkIconLucide, Loader2, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle, Waypoints, Pencil, CheckCircle as CheckCircleIcon, Link2 as ConnectionsIcon
 } from 'lucide-react';
 
-// Define UserProfile interface directly or import if it becomes shared
+// Define UserProfile interface
 export interface UserProfile {
   id: string;
   name: string;
@@ -45,7 +45,7 @@ const initialProfileData: UserProfile = {
   name: 'New Explorer',
   collegeId: 'N/A',
   year: YEARS[0],
-  department: DEPARTMENTS[DEPARTMENTS.length -1], // Default to Undeclared
+  department: DEPARTMENTS[DEPARTMENTS.length - 1],
   profilePictureUrl: 'https://placehold.co/128x128.png?text=U',
   dataAiHint: 'student avatar',
   skills: [],
@@ -54,13 +54,12 @@ const initialProfileData: UserProfile = {
   learningStyles: [],
 };
 
-
 const navFeatures = [
   { href: "/study-sphere", label: "Study Sphere", icon: UsersRound },
   { href: "/event-horizon", label: "Event Horizon", icon: CalendarDays },
   { href: "/celestial-chats", label: "Celestial Chats", icon: MessageCircleQuestion },
   { href: "/nebula-of-ideas", label: "Nebula of Ideas", icon: Lightbulb },
-  { href: "/my-connections", label: "My Connections", icon: LinkIconLucide }, // New Connection Link
+  { href: "/my-connections", label: "My Connections", icon: ConnectionsIcon },
 ];
 
 const UserStatsSidebar: FC = () => {
@@ -72,18 +71,17 @@ const UserStatsSidebar: FC = () => {
   };
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [connectionsCount, setConnectionsCount] = useState<number>(0);
+  const [connectionsCount, setConnectionsCount] = useState<number>(0); // State for connections count
   const [isLoading, setIsLoading] = useState(true);
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<UserProfile>(initialProfileData);
 
-
   useEffect(() => {
     if (user && user.uid) {
       setIsLoading(true);
-      const profileKey = userLocalStorageKey('studyProfile'); // Adjusted key from studySphere-studyProfile
-      const connectionsKey = userLocalStorageKey('connections'); // Centralized key
+      const profileKey = userLocalStorageKey('studyProfile');
+      const connectionsKey = userLocalStorageKey('connections'); // Key for connections
 
       if (profileKey) {
         const savedProfile = localStorage.getItem(profileKey);
@@ -97,6 +95,7 @@ const UserStatsSidebar: FC = () => {
             id: user.uid,
             name: user.email?.split('@')[0] || 'New Explorer',
             profilePictureUrl: `https://placehold.co/128x128.png?text=${user.email?.[0]?.toUpperCase() || 'U'}`,
+            dataAiHint: 'student avatar',
           };
           setProfile(newProfile);
           setEditForm(newProfile);
@@ -106,27 +105,39 @@ const UserStatsSidebar: FC = () => {
 
       if (connectionsKey) {
         const savedConnections = localStorage.getItem(connectionsKey);
-        setConnectionsCount(savedConnections ? (JSON.parse(savedConnections) as any[]).length : 0);
+        if (savedConnections) {
+          try {
+            const parsedConnections = JSON.parse(savedConnections) as any[];
+            setConnectionsCount(parsedConnections.length);
+          } catch (e) {
+            console.error("Error parsing connections from localStorage", e);
+            setConnectionsCount(0);
+          }
+        } else {
+          setConnectionsCount(0);
+        }
       } else {
         setConnectionsCount(0);
       }
+
       setIsLoading(false);
     } else if (!user) {
       setIsLoading(false);
       setProfile(null);
       setConnectionsCount(0);
     }
-  }, [user]);
+  }, [user, isEditDialogOpen]); // Re-fetch if dialog closes, in case profile affects what's shown (e.g., if user updates and connects elsewhere)
 
   const handleEditProfile = () => {
     if (profile) {
       setEditForm({ ...profile }); 
-    } else if (user) {
+    } else if (user) { // Should not happen if profile is initialized, but as a fallback
       const newProfile: UserProfile = {
         ...initialProfileData,
         id: user.uid,
         name: user.email?.split('@')[0] || 'New Explorer',
         profilePictureUrl: `https://placehold.co/128x128.png?text=${user.email?.[0]?.toUpperCase() || 'U'}`,
+        dataAiHint: 'student avatar',
       };
       setEditForm(newProfile);
     }
@@ -139,16 +150,25 @@ const UserStatsSidebar: FC = () => {
       toast({ variant: 'destructive', title: 'Missing Information', description: 'Name and College ID are required.'});
       return;
     }
-    setProfile(editForm); 
-    const profileKey = userLocalStorageKey('studyProfile'); // Adjusted key
+    // Ensure all array fields are indeed arrays before saving
+    const profileToSave: UserProfile = {
+        ...editForm,
+        skills: Array.isArray(editForm.skills) ? editForm.skills : [],
+        interests: Array.isArray(editForm.interests) ? editForm.interests : [],
+        projectAreas: Array.isArray(editForm.projectAreas) ? editForm.projectAreas : [],
+        learningStyles: Array.isArray(editForm.learningStyles) ? editForm.learningStyles : [],
+    };
+
+    setProfile(profileToSave); 
+    const profileKey = userLocalStorageKey('studyProfile');
     if (profileKey) {
-      localStorage.setItem(profileKey, JSON.stringify(editForm));
+      localStorage.setItem(profileKey, JSON.stringify(profileToSave));
     }
     setIsEditDialogOpen(false);
     toast({ title: 'Profile Synchronized!', description: 'Your cosmic coordinates have been updated locally.', action: <CheckCircleIcon className="h-5 w-5 text-green-500" />});
   };
   
-  const handleProfileInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleProfileInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setEditForm(prev => ({ ...prev, [name]: value }));
   };
@@ -168,18 +188,17 @@ const UserStatsSidebar: FC = () => {
     });
   };
 
-
-  if (!user) {
-    return null; 
-  }
-
-  if (isLoading) {
+  if (isLoading && !profile) { // Show loader only if truly loading and no profile yet
     return (
       <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border bg-card/50 p-4 space-y-4 sticky top-0 overflow-y-auto items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Loading Stats...</p>
+        <p className="text-sm text-muted-foreground">Loading Your UniVerse Stats...</p>
       </aside>
     );
+  }
+  
+  if (!user) { // Should be caught by AppContent, but as a safeguard for sidebar
+    return null; 
   }
 
   const skills = profile?.skills || [];
@@ -187,7 +206,7 @@ const UserStatsSidebar: FC = () => {
 
   return (
     <>
-    <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border bg-card/60 backdrop-blur-sm p-4 sticky top-0 overflow-y-auto">
+    <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border/70 bg-card/70 backdrop-blur-sm p-4 sticky top-0 overflow-y-auto shadow-lg">
       <div className="flex-grow space-y-6">
          <Link href="/" className="flex items-center space-x-2 mb-6 group">
             <Waypoints className="h-7 w-7 text-primary group-hover:text-accent transition-colors" />
@@ -196,50 +215,50 @@ const UserStatsSidebar: FC = () => {
             </span>
         </Link>
 
-        <nav className="space-y-2">
+        <nav className="space-y-1">
           <h3 className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Navigate</h3>
           {navFeatures.map((item) => (
             <Button
               key={item.label}
               variant="ghost"
-              className="w-full justify-start text-base py-3 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
+              className="w-full justify-start text-sm py-2.5 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
               asChild
             >
               <Link href={item.href}>
-                <item.icon className="mr-3 h-5 w-5" />
+                <item.icon className="mr-3 h-4 w-4" />
                 {item.label}
               </Link>
             </Button>
           ))}
         </nav>
 
-        <Separator className="bg-border/70" />
+        <Separator className="bg-border/50" />
 
         <div>
             <h3 className="px-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Stats</h3>
-            <Card className="bg-background/50 border-primary/30 shadow-sm">
-                <CardHeader className="pb-2 pt-3">
-                <CardTitle className="text-md font-mono text-primary flex items-center">
-                    <LinkIconLucide className="mr-2 h-4 w-4" />
-                    Connections
+            <Card className="bg-background/40 border-primary/20 shadow-inner">
+                <CardHeader className="pb-1 pt-2.5">
+                <CardTitle className="text-sm font-mono text-primary flex items-center">
+                    <ConnectionsIcon className="mr-2 h-4 w-4" />
+                    Connections Made
                 </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-0">
-                <p className="text-2xl font-bold text-accent">{connectionsCount}</p>
+                <CardContent className="pt-0 pb-2.5">
+                <p className="text-xl font-bold text-accent">{connectionsCount}</p>
                 </CardContent>
             </Card>
 
-            <Card className="mt-3 bg-background/50 border-primary/30 shadow-sm">
-                <CardHeader className="pb-2 pt-3">
-                <CardTitle className="text-md font-mono text-primary flex items-center">
+            <Card className="mt-2 bg-background/40 border-primary/20 shadow-inner">
+                <CardHeader className="pb-1 pt-2.5">
+                <CardTitle className="text-sm font-mono text-primary flex items-center">
                     <Brain className="mr-2 h-4 w-4" />
                     My Skills
                 </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-0 max-h-28 overflow-y-auto space-y-1 pr-1 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+                <CardContent className="pt-0 pb-2.5 max-h-24 overflow-y-auto space-y-1 pr-1 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                 {skills.length > 0 ? (
                     skills.map((skill) => (
-                    <Badge key={skill} variant="secondary" className="mr-1 mb-1 bg-primary/25 text-primary-foreground text-xs">
+                    <Badge key={skill} variant="secondary" className="mr-1 mb-1 bg-primary/20 text-primary-foreground text-xs">
                         {skill}
                     </Badge>
                     ))
@@ -249,17 +268,17 @@ const UserStatsSidebar: FC = () => {
                 </CardContent>
             </Card>
             
-            <Card className="mt-3 bg-background/50 border-primary/30 shadow-sm">
-                <CardHeader className="pb-2 pt-3">
-                <CardTitle className="text-md font-mono text-primary flex items-center">
+            <Card className="mt-2 bg-background/40 border-primary/20 shadow-inner">
+                <CardHeader className="pb-1 pt-2.5">
+                <CardTitle className="text-sm font-mono text-primary flex items-center">
                     <FlaskConical className="mr-2 h-4 w-4" />
-                    Project Areas
+                    My Project Areas
                 </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-0 max-h-28 overflow-y-auto space-y-1 pr-1 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+                <CardContent className="pt-0 pb-2.5 max-h-24 overflow-y-auto space-y-1 pr-1 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
                 {projectAreas.length > 0 ? (
                     projectAreas.map((area) => (
-                    <Badge key={area} variant="outline" className="mr-1 mb-1 border-accent/70 text-accent text-xs">
+                    <Badge key={area} variant="outline" className="mr-1 mb-1 border-accent/50 text-accent text-xs">
                         {area}
                     </Badge>
                     ))
@@ -271,29 +290,29 @@ const UserStatsSidebar: FC = () => {
         </div>
       </div>
 
-      <div className="mt-auto space-y-2 pt-6 border-t border-border/70">
+      <div className="mt-auto space-y-1 pt-4 border-t border-border/50">
          <Button
               variant="ghost"
-              className="w-full justify-start text-base py-3 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
+              className="w-full justify-start text-sm py-2.5 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
               onClick={handleEditProfile} 
             >
-              <Pencil className="mr-3 h-5 w-5" />
+              <Pencil className="mr-3 h-4 w-4" />
               Edit My Profile
           </Button>
          <Button
               variant="ghost"
-              className="w-full justify-start text-base py-3 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
+              className="w-full justify-start text-sm py-2.5 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
               onClick={() => toast({title: "Settings (Demo)", description: "This would open application settings."})} 
             >
-              <Settings className="mr-3 h-5 w-5" />
+              <Settings className="mr-3 h-4 w-4" />
               Settings
           </Button>
           <Button
               variant="ghost"
-              className="w-full justify-start text-base py-3 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
+              className="w-full justify-start text-sm py-2.5 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
               onClick={() => toast({title: "Help & Support (Demo)", description: "This would open a help center."})} 
             >
-              <HelpCircle className="mr-3 h-5 w-5" />
+              <HelpCircle className="mr-3 h-4 w-4" />
               Help & Support
           </Button>
       </div>
@@ -303,16 +322,16 @@ const UserStatsSidebar: FC = () => {
         <DialogContent className="bg-card border-primary/50 sm:max-w-[525px]">
         <DialogHeader>
             <DialogTitle className="font-mono text-primary flex items-center"><Pencil className="mr-2 h-5 w-5"/>Edit Your UniVerse Coordinates</DialogTitle>
-            <DialogDescription>Update your profile. Changes are saved locally to your browser.</DialogDescription>
+            <DialogDescription>Update your profile. Changes are saved locally to your browser for this demo.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSaveProfile} className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-2">
+        <form onSubmit={handleSaveProfile} className="space-y-3 py-2 max-h-[70vh] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
             <div><Label htmlFor="edit-name">Name</Label><Input id="edit-name" name="name" value={editForm.name || ''} onChange={handleProfileInputChange} /></div>
             <div><Label htmlFor="edit-collegeId">College ID</Label><Input id="edit-collegeId" name="collegeId" value={editForm.collegeId || ''} onChange={handleProfileInputChange} /></div>
             
             <div>
                 <Label htmlFor="edit-year">Year</Label>
                 <Select name="year" value={editForm.year || ''} onValueChange={(value) => setEditForm(prev => ({...prev, year: value}))}>
-                    <SelectTrigger id="edit-year"><SelectValue placeholder="Select year" /></SelectTrigger>
+                    <SelectTrigger id="edit-year" className="bg-input"><SelectValue placeholder="Select year" /></SelectTrigger>
                     <SelectContent className="bg-popover border-primary/50">
                         {YEARS.map(year => <SelectItem key={year} value={year} className="hover:!bg-primary/20 focus:!bg-primary/20">{year}</SelectItem>)}
                     </SelectContent>
@@ -321,7 +340,7 @@ const UserStatsSidebar: FC = () => {
             <div>
                 <Label htmlFor="edit-department">Department</Label>
                 <Select name="department" value={editForm.department || ''} onValueChange={(value) => setEditForm(prev => ({...prev, department: value}))}>
-                     <SelectTrigger id="edit-department"><SelectValue placeholder="Select department" /></SelectTrigger>
+                     <SelectTrigger id="edit-department" className="bg-input"><SelectValue placeholder="Select department" /></SelectTrigger>
                      <SelectContent className="bg-popover border-primary/50">
                         {DEPARTMENTS.map(dept => <SelectItem key={dept} value={dept} className="hover:!bg-primary/20 focus:!bg-primary/20">{dept}</SelectItem>)}
                     </SelectContent>
@@ -345,10 +364,7 @@ const UserStatsSidebar: FC = () => {
                 ))}
             </div>
             </div>
-            <DialogFooter className="pt-4">
-            <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-            <Button type="submit" className="bg-primary hover:bg-accent hover:text-accent-foreground">Save Changes</Button>
-            </DialogFooter>
+            <DialogFooter className="pt-3"><DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose><Button type="submit" className="bg-primary hover:bg-accent hover:text-accent-foreground">Save Changes</Button></DialogFooter>
         </form>
         </DialogContent>
     </Dialog>
@@ -357,3 +373,5 @@ const UserStatsSidebar: FC = () => {
 };
 
 export default UserStatsSidebar;
+
+    
