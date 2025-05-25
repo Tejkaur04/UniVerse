@@ -73,17 +73,20 @@ function AppContent({ children }: { children: ReactNode }) {
   }, [isMounted, user, authLoading, pathname, router]);
 
   const isPublicPage = ['/login', '/signup'].includes(pathname);
-  const showAppStructure = isMounted && (!authLoading || isPublicPage || user); // Show structure if mounted and either not loading auth, or on public page, or user exists
-  const showLoader = !isMounted || (authLoading && !isPublicPage && !user); // Show loader if not mounted, or if loading auth and not on public page and no user yet
+  
+  // Determine if the main app structure (sidebar, header, content) should be shown
+  const showAppStructure = isMounted && (!authLoading || user || isPublicPage);
+  // Determine if the global loader should be shown
+  const showGlobalLoader = !isMounted || (authLoading && !user && !isPublicPage);
 
   const showSidebarAndGuide = isMounted && user && !isPublicPage;
 
   return (
-    <div className="flex min-h-screen"> {/* Ensure this root div is always rendered */}
+    <div className="flex min-h-screen"> {/* This root div is always rendered */}
       {showSidebarAndGuide && <UserStatsSidebar />}
       
       <div className="flex flex-col flex-grow">
-        {showLoader ? (
+        {showGlobalLoader ? (
           <div className="flex flex-1 items-center justify-center bg-background">
             <Loader2 className="h-16 w-16 animate-spin text-primary" />
           </div>
@@ -91,8 +94,14 @@ function AppContent({ children }: { children: ReactNode }) {
           <>
             <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <div className="container flex h-16 max-w-screen-2xl items-center px-4">
-                {/* Logo is now part of the sidebar, so header can be simpler or have other elements if needed */}
-                <div className="flex-grow"></div> {/* Pushes user dropdown to the right */}
+                <Link href="/" className="flex items-center space-x-2 group">
+                  <Waypoints className="h-7 w-7 text-primary group-hover:text-accent transition-colors" />
+                  <span className="font-bold text-xl font-mono text-primary group-hover:text-accent transition-colors">
+                    UniVerse
+                  </span>
+                </Link>
+                
+                <div className="flex-grow"></div> 
 
                 <nav className="flex items-center space-x-1 sm:space-x-2">
                   {user ? (
@@ -123,7 +132,7 @@ function AppContent({ children }: { children: ReactNode }) {
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={async () => {
-                          await logout(); // This is the mock logout
+                          await logout(); 
                           router.push('/login');
                         }} className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
                           <LogOut className="mr-2 h-4 w-4" />
@@ -146,8 +155,8 @@ function AppContent({ children }: { children: ReactNode }) {
             </header>
             <main className={cn(
               "flex-1 flex flex-col items-center py-8 z-10 relative",
-              showSidebarAndGuide ? "md:ml-[25rem]" : "", // Adjusted for new sidebar width
-              "px-4 md:px-1" // Adjusted padding for main content
+              showSidebarAndGuide ? "md:ml-[25rem]" : "", 
+              "px-4 md:pl-0 md:pr-1" // Minimal left padding, small right padding on md+
             )}>
               <div className="w-full max-w-7xl">
                 {children}
@@ -155,7 +164,7 @@ function AppContent({ children }: { children: ReactNode }) {
             </main>
           </>
         ) : (
-          // Fallback for unexpected states, though showLoader should cover most loading cases
+          // Fallback for unexpected states
           <div className="flex flex-1 items-center justify-center bg-background">
             <p className="text-lg text-muted-foreground">Initializing UniVerse...</p>
           </div>
