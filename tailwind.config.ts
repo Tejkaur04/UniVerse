@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -95,6 +96,16 @@ export default {
             '0%, 100%': { opacity: '1', transform: 'scale(1)' },
             '50%': { opacity: '0.85', transform: 'scale(1.03)' },
           },
+          'bounce': { // Added bounce animation
+            '0%, 100%': {
+              transform: 'translateY(-10%)',
+              animationTimingFunction: 'cubic-bezier(0.8,0,1,1)'
+            },
+            '50%': {
+              transform: 'translateY(0)',
+              animationTimingFunction: 'cubic-bezier(0,0,0.2,1)'
+            }
+          }
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
@@ -102,6 +113,7 @@ export default {
         'ping-slow': 'ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite',
         'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
         'subtle-pulse': 'subtle-pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'bounce': 'bounce 1s infinite', // Added bounce animation utility
   		}
   	}
   },
