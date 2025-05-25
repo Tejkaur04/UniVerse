@@ -1,108 +1,267 @@
 
 "use client";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { ArrowRight, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Telescope, Orbit } from 'lucide-react';
+import AnimatedHeroText from '@/components/AnimatedHeroText'; // UniVerse component
+import type { FC } from 'react';
 
-import { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import MyProfileTab from '@/components/dashboard/MyProfileTab';
-import BrowseStudentsTab from '@/components/dashboard/BrowseStudentsTab';
-import MyConnectionsTab from '@/components/dashboard/MyConnectionsTab';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UserCircle, Search, Link2, BarChart3 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+// UniVerse Landing Page / Dashboard
 
-export default function DashboardPage() {
-  const { user } = useAuth();
-  const [numConnections, setNumConnections] = useState(0);
-  const [numSkills, setNumSkills] = useState(0);
-  const [numProjectTags, setNumProjectTags] = useState(0);
+// For "UniVerse Command Center" - a section of the landing page that acts as a dashboard
+interface FeatureCardProps {
+  title: string;
+  description: string;
+  href: string;
+  icon: FC<React.ComponentProps<typeof ArrowRight>>; // Lucide icons are FCs
+  cta: string;
+  animationDelay?: string;
+}
 
-  const connectionsLocalStorageKey = user ? `peerconnect-connections-${user.uid}` : null;
-  const profileLocalStorageKey = user ? `peerconnect-profile-${user.uid}` : null;
+const commandCenterFeatures: FeatureCardProps[] = [
+  {
+    title: "Study Sphere",
+    description: "Connect with study buddies, form groups, and share resources.",
+    href: "/study-sphere",
+    icon: UsersRound,
+    cta: "Enter Sphere",
+    animationDelay: "0.1s",
+  },
+  {
+    title: "Event Horizon",
+    description: "Discover campus events, workshops, and seminars.",
+    href: "/event-horizon",
+    icon: CalendarDays,
+    cta: "Explore Events",
+    animationDelay: "0.2s",
+  },
+  {
+    title: "Celestial Chats",
+    description: "Gain wisdom from AI, seniors, and alumni mentors.",
+    href: "/celestial-chats",
+    icon: MessageCircleQuestion,
+    cta: "Join Chats",
+    animationDelay: "0.3s",
+  },
+  {
+    title: "Nebula of Ideas",
+    description: "Launch projects and find collaborators for your innovations.",
+    href: "/nebula-of-ideas",
+    icon: Lightbulb,
+    cta: "Ignite Ideas",
+    animationDelay: "0.4s",
+  },
+];
 
-  useEffect(() => {
-    if (connectionsLocalStorageKey) {
-      const savedConnections = localStorage.getItem(connectionsLocalStorageKey);
-      if (savedConnections) {
-        setNumConnections(JSON.parse(savedConnections).length);
-      }
-    }
-    if (profileLocalStorageKey) {
-      const savedProfile = localStorage.getItem(profileLocalStorageKey);
-      if (savedProfile) {
-        const profile = JSON.parse(savedProfile);
-        setNumSkills(profile.skills?.length || 0);
-        setNumProjectTags(profile.projectAreas?.length || 0);
-      }
-    }
-     // This effect should re-run if the user logs in/out, or if local storage might change
-     // Adding a listener or a more robust state management would be better for real-time updates.
-  }, [connectionsLocalStorageKey, profileLocalStorageKey, user]);
-
-
+const FeatureCard: FC<FeatureCardProps> = ({ title, description, href, icon: Icon, cta, animationDelay }) => {
   return (
-    <div className="container mx-auto px-4 py-8 w-full">
-      <h1 className="text-3xl font-bold mb-2 text-center md:text-left">PeerConnect Dashboard</h1>
-      <p className="text-muted-foreground mb-8 text-center md:text-left">
-        Welcome back! Manage your profile, discover peers, and view your connections.
-      </p>
+    <Card 
+      className="bg-card/70 backdrop-blur-md shadow-xl border-primary/30 hover:border-accent/80 hover:shadow-accent/30 hover:shadow-2xl transition-all duration-300 flex flex-col animate-fade-in-up"
+      style={{ animationDelay }}
+    >
+      <CardHeader className="pb-4">
+        <div className="flex items-center space-x-3 mb-2">
+          <Icon className="h-8 w-8 text-accent animate-subtle-pulse" />
+          <CardTitle className="text-2xl font-mono text-primary">{title}</CardTitle>
+        </div>
+        <CardDescription className="text-foreground/80 h-16">{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex-grow flex flex-col justify-end">
+        <Button asChild className="w-full bg-primary hover:bg-accent hover:text-accent-foreground transition-colors group">
+          <Link href={href}>
+            {cta} <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+};
 
-      {/* Stats Section - Simulated */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <Card className="shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">My Connections</CardTitle>
-            <Link2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{numConnections}</div>
-            <p className="text-xs text-muted-foreground">Peers you've connected with</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">My Skills</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{numSkills}</div>
-            <p className="text-xs text-muted-foreground">Skills listed on your profile</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">My Project Tags</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{numProjectTags}</div>
-            <p className="text-xs text-muted-foreground">Project areas you're interested in</p>
-          </CardContent>
-        </Card>
-      </div>
+// For "What Awaits You" - full-width feature descriptions
+interface FullFeatureInfo {
+  title: string;
+  shortDescription: string;
+  detailedDescription: string;
+  icon: FC<React.ComponentProps<typeof ArrowRight>>;
+  iconColor: string;
+  href: string;
+}
 
-      <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 gap-1 mb-6">
-          <TabsTrigger value="profile" className="text-sm sm:text-base">
-            <UserCircle className="mr-2 h-5 w-5" /> My Profile
-          </TabsTrigger>
-          <TabsTrigger value="browse" className="text-sm sm:text-base">
-            <Search className="mr-2 h-5 w-5" /> Browse Students
-          </TabsTrigger>
-          <TabsTrigger value="connections" className="text-sm sm:text-base">
-            <Link2 className="mr-2 h-5 w-5" /> My Connections
-          </TabsTrigger>
-        </TabsList>
+const detailedFeatures: FullFeatureInfo[] = [
+  {
+    title: "Study Sphere: Find Your Constellation",
+    shortDescription: "Navigate the academic cosmos to find study partners aligned with your courses and learning styles.",
+    detailedDescription: "Create your detailed study profile, specify your courses, and set your preferred learning methods. Search and filter through peers to find compatible study buddies. Connect, form study groups, share resources, and coordinate sessions seamlessly.",
+    icon: UsersRound,
+    iconColor: "text-accent", // Yellow
+    href: "/study-sphere",
+  },
+  {
+    title: "Event Horizon: Discover New Worlds",
+    shortDescription: "Explore a universe of campus happenings, from academic workshops to social gatherings.",
+    detailedDescription: "Stay ahead with an interactive calendar of campus events, workshops, and seminars. Filter by interests like coding or arts, search for specific events, view details, RSVP, and even discover peer-organized study sessions.",
+    icon: CalendarDays,
+    iconColor: "text-primary", // Purple
+    href: "/event-horizon",
+  },
+  {
+    title: "Celestial Chats: Wisdom from the Stars",
+    shortDescription: "Gain insights from experienced navigators – seniors, alumni, and our Stellar Assist AI.",
+    detailedDescription: "Engage with our AI for quick guidance, view schedules for upcoming AMA sessions with seniors and alumni, submit questions, participate in live Q&As, and browse archives of past wisdom. Connect with mentors and explore diverse perspectives.",
+    icon: MessageCircleQuestion,
+    iconColor: "text-green-400", // Example color
+    href: "/celestial-chats",
+  },
+  {
+    title: "Nebula of Ideas: Birth Your Innovations",
+    shortDescription: "Launch your project ideas into the cosmos and find co-creators to bring them to life.",
+    detailedDescription: "Share your innovative project concepts, outline your goals, and specify the skills you need. Tag your own expertise, browse projects shared by others, search by keywords or skills, express interest, and connect with potential teammates to collaborate.",
+    icon: Lightbulb,
+    iconColor: "text-sky-400", // Example color
+    href: "/nebula-of-ideas",
+  },
+];
 
-        <TabsContent value="profile" className="animate-fade-in-up">
-          <MyProfileTab />
-        </TabsContent>
-        <TabsContent value="browse" className="animate-fade-in-up">
-          <BrowseStudentsTab />
-        </TabsContent>
-        <TabsContent value="connections" className="animate-fade-in-up">
-          <MyConnectionsTab />
-        </TabsContent>
-      </Tabs>
+
+export default function LandingPage() {
+  return (
+    <div className="w-full max-w-7xl mx-auto px-4">
+      {/* Hero Section */}
+      <section className="py-20 md:py-32 text-center min-h-[calc(80vh-4rem)] flex flex-col justify-center items-center">
+        <motion.div 
+          initial={{ opacity: 0, y: -30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "circOut" }}
+          className="mb-6"
+        >
+          <Orbit className="h-24 w-24 text-primary animate-pulse" />
+        </motion.div>
+        <AnimatedHeroText
+          text="Welcome to UniVerse"
+          className="text-4xl sm:text-5xl md:text-6xl font-bold font-mono tracking-tight mb-6 
+                     bg-gradient-to-r from-primary via-accent to-primary text-transparent bg-clip-text animate-text-shimmer"
+        />
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.8, ease: "easeOut" }}
+          className="text-lg md:text-xl text-foreground/80 max-w-2xl mx-auto mb-10 font-medium"
+        >
+          Your central hub for academic collaboration, event discovery, insightful guidance, and innovative project development. Navigate your university journey like never before!
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 1.2, type: "spring", stiffness: 100 }}
+        >
+          <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/80 px-8 py-6 text-lg group" asChild>
+            <Link href="#command-center"> {/* Link to the command center section */}
+              Explore Your Universe <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </Button>
+        </motion.div>
+      </section>
+
+      {/* UniVerse Command Center (Dashboard Cards) Section */}
+      <section id="command-center" className="py-16 md:py-24 bg-background/30 rounded-xl shadow-2xl my-16 md:my-24 p-6 md:p-10 border border-primary/20">
+        <h2 
+          className="text-3xl sm:text-4xl font-bold text-center mb-4 font-mono 
+                     bg-gradient-to-r from-primary via-accent to-primary text-transparent bg-clip-text animate-text-shimmer"
+           style={{ animationDelay: '0s' }}
+        >
+          UniVerse Command Center
+        </h2>
+        <p className="text-center text-foreground/70 mb-12 md:mb-16 max-w-xl mx-auto">
+          Quickly navigate to the core modules of UniVerse. Each sphere is designed to enhance a different aspect of your student life.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {commandCenterFeatures.map((feature) => (
+            <FeatureCard key={feature.title} {...feature} />
+          ))}
+        </div>
+      </section>
+
+      {/* What Awaits You (Detailed Feature Explanations) Section */}
+      <section className="py-16 md:py-24">
+         <div className="text-center mb-16 md:mb-20">
+          <Telescope className="h-16 w-16 text-primary mx-auto mb-4 animate-bounce hover:animate-none hover:scale-110 transition-transform" />
+          <h2 
+            className="text-3xl sm:text-4xl font-bold font-mono 
+                       bg-gradient-to-r from-primary via-accent to-primary text-transparent bg-clip-text animate-text-shimmer"
+             style={{ animationDelay: '0.2s' }}
+          >
+            What Awaits You?
+          </h2>
+          <p className="mt-4 text-lg text-foreground/70 max-w-2xl mx-auto">
+            Dive deeper into the core constellations of UniVerse and discover how they can illuminate your path.
+          </p>
+        </div>
+
+        <div className="space-y-16 md:space-y-24">
+          {detailedFeatures.map((feature, index) => {
+            const IconComponent = feature.icon;
+            const isEven = index % 2 === 0;
+            return (
+              <motion.section
+                key={feature.title}
+                className={`w-3/4 mx-auto p-8 md:p-12 rounded-xl shadow-2xl flex flex-col ${isEven ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-8 md:gap-12 bg-card/60 backdrop-blur-md border border-primary/40`}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <div className="flex-shrink-0 text-center md:text-left">
+                  <IconComponent className={`h-20 w-20 md:h-28 md:w-28 mb-4 md:mb-0 ${feature.iconColor} animate-subtle-pulse`} />
+                </div>
+                <div className="flex-grow text-center md:text-left">
+                  <h3 className={`text-2xl md:text-3xl font-bold font-mono mb-3 ${feature.iconColor}`}>{feature.title}</h3>
+                  <p className="text-md md:text-lg text-foreground/80 mb-4">{feature.shortDescription}</p>
+                  <p className="text-sm md:text-base text-muted-foreground mb-6">{feature.detailedDescription}</p>
+                   <Button asChild variant="outline" className={`border-2 ${feature.iconColor.replace('text-', 'border-')} ${feature.iconColor} hover:bg-transparent hover:text-primary-foreground hover:!bg-${feature.iconColor.split('-')[1]}/80 group`}>
+                    <Link href={feature.href}>
+                      Explore {feature.title.split(':')[0]} <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </Button>
+                </div>
+              </motion.section>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Final Call to Action */}
+      <section className="py-20 md:py-32 text-center">
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+          className="text-3xl sm:text-4xl font-bold font-mono mb-6 bg-gradient-to-r from-accent via-primary to-accent text-transparent bg-clip-text"
+        >
+          Ready to Navigate Your UniVerse?
+        </motion.h2>
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4, ease: "easeOut" }}
+          className="text-lg text-foreground/70 max-w-xl mx-auto mb-10"
+        >
+          Join a community of explorers, innovators, and scholars. Your journey of discovery starts now.
+        </motion.p>
+        <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.6, type: "spring", stiffness: 100 }}
+        >
+          <Button size="lg" className="bg-primary hover:bg-primary/80 text-primary-foreground px-10 py-6 text-xl group" asChild>
+            <Link href="/study-sphere"> {/* Default to Study Sphere as a primary start point */}
+              Begin Your Voyage <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform"/>
+            </Link>
+          </Button>
+        </motion.div>
+      </section>
     </div>
   );
 }
+// Added framer-motion import
+import { motion } from 'framer-motion';

@@ -13,7 +13,7 @@ export default {
   	extend: {
       fontFamily: {
         sans: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
-        mono: ['var(--font-roboto-mono)', ...defaultTheme.fontFamily.mono],
+        mono: ['var(--font-roboto-mono)', ...defaultTheme.fontFamily.mono], // Changed from geist-mono
       },
   		colors: {
   			background: 'hsl(var(--background))',
@@ -56,7 +56,7 @@ export default {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
-  			sidebar: {
+  			sidebar: { // Keep sidebar for consistency if used by ShadCN components
   				DEFAULT: 'hsl(var(--sidebar-background))',
   				foreground: 'hsl(var(--sidebar-foreground))',
   				primary: 'hsl(var(--sidebar-primary))',
@@ -73,31 +73,40 @@ export default {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		keyframes: {
+        // UniVerse Animations
   			'accordion-down': {
-  				from: {
-  					height: '0'
-  				},
-  				to: {
-  					height: 'var(--radix-accordion-content-height)'
-  				}
+  				from: { height: '0' },
+  				to: { height: 'var(--radix-accordion-content-height)' }
   			},
   			'accordion-up': {
-  				from: {
-  					height: 'var(--radix-accordion-content-height)'
-  				},
-  				to: {
-  					height: '0'
-  				}
+  				from: { height: 'var(--radix-accordion-content-height)' },
+  				to: { height: '0' }
   			},
         'fade-in-up': {
-          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        'text-shimmer': {
+          '0%': { backgroundPosition: '200% 0' },
+          '100%': { backgroundPosition: '-200% 0' },
+        },
+        'subtle-pulse': {
+          '0%, 100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.8', transform: 'scale(1.05)' },
+        },
+        bounce: { // For Alien Guide
+          '0%, 100%': { transform: 'translateY(-5%)', animationTimingFunction: 'cubic-bezier(0.8,0,1,1)' },
+          '50%': { transform: 'translateY(0)', animationTimingFunction: 'cubic-bezier(0,0,0.2,1)' },
+        }
   		},
   		animation: {
+        // UniVerse Animations
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
-        'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
+        'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
+        'text-shimmer': 'text-shimmer 4s linear infinite',
+        'subtle-pulse': 'subtle-pulse 2.5s ease-in-out infinite',
+        bounce: 'bounce 1.5s infinite',
   		}
   	}
   },
