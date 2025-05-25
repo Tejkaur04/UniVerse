@@ -4,13 +4,18 @@
 import type { ReactNode } from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Inter, Roboto_Mono } from 'next/font/google';
+import { Inter, Roboto_Mono } from 'next/font/google'; // Changed from Geist
+import { usePathname, useRouter } from 'next/navigation'; // Added usePathname
 import {
   UserRound,
   LogOut,
   Loader2,
   LogInIcon,
-  Waypoints,
+  Waypoints, // Constellation-like icon
+  UsersRound,     // For Study Sphere
+  CalendarDays,   // For Event Horizon
+  MessageCircleQuestion, // For Celestial Chats
+  Lightbulb,      // For Nebula of Ideas
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -27,38 +32,54 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import StarryBackground from '@/components/starry-background';
+import UserStatsSidebar from '@/components/UserStatsSidebar'; 
 import AlienGuide from '@/components/AlienGuide';
-import UserStatsSidebar from '@/components/UserStatsSidebar';
 import {
+  Tooltip,
+  TooltipContent,
   TooltipProvider,
+  TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-const inter = Inter({
+
+const inter = Inter({ // Changed from Geist_Sans
   variable: '--font-inter',
   subsets: ['latin'],
   display: 'swap',
 });
 
-const robotoMono = Roboto_Mono({
+const robotoMono = Roboto_Mono({ // Changed from Geist_Mono
   variable: '--font-roboto-mono',
   subsets: ['latin'],
   display: 'swap',
 });
 
+const navFeatures = [
+  { href: "/study-sphere", label: "Study Sphere", icon: UsersRound },
+  { href: "/event-horizon", label: "Event Horizon", icon: CalendarDays },
+  { href: "/celestial-chats", label: "Celestial Chats", icon: MessageCircleQuestion },
+  { href: "/nebula-of-ideas", label: "Nebula of Ideas", icon: Lightbulb },
+];
+
+
 function AppContent({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname(); // Use usePathname for current route
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Determine if the current page is public (login/signup)
-  // For mock auth, we rely on user state; for real auth, middleware might handle this.
-  // This simplified check works with mock auth.
-  const isPublicPage = typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname === '/signup');
+  const isPublicPage = pathname === '/login' || pathname === '/signup';
 
-  const showSidebarAndGuide = isMounted && user;
+  // Redirect logic
+  useEffect(() => {
+    if (isMounted && !authLoading && !user && !isPublicPage) {
+      router.push('/login');
+    }
+  }, [isMounted, authLoading, user, isPublicPage, router, pathname]); // Added pathname to dependencies
 
   if (!isMounted) {
     return (
@@ -68,15 +89,25 @@ function AppContent({ children }: { children: ReactNode }) {
     );
   }
   
-  // If still authenticating (for real auth this would be important)
-  // or if not logged in and trying to access a protected page
-  if (authLoading || (!user && !isPublicPage)) {
-     return (
+  if (authLoading) { // Simplified initial loading check
+    return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
     );
   }
+
+  if (!user && !isPublicPage) {
+    // This condition is met while redirecting for protected routes
+    // Show loader until redirect completes
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  const showSidebarAndGuide = isMounted && user;
 
   return (
     <div className="flex min-h-screen">
@@ -87,7 +118,7 @@ function AppContent({ children }: { children: ReactNode }) {
             "sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
           )}>
           <div className="container flex h-16 max-w-screen-2xl items-center px-4">
-            <Link href="/" className="flex items-center space-x-2 group">
+            <Link href="/" className="flex items-center space-x-2 group mr-6">
               <Waypoints className="h-7 w-7 text-primary group-hover:text-accent transition-colors" />
               <span className="font-bold text-xl font-mono text-primary group-hover:text-accent transition-colors">
                 UniVerse
@@ -97,6 +128,7 @@ function AppContent({ children }: { children: ReactNode }) {
             <div className="flex-grow"></div> 
 
             <nav className="flex items-center space-x-1 sm:space-x-2">
+               {/* Navbar shortcuts removed as they are now in UserStatsSidebar */}
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -118,15 +150,15 @@ function AppContent({ children }: { children: ReactNode }) {
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-border/50" />
-                    <DropdownMenuItem asChild className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
-                        <Link href="/"> 
-                            <Waypoints className="mr-2 h-4 w-4" /> {/* Using Waypoints as a generic home/dashboard icon */}
+                     <DropdownMenuItem asChild className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
+                        <Link href="/"> {/* Link to unified landing/dashboard page */}
+                            <Waypoints className="mr-2 h-4 w-4" />
                             <span>Home / Main</span>
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { 
-                        const authContext = useAuth(); 
-                        authContext.logout(); 
+                        logout(); 
+                        router.push('/login'); // Redirect to login after logout
                     }} className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out (Demo)</span>
@@ -146,9 +178,10 @@ function AppContent({ children }: { children: ReactNode }) {
         </header>
         <main className={cn(
           "flex-1 flex flex-col py-8 z-10 relative", 
-          "md:px-0" 
+          showSidebarAndGuide ? "md:ml-[25rem]" : "", // Adjust based on sidebar width
+          "px-4 md:px-0" // No horizontal padding on md+ for main content container itself
         )}>
-          {/* Added padding p-4 md:p-6 here for border spacing */}
+          {/* Added padding p-4 md:p-6 here for border spacing around content */}
           <div className="w-full max-w-7xl p-4 md:p-6"> 
             {children}
           </div>
