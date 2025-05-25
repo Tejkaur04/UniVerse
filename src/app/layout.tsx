@@ -4,18 +4,14 @@
 import type { ReactNode } from 'react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Inter, Roboto_Mono } from 'next/font/google'; // Changed from Geist
-import { usePathname, useRouter } from 'next/navigation'; // Added usePathname
+import { Inter, Roboto_Mono } from 'next/font/google'; 
+import { usePathname, useRouter } from 'next/navigation'; 
 import {
   UserRound,
   LogOut,
   Loader2,
   LogInIcon,
-  Waypoints, // Constellation-like icon
-  UsersRound,     // For Study Sphere
-  CalendarDays,   // For Event Horizon
-  MessageCircleQuestion, // For Celestial Chats
-  Lightbulb,      // For Nebula of Ideas
+  Waypoints, 
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -42,31 +38,24 @@ import {
 } from "@/components/ui/tooltip";
 
 
-const inter = Inter({ // Changed from Geist_Sans
+const inter = Inter({ 
   variable: '--font-inter',
   subsets: ['latin'],
   display: 'swap',
 });
 
-const robotoMono = Roboto_Mono({ // Changed from Geist_Mono
+const robotoMono = Roboto_Mono({ 
   variable: '--font-roboto-mono',
   subsets: ['latin'],
   display: 'swap',
 });
-
-const navFeatures = [
-  { href: "/study-sphere", label: "Study Sphere", icon: UsersRound },
-  { href: "/event-horizon", label: "Event Horizon", icon: CalendarDays },
-  { href: "/celestial-chats", label: "Celestial Chats", icon: MessageCircleQuestion },
-  { href: "/nebula-of-ideas", label: "Nebula of Ideas", icon: Lightbulb },
-];
 
 
 function AppContent({ children }: { children: ReactNode }) {
   const { user, loading: authLoading, logout } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
-  const pathname = usePathname(); // Use usePathname for current route
+  const pathname = usePathname(); 
 
   useEffect(() => {
     setIsMounted(true);
@@ -74,118 +63,102 @@ function AppContent({ children }: { children: ReactNode }) {
 
   const isPublicPage = pathname === '/login' || pathname === '/signup';
 
-  // Redirect logic
   useEffect(() => {
     if (isMounted && !authLoading && !user && !isPublicPage) {
       router.push('/login');
     }
-  }, [isMounted, authLoading, user, isPublicPage, router, pathname]); // Added pathname to dependencies
+  }, [isMounted, authLoading, user, isPublicPage, router, pathname]); 
 
-  if (!isMounted) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
-  if (authLoading) { // Simplified initial loading check
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const showSidebarAndGuide = isMounted && user && !isPublicPage;
 
-  if (!user && !isPublicPage) {
-    // This condition is met while redirecting for protected routes
-    // Show loader until redirect completes
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
-  const showSidebarAndGuide = isMounted && user;
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen"> {/* This is the main flex container */}
       {showSidebarAndGuide && <UserStatsSidebar />}
       
-      <div className="flex flex-col flex-grow">
-        <header className={cn(
-            "sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-          )}>
-          <div className="container flex h-16 max-w-screen-2xl items-center px-4">
-            <Link href="/" className="flex items-center space-x-2 group mr-6">
-              <Waypoints className="h-7 w-7 text-primary group-hover:text-accent transition-colors" />
-              <span className="font-bold text-xl font-mono text-primary group-hover:text-accent transition-colors">
-                UniVerse
-              </span>
-            </Link>
-            
-            <div className="flex-grow"></div> 
+      <div className="flex flex-col flex-grow"> {/* This div grows to take space next to sidebar */}
+        {!isMounted || authLoading ? (
+           <div className="flex items-center justify-center flex-1"> {/* Centered loader for the main content area */}
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+          </div>
+        ) : !user && !isPublicPage ? (
+            <div className="flex items-center justify-center flex-1"> {/* Centered loader while redirecting */}
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </div>
+        ) : (
+          <>
+            <header className={cn(
+                "sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+              )}>
+              <div className="container flex h-16 max-w-screen-2xl items-center px-4">
+                <Link href="/" className="flex items-center space-x-2 group mr-6">
+                  <Waypoints className="h-7 w-7 text-primary group-hover:text-accent transition-colors" />
+                  <span className="font-bold text-xl font-mono text-primary group-hover:text-accent transition-colors">
+                    UniVerse
+                  </span>
+                </Link>
+                
+                <div className="flex-grow"></div> 
 
-            <nav className="flex items-center space-x-1 sm:space-x-2">
-               {/* Navbar shortcuts removed as they are now in UserStatsSidebar */}
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 ml-2">
-                      <Avatar className="h-9 w-9 border-2 border-primary">
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          {user.email ? user.email.charAt(0).toUpperCase() : <UserRound size={20}/>}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-card border-primary/50" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none text-foreground">Logged In (Demo)</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-border/50" />
-                     <DropdownMenuItem asChild className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
-                        <Link href="/"> {/* Link to unified landing/dashboard page */}
-                            <Waypoints className="mr-2 h-4 w-4" />
-                            <span>Home / Main</span>
+                <nav className="flex items-center space-x-1 sm:space-x-2">
+                  {user ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 ml-2">
+                          <Avatar className="h-9 w-9 border-2 border-primary">
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              {user.email ? user.email.charAt(0).toUpperCase() : <UserRound size={20}/>}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-56 bg-card border-primary/50" align="end" forceMount>
+                        <DropdownMenuLabel className="font-normal">
+                          <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none text-foreground">Logged In (Demo)</p>
+                            <p className="text-xs leading-none text-muted-foreground">
+                              {user.email}
+                            </p>
+                          </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator className="bg-border/50" />
+                         <DropdownMenuItem asChild className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
+                            <Link href="/"> 
+                                <Waypoints className="mr-2 h-4 w-4" />
+                                <span>Home / Main</span>
+                            </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { 
+                            logout(); 
+                            router.push('/login'); 
+                        }} className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Log out (Demo)</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                      <Button asChild variant="outline" size="sm" className="ml-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+                        <Link href="/login">
+                          <LogInIcon className="mr-2 h-4 w-4" />
+                          Login/Sign Up
                         </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => { 
-                        logout(); 
-                        router.push('/login'); // Redirect to login after logout
-                    }} className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out (Demo)</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                  <Button asChild variant="outline" size="sm" className="ml-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-                    <Link href="/login">
-                      <LogInIcon className="mr-2 h-4 w-4" />
-                      Login/Sign Up
-                    </Link>
-                  </Button>
-              )}
-            </nav>
-          </div>
-        </header>
-        <main className={cn(
-          "flex-1 flex flex-col py-8 z-10 relative", 
-          showSidebarAndGuide ? "md:ml-[25rem]" : "", // Adjust based on sidebar width
-          "px-4 md:px-0" // No horizontal padding on md+ for main content container itself
-        )}>
-          {/* Added padding p-4 md:p-6 here for border spacing around content */}
-          <div className="w-full max-w-7xl p-4 md:p-6"> 
-            {children}
-          </div>
-        </main>
+                      </Button>
+                  )}
+                </nav>
+              </div>
+            </header>
+            <main className={cn(
+              "flex-1 flex flex-col z-10 relative", 
+              "py-8", // Vertical padding for main
+              "px-4 md:px-0" // No horizontal padding on md+ for main element itself
+            )}>
+              <div className="w-full max-w-7xl p-4 md:py-6 md:pr-6 md:pl-0"> {/* Adjusted padding here */}
+                {children}
+              </div>
+            </main>
+          </>
+        )}
       </div>
       {showSidebarAndGuide && <AlienGuide />}
     </div>
