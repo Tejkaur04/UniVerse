@@ -20,7 +20,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import AlienGuide from '@/components/AlienGuide';
 
-// Hardcoded initial data
+// Hardcoded initial data - these will be used if localStorage is empty
 const ALL_AVAILABLE_COURSES = ["Astrophysics 101", "Quantum Mechanics", "Calculus II", "Organic Chemistry", "Literary Theory", "Computer Science 101", "History of Art"];
 const ALL_LEARNING_STYLES = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
 
@@ -64,63 +64,101 @@ interface StudySession {
   isJoinedByCurrentUser?: boolean;
 }
 
-const initialStudyProfile: StudyProfileData = {
+const initialStudyProfileData: StudyProfileData = {
   courses: ["Astrophysics 101", "Quantum Mechanics"],
   learningStyles: ["Visual", "Reading/Writing"],
 };
 
-const initialPotentialMatches: PotentialMatch[] = [
+const initialPotentialMatchesData: PotentialMatch[] = [
   { id: 1, name: "Alex Cosmo", courses: ["Astrophysics 101", "Calculus II"], learningStyles: ["Visual", "Kinesthetic"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person student" },
   { id: 2, name: "Nova Stellar", courses: ["Quantum Mechanics", "Organic Chemistry"], learningStyles: ["Auditory", "Reading/Writing"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person learner" },
   { id: 3, name: "Orion Byte", courses: ["Calculus II", "Astrophysics 101"], learningStyles: ["Kinesthetic", "Reading/Writing"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person tech" },
 ];
 
-const initialStudyGroups: StudyGroup[] = [
+const initialStudyGroupsData: StudyGroup[] = [
   { id: 1, name: "Quantum Leapsters", courses: ["Quantum Mechanics"], members: 3, description: "Mastering the quantum realm together.", isJoinedByCurrentUser: false },
-  { id: 2, name: "Astro Alliance", courses: ["Astrophysics 101"], members: 5, description: "Exploring the cosmos, one equation at a time.", isJoinedByCurrentUser: true },
+  { id: 2, name: "Astro Alliance", courses: ["Astrophysics 101"], members: 5, description: "Exploring the cosmos, one equation at a time.", isJoinedByCurrentUser: false }, // Set initial to false
 ];
 
-const initialSharedResources: SharedResource[] = [
+const initialSharedResourcesData: SharedResource[] = [
   { id: 1, name: "Astro Notes Ch. 1-3.pdf", type: "PDF", uploader: "Alex Cosmo", course: "Astrophysics 101" },
   { id: 2, name: "Calculus Practice Set 1.docx", type: "DOCX", uploader: "Admin", course: "Calculus II" },
 ];
 
-const initialStudySessions: StudySession[] = [
+const initialStudySessionsData: StudySession[] = [
   { id: 1, topic: "Astrophysics Midterm Review", dateTime: "October 28, 2024, 2:00 PM", group: "Astro Alliance", location: "Virtual via UniMeet", isJoinedByCurrentUser: false },
-  { id: 2, topic: "Quantum Entanglement Workshop", dateTime: "November 5, 2024, 5:00 PM", group: "Quantum Leapsters", location: "Library Room 3B", isJoinedByCurrentUser: true },
+  { id: 2, topic: "Quantum Entanglement Workshop", dateTime: "November 5, 2024, 5:00 PM", group: "Quantum Leapsters", location: "Library Room 3B", isJoinedByCurrentUser: false },
 ];
+
 
 const tabContentVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeInOut" } },
 };
 
-const initialGuideMessage = "Welcome to the Study Sphere, Earthling! Customize your profile, find study buddies, join groups, share resources, and schedule sessions all from here. Explore the tabs to get started!";
+const initialGuideMessage = "Welcome to the Study Sphere, Earthling! I've tried to remember your settings if you've been here before. Customize your profile, find study buddies, join groups, share resources, and schedule sessions all from here. Your progress is saved in your browser!";
+
+// localStorage keys
+const LS_STUDY_PROFILE = 'uniVerseStudyProfile';
+const LS_STUDY_GROUPS = 'uniVerseStudyGroups';
+const LS_SHARED_RESOURCES = 'uniVerseSharedResources';
+const LS_STUDY_SESSIONS = 'uniVerseStudySessions';
+
 
 export default function StudySpherePage() {
   const { toast } = useToast();
-  const [studyProfile, setStudyProfile] = useState<StudyProfileData>(initialStudyProfile);
+
+  // State initializations with localStorage loading
+  const [studyProfile, setStudyProfile] = useState<StudyProfileData>(() => {
+    if (typeof window !== 'undefined') {
+      const savedProfile = localStorage.getItem(LS_STUDY_PROFILE);
+      return savedProfile ? JSON.parse(savedProfile) : initialStudyProfileData;
+    }
+    return initialStudyProfileData;
+  });
+
+  const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedGroups = localStorage.getItem(LS_STUDY_GROUPS);
+      return savedGroups ? JSON.parse(savedGroups) : initialStudyGroupsData;
+    }
+    return initialStudyGroupsData;
+  });
+  
+  const [sharedResources, setSharedResources] = useState<SharedResource[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedResources = localStorage.getItem(LS_SHARED_RESOURCES);
+      return savedResources ? JSON.parse(savedResources) : initialSharedResourcesData;
+    }
+    return initialSharedResourcesData;
+  });
+
+  const [studySessions, setStudySessions] = useState<StudySession[]>(() => {
+    if (typeof window !== 'undefined') {
+      const savedSessions = localStorage.getItem(LS_STUDY_SESSIONS);
+      return savedSessions ? JSON.parse(savedSessions) : initialStudySessionsData;
+    }
+    return initialStudySessionsData;
+  });
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editCoursesInput, setEditCoursesInput] = useState('');
   const [editLearningStyles, setEditLearningStyles] = useState<string[]>([]);
 
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('');
   const [selectedStyleFilter, setSelectedStyleFilter] = useState<string>('');
-  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(initialPotentialMatches);
+  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData); // Potential matches are static for now
 
-  const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(initialStudyGroups);
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupCourses, setNewGroupCourses] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
 
-  const [sharedResources, setSharedResources] = useState<SharedResource[]>(initialSharedResources);
   const [isUploadResourceDialogOpen, setIsUploadResourceDialogOpen] = useState(false);
   const [newResourceName, setNewResourceName] = useState('');
   const [newResourceCourse, setNewResourceCourse] = useState('');
   const [newResourceType, setNewResourceType] = useState('');
 
-  const [studySessions, setStudySessions] = useState<StudySession[]>(initialStudySessions);
   const [isScheduleSessionDialogOpen, setIsScheduleSessionDialogOpen] = useState(false);
   const [newSessionTopic, setNewSessionTopic] = useState('');
   const [newSessionDateTime, setNewSessionDateTime] = useState('');
@@ -130,6 +168,32 @@ export default function StudySpherePage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [guideMessage, setGuideMessage] = useState(initialGuideMessage);
 
+  // Save to localStorage effects
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LS_STUDY_PROFILE, JSON.stringify(studyProfile));
+    }
+  }, [studyProfile]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LS_STUDY_GROUPS, JSON.stringify(studyGroups));
+    }
+  }, [studyGroups]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LS_SHARED_RESOURCES, JSON.stringify(sharedResources));
+    }
+  }, [sharedResources]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(LS_STUDY_SESSIONS, JSON.stringify(studySessions));
+    }
+  }, [studySessions]);
+
+
   useEffect(() => {
     if (isEditDialogOpen) {
         setEditCoursesInput(studyProfile.courses.join(', '));
@@ -138,7 +202,7 @@ export default function StudySpherePage() {
   }, [studyProfile, isEditDialogOpen]);
 
   useEffect(() => {
-    let matches = [...initialPotentialMatches];
+    let matches = [...initialPotentialMatchesData]; // Start with the full static list
     if (selectedCourseFilter && selectedCourseFilter !== 'all') {
       matches = matches.filter(match => match.courses.includes(selectedCourseFilter));
     }
@@ -150,25 +214,27 @@ export default function StudySpherePage() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    let message = "";
     switch (value) {
       case "profile":
-        setGuideMessage("This is your Study Profile! Keep your courses and learning styles up-to-date to find the best study matches.");
+        message = "This is your Study Profile! Keep your courses and learning styles up-to-date. Changes are saved in your browser!";
         break;
       case "find-buddies":
-        setGuideMessage("Looking for study partners? Use the filters here to find students taking similar courses or who share your learning style!");
+        message = "Looking for study partners? Use the filters here to find students taking similar courses or who share your learning style!";
         break;
       case "groups":
-        setGuideMessage("Collaborate in Study Groups! You can join an existing one or start your own group for a specific subject.");
+        message = "Collaborate in Study Groups! You can join an existing one or start your own. Your groups are saved in your browser.";
         break;
       case "resources":
-        setGuideMessage("Share and discover helpful study materials here! Notes, summaries, or useful links – knowledge grows when shared.");
+        message = "Share and discover helpful study materials here! Your contributions are saved locally.";
         break;
       case "sessions":
-        setGuideMessage("Time to hit the books together! Schedule study sessions with your groups or partners right here.");
+        message = "Time to hit the books together! Schedule study sessions with your groups. They'll be remembered by your browser.";
         break;
       default:
-        setGuideMessage(initialGuideMessage);
+        message = initialGuideMessage;
     }
+    setGuideMessage(message);
   };
 
   const handleEditProfile = () => {
@@ -184,7 +250,7 @@ export default function StudySpherePage() {
     setIsEditDialogOpen(false);
     toast({
       title: "Profile Updated",
-      description: "Your study profile has been saved locally.",
+      description: "Your study profile has been saved in your browser.",
     });
   };
 
@@ -218,17 +284,17 @@ export default function StudySpherePage() {
     setNewGroupDescription('');
     toast({
       title: "Study Group Created!",
-      description: `The group "${newGroup.name}" has been successfully created.`,
+      description: `The group "${newGroup.name}" has been successfully created and saved in your browser.`,
     });
   };
 
   const handleJoinGroup = (groupId: number) => {
-    let groupJoined = false;
+    let groupJoinedSuccessfully = false;
     let groupName = "";
     setStudyGroups(prevGroups =>
       prevGroups.map(group => {
         if (group.id === groupId && !group.isJoinedByCurrentUser) {
-          groupJoined = true;
+          groupJoinedSuccessfully = true;
           groupName = group.name;
           return { ...group, members: group.members + 1, isJoinedByCurrentUser: true };
         }
@@ -236,10 +302,10 @@ export default function StudySpherePage() {
       })
     );
     
-    if (groupJoined && groupName) {
+    if (groupJoinedSuccessfully && groupName) {
         toast({
             title: "Joined Group!",
-            description: `You have successfully joined "${groupName}".`,
+            description: `You have successfully joined "${groupName}". Your status is saved in your browser.`,
         });
     } else {
         const group = studyGroups.find(g => g.id === groupId);
@@ -267,7 +333,7 @@ export default function StudySpherePage() {
       name: newResourceName.trim(),
       course: newResourceCourse.trim(),
       type: newResourceType.trim(),
-      uploader: "You (Demo User)", 
+      uploader: "You (Local Demo)", 
     };
     setSharedResources(prevResources => [newResource, ...prevResources]);
     setIsUploadResourceDialogOpen(false);
@@ -276,7 +342,7 @@ export default function StudySpherePage() {
     setNewResourceType('');
     toast({
       title: "Resource Uploaded!",
-      description: `"${newResource.name}" has been added to shared resources.`,
+      description: `"${newResource.name}" has been added and saved in your browser.`,
     });
   };
 
@@ -295,7 +361,7 @@ export default function StudySpherePage() {
       dateTime: newSessionDateTime.trim(),
       group: newSessionGroup.trim(),
       location: newSessionLocation.trim(),
-      isJoinedByCurrentUser: false, 
+      isJoinedByCurrentUser: true, // Auto-join session you create
     };
     setStudySessions(prevSessions => [newSession, ...prevSessions]);
     setIsScheduleSessionDialogOpen(false);
@@ -305,7 +371,7 @@ export default function StudySpherePage() {
     setNewSessionLocation('');
     toast({
       title: "Study Session Scheduled!",
-      description: `"${newSession.topic}" has been added to upcoming sessions.`,
+      description: `"${newSession.topic}" has been added and saved in your browser.`,
     });
   };
 
@@ -327,9 +393,9 @@ export default function StudySpherePage() {
     if (sessionTopic) {
         toast({
             title: sessionJoined ? "Joined Session!" : "Left Session",
-            description: sessionJoined 
+            description: (sessionJoined 
                 ? `You have successfully joined "${sessionTopic}".` 
-                : `You have left "${sessionTopic}".`,
+                : `You have left "${sessionTopic}".`) + " Your status is saved in your browser.",
         });
     }
   };
@@ -359,11 +425,11 @@ export default function StudySpherePage() {
           Your cosmic hub for collaborative learning! Find partners, join groups, and share knowledge.
         </p>
          <p className="text-md text-center text-foreground/80 mb-10">
-          Welcome, scholar! Shape your study profile, explore connections, and launch your academic journey to new heights.
+          Welcome, scholar! Shape your study profile, explore connections, and launch your academic journey to new heights. (Your progress here is saved in your browser for this session!)
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="w-full" onValueChange={handleTabChange}>
+      <Tabs defaultValue="profile" className="w-full" onValueChange={handleTabChange} value={activeTab}>
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-8">
           <TabsTrigger value="profile" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
             <UserCircle className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform animate-subtle-pulse" />My Profile
@@ -389,7 +455,7 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <BookOpen className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Your Study Profile
                 </CardTitle>
-                <CardDescription>Define your academic focus and learning preferences to find the perfect study mates.</CardDescription>
+                <CardDescription>Define your academic focus and learning preferences. Changes are saved locally in your browser.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                 <div>
@@ -469,12 +535,12 @@ export default function StudySpherePage() {
                     <CardTitle className="text-2xl flex items-center text-primary">
                     <Search className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Find Your Constellation
                     </CardTitle>
-                    <CardDescription>Filter by courses and learning preferences to discover compatible study partners.</CardDescription>
+                    <CardDescription>Filter by courses and learning preferences to discover compatible study partners. (Buddy list is for demo purposes).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
                     <Label htmlFor="course-filter" className="text-base text-foreground/90">Filter by Course:</Label>
-                    <Select onValueChange={(value) => setSelectedCourseFilter(value === 'all' ? '' : value)} defaultValue="">
+                    <Select onValueChange={(value) => setSelectedCourseFilter(value === 'all' ? '' : value)} defaultValue={selectedCourseFilter || "all"}>
                         <SelectTrigger id="course-filter" className="w-full bg-background/70">
                         <SelectValue placeholder="Select a course to find peers" />
                         </SelectTrigger>
@@ -486,7 +552,7 @@ export default function StudySpherePage() {
                     </div>
                     <div className="space-y-2">
                     <Label htmlFor="style-filter" className="text-base text-foreground/90">Filter by Learning Style:</Label>
-                    <Select onValueChange={(value) => setSelectedStyleFilter(value === 'all' ? '' : value)} defaultValue="">
+                    <Select onValueChange={(value) => setSelectedStyleFilter(value === 'all' ? '' : value)} defaultValue={selectedStyleFilter || "all"}>
                         <SelectTrigger id="style-filter" className="w-full bg-background/70">
                         <SelectValue placeholder="Select a preferred learning style" />
                         </SelectTrigger>
@@ -515,7 +581,7 @@ export default function StudySpherePage() {
                         <p className="text-sm text-muted-foreground">Courses: {match.courses.join(', ')}</p>
                         <p className="text-sm text-muted-foreground">Learning Styles: {match.learningStyles.join(', ')}</p>
                         </div>
-                        <Button onClick={() => handleDemoClick(`Connection request sent to ${match.name}! (Demo)`)} size="sm" variant="outline" className="shrink-0 self-start sm:self-center border-accent text-accent hover:bg-accent/10">
+                        <Button onClick={() => handleDemoClick(`Connection request sent to ${match.name}! (Demo - real connections coming soon!)`)} size="sm" variant="outline" className="shrink-0 self-start sm:self-center border-accent text-accent hover:bg-accent/10">
                         <UserPlus className="mr-2 h-4 w-4" /> Connect
                         </Button>
                     </Card>
@@ -531,7 +597,7 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <Group className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Collaborative Orbits (Study Groups)
                 </CardTitle>
-                <CardDescription>Launch your own study group or join an existing constellation of learners.</CardDescription>
+                <CardDescription>Launch your own study group or join an existing constellation. Your groups are saved locally.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <Dialog open={isCreateGroupDialogOpen} onOpenChange={setIsCreateGroupDialogOpen}>
@@ -624,7 +690,7 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <FileText className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Knowledge Nebula (Shared Resources)
                 </CardTitle>
-                <CardDescription>Exchange notes, summaries, and helpful materials with your connections and groups.</CardDescription>
+                <CardDescription>Exchange notes and materials. Your uploads are saved in your browser.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                 <Dialog open={isUploadResourceDialogOpen} onOpenChange={setIsUploadResourceDialogOpen}>
@@ -637,7 +703,7 @@ export default function StudySpherePage() {
                     <DialogHeader>
                         <DialogTitle className="text-primary">Upload a New Resource</DialogTitle>
                         <DialogDescription>
-                        Share your knowledge with the UniVerse community!
+                        Share your knowledge with the UniVerse community! (Locally for now)
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -709,7 +775,7 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <Clock className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Synchronized Orbits (Study Sessions)
                 </CardTitle>
-                <CardDescription>Plan and schedule study times with your partners or groups.</CardDescription>
+                <CardDescription>Plan and schedule study times. Your sessions are saved locally.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                 <Dialog open={isScheduleSessionDialogOpen} onOpenChange={setIsScheduleSessionDialogOpen}>
@@ -722,7 +788,7 @@ export default function StudySpherePage() {
                     <DialogHeader>
                         <DialogTitle className="text-primary">Schedule a New Study Session</DialogTitle>
                         <DialogDescription>
-                            Coordinate your learning efforts with the UniVerse crew!
+                            Coordinate your learning efforts with the UniVerse crew! (Locally for now)
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -795,7 +861,7 @@ export default function StudySpherePage() {
                     </Button>
                     </Card>
                 ))}
-                {studySessions.length === 0 && <p className="text-muted-foreground text-center py-4">No study sessions scheduled yet.</p>}
+                {studySessions.length === 0 && <p className="text-muted-foreground text-center py-4">No study sessions scheduled yet. Why not create one?</p>}
                 </CardContent>
             </Card>
             </TabsContent>
@@ -805,4 +871,3 @@ export default function StudySpherePage() {
     </div>
   );
 }
-
