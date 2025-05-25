@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -116,7 +116,7 @@ export default function StudySpherePage() {
           Your cosmic hub for collaborative learning! Define your profile, find partners, join groups, and more.
         </p>
         <p className="text-md text-center text-foreground/80 mb-10">
-          Navigate your academic journey by connecting with fellow students. Let's make learning a shared adventure!
+          Navigate your academic journey by connecting with fellow students. Let's make learning a shared adventure! Welcome to your personal constellation for academic success!
         </p>
       </div>
 
@@ -379,5 +379,3 @@ export default function StudySpherePage() {
     </div>
   );
 }
-
-    
