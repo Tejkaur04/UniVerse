@@ -57,10 +57,9 @@ export default function LoginPage() {
         }
       } else {
         // Successful login is handled by the useEffect watching the `user` state
-        // No explicit redirect here, as onAuthStateChanged will update `user`
+        // which will redirect to /dashboard
       }
     } catch (e: any) {
-      // This catch block might be redundant if login function already returns AuthError
       setError(e.message || "An unexpected error occurred during login.");
     } finally {
       setIsLoading(false);
@@ -68,12 +67,14 @@ export default function LoginPage() {
   };
 
   if (authLoading || (!authLoading && user)) {
+    // Show loader if auth state is loading OR if user is logged in (before redirect)
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
+
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 p-4">
@@ -103,6 +104,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required 
+                autoComplete="email"
               />
             </div>
             <div className="space-y-2">
@@ -114,6 +116,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required 
+                autoComplete="current-password"
               />
             </div>
             <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90" disabled={isLoading}>
