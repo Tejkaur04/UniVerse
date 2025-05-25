@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, UserPlus, Loader2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast"; // Import toast
+import { toast } from "@/hooks/use-toast";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [pageError, setPageError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Local loading for form submission
 
   useEffect(() => {
     clearError();
@@ -34,10 +34,11 @@ export default function SignupPage() {
   }, [authError]);
 
  useEffect(() => {
-    if (!authLoading && user) {
-      router.push('/dashboard'); // Redirect to dashboard on successful signup
+    // Only redirect if user object exists (authLoading is handled by AppContent)
+    if (user) {
+      router.push('/'); 
     }
-  }, [user, authLoading, router]);
+  }, [user, router]);
 
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -62,18 +63,21 @@ export default function SignupPage() {
       return;
     }
 
-    // Using mock signup from AuthContext
     const result = await signup({ email, password });
     if (result && 'error' in result && result.error) {
         setPageError(result.error);
     } else if (result && 'uid' in result) {
         toast({ title: "Account Created (Demo)", description: `Welcome to UniVerse, ${result.email}!`});
-        // useEffect will handle redirect to /dashboard
+        // Redirection is handled by the useEffect above, or by AppContent's protection
     }
     setIsLoading(false);
   };
 
-  if (authLoading || (!authLoading && user)) {
+  // AppContent handles the main loading state until auth is resolved.
+  // If user exists after loading, this page will be redirected by useEffect.
+  // So, we can directly render the form if no user.
+  if (user) {
+    // User is logged in, waiting for redirect from useEffect. Show a minimal loader.
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -85,7 +89,7 @@ export default function SignupPage() {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 p-4">
       <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm border-border/70">
         <CardHeader className="text-center">
-          <UserPlus className="mx-auto h-12 w-12 text-primary mb-4" />
+          <UserPlus className="mx-auto h-12 w-12 text-primary mb-4 font-mono animate-subtle-pulse" />
           <CardTitle className="text-3xl font-bold text-primary font-mono">Join UniVerse!</CardTitle>
           <CardDescription className="text-muted-foreground">
             Create your account to explore (Demo Mode).
@@ -136,8 +140,8 @@ export default function SignupPage() {
                 autoComplete="new-password"
               />
             </div>
-            <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90" disabled={isLoading || authLoading}>
-              {isLoading || authLoading ? (
+            <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90" disabled={isLoading}>
+              {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Creating Account...
@@ -160,5 +164,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
-    
