@@ -7,6 +7,7 @@ import { ArrowRight, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb,
 import AnimatedHeroText from '@/components/AnimatedHeroText';
 import type { FC } from 'react';
 import { motion } from 'framer-motion';
+import { Analytics } from "@vercel/analytics/next"
 
 // FeatureCardProps and FeatureCard component are no longer needed here as navigation is in sidebar.
 
@@ -57,6 +58,8 @@ const detailedFeatures: FullFeatureInfo[] = [
 
 export default function UnifiedLandingPage() {
   return (
+    <>
+    <Analytics/>
     <div className="w-full">
       {/* Hero Section */}
       <section className="py-20 md:py-32 text-center min-h-[calc(80vh-4rem)] flex flex-col justify-center items-center">
@@ -179,5 +182,6 @@ export default function UnifiedLandingPage() {
         </motion.div>
       </section>
     </div>
+    </>
   );
 }
