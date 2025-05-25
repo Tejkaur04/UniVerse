@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog"; // Removed DialogFooter as it's not used
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +21,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   Home, UsersRound, Search as SearchIcon, Users as UsersIcon, FileText, CalendarCheck, CalendarPlus, Star,
   Briefcase, Palette, ThumbsUp, Link2, MessageSquare, XCircle, Pencil, PlusCircle, Filter as FilterIcon,
-  UploadCloud, BookOpen, CheckCircle as CheckCircleIcon, ListFilter, Info, BookUser, GripVertical, UserCircle
+  UploadCloud, BookOpen, CheckCircle as CheckCircleIcon, ListFilter, Info, BookUser, GripVertical, UserCircle, LinkIcon, Settings, HelpCircle, Waypoints
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,8 +41,8 @@ export interface MockStudentProfile {
   interests: string[];
   projectAreas: string[];
   learningStyles: string[];
-  role?: 'Student' | 'Mentor' | 'Initiator';
-  courses?: string[];
+  role?: 'Student' | 'Mentor' | 'Initiator'; // Added role for My Connections
+  courses?: string[]; // Added courses
 }
 
 export interface StudyGroup {
@@ -75,6 +75,8 @@ export interface StudySession {
   isJoinedByCurrentUser?: boolean;
 }
 
+// Re-declare LEARNING_STYLES_OPTIONS here
+const LEARNING_STYLES_OPTIONS = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
 
 const COURSES_OPTIONS = ["All", "Astrophysics 101", "Quantum Mechanics", "Alien Civilizations", "Starship Engineering", "Cosmic Economics"];
 const LEARNING_STYLES_OPTIONS_FILTER = ["All", ...LEARNING_STYLES_OPTIONS]; // For filter dropdown
@@ -130,20 +132,26 @@ const StudySpherePage: FC = () => {
     return user ? `uniVerse-${baseKey}-${user.uid}` : null;
   };
 
+  // Helper to load data from localStorage or fallback
   const loadData = <T,>(keySuffix: string, fallbackData: T): T => {
     if (typeof window === 'undefined') return fallbackData;
     const key = userLocalStorageKey(keySuffix);
-    if (!key) return fallbackData;
+    if (!key) return fallbackData; // No user, return fallback
     const saved = localStorage.getItem(key);
     if (saved) {
-      try { return JSON.parse(saved) as T; }
-      catch (error) { console.error(`Failed to parse ${keySuffix} from localStorage`, error); return fallbackData; }
+      try {
+        return JSON.parse(saved) as T;
+      } catch (error) {
+        console.error(`Failed to parse ${keySuffix} from localStorage`, error);
+        return fallbackData; // Parse error, return fallback
+      }
     }
-    return fallbackData;
+    return fallbackData; // Nothing saved, return fallback
   };
 
+  // Helper to save data to localStorage
   const saveData = <T,>(keySuffix: string, data: T) => {
-    if (typeof window === 'undefined' || !user) return;
+    if (typeof window === 'undefined' || !user) return; // Don't save if no window or user
     const key = userLocalStorageKey(keySuffix);
     if (!key) return;
     localStorage.setItem(key, JSON.stringify(data));
@@ -168,11 +176,9 @@ const StudySpherePage: FC = () => {
   
   // Centralized Connections State (read for "sent requests", write for new connections)
   const [sentRequests, setSentRequests] = useState<string[]>(() => loadData('sentRequests', []));
-  const [connections, setConnections] = useState<MockStudentProfile[]>(() => loadData('connections', []));
-  
-  useEffect(() => { saveData('sentRequests', sentRequests); }, [sentRequests, user]);
-  useEffect(() => { saveData('connections', connections); }, [connections, user]);
+  // connections are managed via localStorage directly in handleConnect, no need for separate state here if My Connections is a separate page
 
+  useEffect(() => { saveData('sentRequests', sentRequests); }, [sentRequests, user]);
 
   // Study Groups State
   const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(() => loadData('studyGroups', initialStudyGroupsData));
@@ -235,15 +241,18 @@ const StudySpherePage: FC = () => {
       saveData('sentRequests', newSentRequests);
       return newSentRequests;
     });
-    setConnections(prev => {
-      if (!prev.find(c => c.id === student.id)) {
-        const newConnections = [...prev, {...student, role: 'Student'}]; // Add role for My Connections page
-        saveData('connections', newConnections);
-        return newConnections;
-      }
-      return prev;
-    });
-    toast({ title: 'Connection Request Transmitted!', description: `Signal sent to ${student.name}. (Simulated auto-acceptance). Your connections list is updated locally.`, action: <ThumbsUp className="h-5 w-5 text-green-500" /> });
+    
+    // Update connections in localStorage
+    const connectionsKey = userLocalStorageKey('connections');
+    if (connectionsKey) {
+        const currentConnections: MockStudentProfile[] = loadData('connections', []);
+        if (!currentConnections.find(c => c.id === student.id)) {
+            const newConnections = [...currentConnections, {...student, role: 'Student'}]; // Add role for My Connections page
+            saveData('connections', newConnections);
+        }
+    }
+
+    toast({ title: 'Connection Request Transmitted!', description: `Signal sent to ${student.name}. (Simulated auto-acceptance). Your connections list is updated locally. Real connections coming soon!`, action: <ThumbsUp className="h-5 w-5 text-green-500" /> });
   };
 
 
@@ -274,8 +283,9 @@ const StudySpherePage: FC = () => {
                 toast({ title: "Joined Study Orbit!", description: `You've joined ${group.name}. Progress saved locally.`, action: <CheckCircleIcon className="h-5 w-5 text-green-500" /> });
                 return { ...group, members: group.members + 1, isJoinedByCurrentUser: true };
             } else if (group.id === groupId && group.isJoinedByCurrentUser) {
-                toast({ title: "Left Study Orbit", description: `You've left ${group.name}. Progress saved locally.` });
-                return { ...group, members: Math.max(0, group.members - 1), isJoinedByCurrentUser: false };
+                // Optionally allow leaving, or just keep it as joined for demo simplicity
+                // toast({ title: "Already in Orbit", description: `You are already part of ${group.name}.` });
+                return group; // No change if already joined
             }
             return group;
         });
@@ -364,16 +374,16 @@ const StudySpherePage: FC = () => {
           <h1 className="text-4xl font-bold font-mono mb-2 bg-gradient-to-r from-primary via-accent to-primary text-transparent bg-clip-text">Study Sphere</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Forge academic alliances in your personal corner of the UniVerse.
-            Navigate using the tabs below to manage your profile, find partners, join groups, share resources, and schedule study sessions.
+            Navigate using the tabs below to find partners, join groups, share resources, and schedule study sessions.
           </p>
            <p className="text-sm text-muted-foreground mt-1">
-            Your progress here is saved in your browser for this demo session!
+            Your profile info is saved to your UniVerse account! Other progress here (groups, resources, sessions) is saved locally in your browser for this demo.
           </p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-1 mb-8 border-b border-border pb-1">
+      <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-1 mb-8 border-b border-border pb-1">
             <TabsTrigger value="browse" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
                 <SearchIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Find Buddies
             </TabsTrigger>
@@ -475,14 +485,14 @@ const StudySpherePage: FC = () => {
                           return (
                             <Card key={group.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                               <div className="flex items-center space-x-3 mb-3 sm:mb-0">
-                                <IconComponent className="h-8 w-8 text-accent shrink-0" />
+                                {IconComponent && <IconComponent className="h-8 w-8 text-accent shrink-0" />}
                                 <div>
                                   <h4 className="font-semibold text-md text-primary">{group.name}</h4>
                                   <p className="text-xs text-muted-foreground">{group.description}</p>
                                   <p className="text-xs text-muted-foreground">Courses: {group.courses.join(', ')} | Members: {group.members}</p>
                                 </div>
                               </div>
-                              <Button onClick={() => handleJoinGroup(group.id)} variant={group.isJoinedByCurrentUser ? "default" : "outline"} size="sm" className={group.isJoinedByCurrentUser ? "bg-accent text-accent-foreground hover:bg-accent/80" : "border-accent text-accent hover:bg-accent/10"}>
+                              <Button onClick={() => handleJoinGroup(group.id)} variant={group.isJoinedByCurrentUser ? "default" : "outline"} size="sm" className={group.isJoinedByCurrentUser ? "bg-accent text-accent-foreground hover:bg-accent/80 cursor-not-allowed" : "border-accent text-accent hover:bg-accent/10"} disabled={group.isJoinedByCurrentUser}>
                                 {group.isJoinedByCurrentUser ? <><CheckCircleIcon className="mr-2 h-4 w-4" />Joined Orbit</> : <><Link2 className="mr-2 h-4 w-4" />Join Orbit</>}
                               </Button>
                             </Card>
@@ -527,7 +537,7 @@ const StudySpherePage: FC = () => {
                           return (
                             <Card key={res.id} className="p-3 flex items-center justify-between bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                               <div className="flex items-center space-x-3">
-                                <IconComponent className="h-6 w-6 text-accent shrink-0" />
+                                { IconComponent && <IconComponent className="h-6 w-6 text-accent shrink-0" /> }
                                 <div>
                                   <h4 className="font-medium text-primary text-sm">{res.name}</h4>
                                   <p className="text-xs text-muted-foreground">Course: {res.course} | Type: {res.type} | Uploaded: {res.uploadDate} by {res.uploader}</p>
@@ -578,7 +588,7 @@ const StudySpherePage: FC = () => {
                             <Card key={sess.id} className="p-3 bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-center space-x-3 mb-2 sm:mb-0">
-                                  <IconComponent className="h-6 w-6 text-accent shrink-0" />
+                                  { IconComponent && <IconComponent className="h-6 w-6 text-accent shrink-0" /> }
                                   <div>
                                     <h4 className="font-medium text-primary text-sm">{sess.topic}</h4>
                                     <p className="text-xs text-muted-foreground">When: {new Date(sess.dateTime).toLocaleString()} | Where: {sess.location}</p>
@@ -606,3 +616,6 @@ const StudySpherePage: FC = () => {
 };
 
 export default StudySpherePage;
+
+
+    
