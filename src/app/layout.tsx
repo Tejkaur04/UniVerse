@@ -74,9 +74,7 @@ function AppContent({ children }: { children: ReactNode }) {
 
   const isPublicPage = ['/login', '/signup'].includes(pathname);
   
-  // Determine if the main app structure (sidebar, header, content) should be shown
   const showAppStructure = isMounted && (!authLoading || user || isPublicPage);
-  // Determine if the global loader should be shown
   const showGlobalLoader = !isMounted || (authLoading && !user && !isPublicPage);
 
   const showSidebarAndGuide = isMounted && user && !isPublicPage;
@@ -154,9 +152,9 @@ function AppContent({ children }: { children: ReactNode }) {
               </div>
             </header>
             <main className={cn(
-              "flex-1 flex flex-col items-center py-8 z-10 relative",
+              "flex-1 flex flex-col py-8 z-10 relative", // Removed items-center
               showSidebarAndGuide ? "md:ml-[25rem]" : "", 
-              "px-4 md:pl-0 md:pr-1" // Minimal left padding, small right padding on md+
+              "px-4 md:pl-0 md:pr-1" 
             )}>
               <div className="w-full max-w-7xl">
                 {children}
