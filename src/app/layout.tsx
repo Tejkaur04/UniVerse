@@ -11,13 +11,6 @@ import {
   Loader2,
   LogInIcon,
   Waypoints,
-  UsersRound,
-  CalendarDays,
-  MessageCircleQuestion,
-  Lightbulb,
-  Settings,
-  HelpCircle,
-  Home as HomeIcon,
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -37,10 +30,7 @@ import StarryBackground from '@/components/starry-background';
 import AlienGuide from '@/components/AlienGuide';
 import UserStatsSidebar from '@/components/UserStatsSidebar';
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip";
 
 const inter = Inter({
@@ -63,9 +53,12 @@ function AppContent({ children }: { children: ReactNode }) {
     setIsMounted(true);
   }, []);
 
+  // Determine if the current page is public (login/signup)
+  // For mock auth, we rely on user state; for real auth, middleware might handle this.
+  // This simplified check works with mock auth.
+  const isPublicPage = typeof window !== 'undefined' && (window.location.pathname === '/login' || window.location.pathname === '/signup');
+
   const showSidebarAndGuide = isMounted && user;
-  const isPublicPage = false; // Assuming most pages are protected after login for this structure
-  // If you have actual public pages like /about, this logic would need usePathname
 
   if (!isMounted) {
     return (
@@ -74,8 +67,10 @@ function AppContent({ children }: { children: ReactNode }) {
       </div>
     );
   }
-
-  if (authLoading && !user && !isPublicPage) {
+  
+  // If still authenticating (for real auth this would be important)
+  // or if not logged in and trying to access a protected page
+  if (authLoading || (!user && !isPublicPage)) {
      return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -84,13 +79,12 @@ function AppContent({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen"> {/* Root flex container */}
+    <div className="flex min-h-screen">
       {showSidebarAndGuide && <UserStatsSidebar />}
       
-      <div className="flex flex-col flex-grow"> {/* This div now correctly fills space next to sidebar */}
+      <div className="flex flex-col flex-grow">
         <header className={cn(
             "sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-            // Removed md:ml-[25rem] from here
           )}>
           <div className="container flex h-16 max-w-screen-2xl items-center px-4">
             <Link href="/" className="flex items-center space-x-2 group">
@@ -103,7 +97,6 @@ function AppContent({ children }: { children: ReactNode }) {
             <div className="flex-grow"></div> 
 
             <nav className="flex items-center space-x-1 sm:space-x-2">
-              {/* User auth section remains the same */}
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -126,16 +119,14 @@ function AppContent({ children }: { children: ReactNode }) {
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-border/50" />
                     <DropdownMenuItem asChild className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
-                        <Link href="/"> {/* This should be the main dashboard/landing page */}
-                            <HomeIcon className="mr-2 h-4 w-4" />
-                            <span>Home / Dashboard</span>
+                        <Link href="/"> 
+                            <Waypoints className="mr-2 h-4 w-4" /> {/* Using Waypoints as a generic home/dashboard icon */}
+                            <span>Home / Main</span>
                         </Link>
                     </DropdownMenuItem>
-                     {/* Logout button is part of AuthContext now, but keep UI for it */}
                     <DropdownMenuItem onClick={() => { 
                         const authContext = useAuth(); 
                         authContext.logout(); 
-                        // Router push to /login is handled by AuthContext/redirect logic
                     }} className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out (Demo)</span>
@@ -143,26 +134,22 @@ function AppContent({ children }: { children: ReactNode }) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                // This part is less relevant now due to mock auth and redirects
-                // but keeping structure in case auth changes
-                !isPublicPage && ( 
                   <Button asChild variant="outline" size="sm" className="ml-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
                     <Link href="/login">
                       <LogInIcon className="mr-2 h-4 w-4" />
                       Login/Sign Up
                     </Link>
                   </Button>
-                )
               )}
             </nav>
           </div>
         </header>
         <main className={cn(
           "flex-1 flex flex-col py-8 z-10 relative", 
-          // Removed md:ml-[25rem] from here
-          "px-4 md:px-0" // md:px-0 ensures no horizontal padding on main content itself on larger screens
+          "md:px-0" 
         )}>
-          <div className="w-full max-w-7xl">
+          {/* Added padding p-4 md:p-6 here for border spacing */}
+          <div className="w-full max-w-7xl p-4 md:p-6"> 
             {children}
           </div>
         </main>
@@ -186,7 +173,7 @@ export default function RootLayout({
           "min-h-screen bg-background text-foreground font-sans antialiased"
       )}>
         <StarryBackground />
-        <AuthProvider> {/* Ensure AuthProvider is still wrapping AppContent */}
+        <AuthProvider> 
           <TooltipProvider delayDuration={100}>
              <AppContent>{children}</AppContent>
           </TooltipProvider>

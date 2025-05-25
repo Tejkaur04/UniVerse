@@ -19,29 +19,16 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
-  ArrowLeft, UserCircle, Search, Users, FileText, CalendarCheck, UsersRound, Home,
+  UserCircle, Search, Users, FileText, CalendarCheck, UsersRound, Home,
   Briefcase, Palette, ThumbsUp, Link2, MessageSquare, XCircle, Pencil, PlusCircle,
   UploadCloud, BookOpen, CheckCircle as CheckCircleIcon, CalendarPlus, ListFilter, Info, BookUser, GripVertical
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { UserProfile } from '@/components/UserStatsSidebar'; // Import UserProfile from sidebar
 
-// Interfaces
-export interface UserProfile {
-  id: string;
-  name: string;
-  collegeId: string;
-  year: string;
-  department: string;
-  profilePictureUrl?: string;
-  dataAiHint?: string;
-  skills: string[];
-  interests: string[];
-  projectAreas: string[];
-  learningStyles: string[];
-}
-
+// MockStudentProfile, StudyGroup, SharedResource, StudySession interfaces
 export interface MockStudentProfile {
   id: string;
   name: string;
@@ -86,10 +73,10 @@ interface StudySession {
   isJoinedByCurrentUser?: boolean;
 }
 
-const DEPARTMENTS = ["Computer Science", "Quantum Engineering", "Astrobiology", "Xenolinguistics", "Galactic History", "Business Administration", "All"];
-const YEARS = ["Fresher", "Sophomore", "Junior", "Senior", "Graduate", "All"];
-const LEARNING_STYLES_OPTIONS = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
 const COURSES_OPTIONS = ["Astrophysics 101", "Quantum Mechanics", "Alien Civilizations", "Starship Engineering", "Cosmic Economics", "All"];
+const LEARNING_STYLES_OPTIONS = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing", "All"];
+const DEPARTMENTS_OPTIONS = ["Computer Science", "Quantum Engineering", "Astrobiology", "Xenolinguistics", "Galactic History", "Business Administration", "All"];
+
 
 const iconMap: { [key: string]: LucideIcon } = {
   Users: Users,
@@ -106,21 +93,6 @@ const iconMap: { [key: string]: LucideIcon } = {
   Briefcase: Briefcase,
   Palette: Palette,
   GripVertical: GripVertical,
-};
-
-// Initial Hardcoded Data (will be loaded from localStorage if available)
-const initialProfileData: UserProfile = {
-  id: 'currentUser',
-  name: 'Alex Comet',
-  collegeId: 'STU-007',
-  year: 'Junior',
-  department: 'Astrophysics',
-  profilePictureUrl: 'https://placehold.co/128x128.png?text=AC',
-  dataAiHint: 'student space',
-  skills: ['Problem Solving', 'Data Analysis', 'Telescope Operation'],
-  interests: ['Black Holes', 'Sci-Fi Novels', 'Coding'],
-  projectAreas: ['Dark Matter Research', 'Exoplanet Habitability'],
-  learningStyles: ['Visual', 'Reading/Writing'],
 };
 
 const initialPotentialMatchesData: MockStudentProfile[] = [
@@ -144,17 +116,18 @@ const initialStudySessionsData: StudySession[] = [
   { id: 'sess2', topic: 'Astro 101 Q&A', dateTime: '2024-05-12 @ 14:00 GST', groupOrParticipants: 'Astro 101 Peer Tutors', location: 'Library Observation Deck', iconName: 'CalendarCheck', isJoinedByCurrentUser: true },
 ];
 
-
 const StudySpherePage: FC = () => {
   const { user } = useAuth(); 
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<string>("profile");
+  const [activeTab, setActiveTab] = useState<string>("browse"); // Default to "Find Buddies"
   
-  const userLocalStorageKey = (dataKey: string) => user ? `uniVerse-studySphere-${dataKey}-${user.uid}` : `uniVerse-studySphere-${dataKey}-guest`;
+  const userLocalStorageKey = (dataKey: string) => user ? `uniVerse-${dataKey}-${user.uid}` : `uniVerse-${dataKey}-guest`; // Guest fallback for safety, though user should exist
 
+  // Load data from localStorage helper
   const loadData = <T,>(keySuffix: string, fallbackData: T): T => {
     if (typeof window === 'undefined') return fallbackData;
     const key = userLocalStorageKey(keySuffix);
+    if (!key) return fallbackData; // If no user, return fallback
     const saved = localStorage.getItem(key);
     if (saved) {
       try {
@@ -167,37 +140,42 @@ const StudySpherePage: FC = () => {
     return fallbackData;
   };
 
+  // Save data to localStorage helper
   const saveData = <T,>(keySuffix: string, data: T) => {
-    if (typeof window === 'undefined' || !user) return;
-    localStorage.setItem(userLocalStorageKey(keySuffix), JSON.stringify(data));
+    if (typeof window === 'undefined' || !user) return; // Don't save if no user
+    const key = userLocalStorageKey(keySuffix);
+    if (key) {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
   };
 
-  const [studyProfile, setStudyProfile] = useState<UserProfile>(() => loadData('studyProfile', initialProfileData));
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editForm, setEditForm] = useState<UserProfile>(studyProfile);
+  // Profile data is now primarily managed by UserStatsSidebar, but StudySphere might need read-access for context
+  const [studyProfile, setStudyProfile] = useState<UserProfile | null>(null);
 
-  const [potentialMatches, setPotentialMatches] = useState<MockStudentProfile[]>(initialPotentialMatchesData);
+  const [potentialMatches] = useState<MockStudentProfile[]>(initialPotentialMatchesData); // Assuming static for now
   const [filteredMatches, setFilteredMatches] = useState<MockStudentProfile[]>(initialPotentialMatchesData);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourseFilter, setSelectedCourseFilter] = useState('All');
   const [selectedStyleFilter, setSelectedStyleFilter] = useState('All');
-  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('All');
-  const [sentRequests, setSentRequests] = useState<string[]>(() => loadData('sentRequests', []));
-  const [connections, setConnections] = useState<MockStudentProfile[]>(() => loadData('connections', []));
+  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('All'); // Added department filter state
+  
+  const [sentRequests, setSentRequests] = useState<string[]>(() => loadData('studySphere-sentRequests', []));
+  const [connections, setConnections] = useState<MockStudentProfile[]>(() => loadData('studySphere-connections', []));
 
-  const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(() => loadData('studyGroups', initialStudyGroupsData));
+
+  const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(() => loadData('studySphere-studyGroups', initialStudyGroupsData));
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupCourses, setNewGroupCourses] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
 
-  const [sharedResources, setSharedResources] = useState<SharedResource[]>(() => loadData('sharedResources', initialSharedResourcesData));
+  const [sharedResources, setSharedResources] = useState<SharedResource[]>(() => loadData('studySphere-sharedResources', initialSharedResourcesData));
   const [isUploadResourceDialogOpen, setIsUploadResourceDialogOpen] = useState(false);
   const [newResourceName, setNewResourceName] = useState('');
   const [newResourceCourse, setNewResourceCourse] = useState('');
   const [newResourceType, setNewResourceType] = useState('');
 
-  const [studySessions, setStudySessions] = useState<StudySession[]>(() => loadData('studySessions', initialStudySessionsData));
+  const [studySessions, setStudySessions] = useState<StudySession[]>(() => loadData('studySphere-studySessions', initialStudySessionsData));
   const [isScheduleSessionDialogOpen, setIsScheduleSessionDialogOpen] = useState(false);
   const [newSessionTopic, setNewSessionTopic] = useState('');
   const [newSessionDateTime, setNewSessionDateTime] = useState('');
@@ -206,58 +184,25 @@ const StudySpherePage: FC = () => {
   
   useEffect(() => {
     if (user) {
-        setStudyProfile(loadData('studyProfile', { ...initialProfileData, id: user.uid, name: user.email?.split('@')[0] || 'New User' }));
-        setSentRequests(loadData('sentRequests', []));
-        setConnections(loadData('connections', []));
-        setStudyGroups(loadData('studyGroups', initialStudyGroupsData));
-        setSharedResources(loadData('sharedResources', initialSharedResourcesData));
-        setStudySessions(loadData('studySessions', initialStudySessionsData));
+        const profileKey = userLocalStorageKey('studyProfile');
+        if (profileKey) {
+            const savedProfile = localStorage.getItem(profileKey);
+            if (savedProfile) setStudyProfile(JSON.parse(savedProfile));
+        }
+        setSentRequests(loadData('studySphere-sentRequests', []));
+        setConnections(loadData('studySphere-connections', []));
+        setStudyGroups(loadData('studySphere-studyGroups', initialStudyGroupsData));
+        setSharedResources(loadData('studySphere-sharedResources', initialSharedResourcesData));
+        setStudySessions(loadData('studySphere-studySessions', initialStudySessionsData));
     }
   }, [user]);
   
-  useEffect(() => { saveData('studyProfile', studyProfile); }, [studyProfile, user]);
-  useEffect(() => { saveData('studyGroups', studyGroups); }, [studyGroups, user]);
-  useEffect(() => { saveData('sharedResources', sharedResources); }, [sharedResources, user]);
-  useEffect(() => { saveData('studySessions', studySessions); }, [studySessions, user]);
-  useEffect(() => { saveData('sentRequests', sentRequests); }, [sentRequests, user]);
-  useEffect(() => { saveData('connections', connections); }, [connections, user]);
+  useEffect(() => { saveData('studySphere-studyGroups', studyGroups); }, [studyGroups, user]);
+  useEffect(() => { saveData('studySphere-sharedResources', sharedResources); }, [sharedResources, user]);
+  useEffect(() => { saveData('studySphere-studySessions', studySessions); }, [studySessions, user]);
+  useEffect(() => { saveData('studySphere-sentRequests', sentRequests); }, [sentRequests, user]);
+  useEffect(() => { saveData('studySphere-connections', connections); }, [connections, user]);
 
-
-  const handleEditProfile = () => {
-    setEditForm({ ...studyProfile }); 
-    setIsEditDialogOpen(true);
-  };
-
-  const handleSaveProfile = (e: FormEvent) => {
-    e.preventDefault();
-    if (!editForm.name?.trim() || !editForm.collegeId?.trim()) {
-      toast({ variant: 'destructive', title: 'Missing Information', description: 'Name and College ID are required.'});
-      return;
-    }
-    setStudyProfile(editForm);
-    setIsEditDialogOpen(false);
-    toast({ title: 'Profile Synchronized!', description: 'Your cosmic coordinates have been updated locally.', action: <CheckCircleIcon className="h-5 w-5 text-green-500" />});
-  };
-
-  const handleProfileInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setEditForm(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleSkillsArrayInputChange = (field: keyof UserProfile, value: string) => {
-    const valuesArray = value.split(',').map(s => s.trim()).filter(s => s);
-    setEditForm(prev => ({ ...prev, [field]: valuesArray as any })); 
-  };
-
-  const handleLearningStylesChange = (style: string, checked: boolean) => {
-    setEditForm(prev => {
-      const currentStyles = Array.isArray(prev.learningStyles) ? prev.learningStyles : [];
-      const newStyles = checked 
-        ? [...currentStyles, style] 
-        : currentStyles.filter(s => s !== style);
-      return { ...prev, learningStyles: newStyles };
-    });
-  };
 
   useEffect(() => {
     let matches = potentialMatches; 
@@ -285,10 +230,13 @@ const StudySpherePage: FC = () => {
       toast({ variant: 'destructive', title: 'Error', description: 'Mock user session not found.' });
       return;
     }
+    // Add to connections if not already there
     if (!connections.find(c => c.id === student.id)) {
       setConnections(prev => [...prev, student]);
     }
-    setSentRequests(prev => [...new Set([...prev, student.id])]);
+    // Add to sent requests to disable button
+    setSentRequests(prev => [...new Set([...prev, student.id])]); // Use Set to avoid duplicates
+    
     toast({ title: 'Connection Request Transmitted!', description: `Signal sent to ${student.name}. (Simulated auto-acceptance for demo). Your connections list is updated locally.`, action: <ThumbsUp className="h-5 w-5 text-green-500" />});
   };
 
@@ -334,7 +282,7 @@ const StudySpherePage: FC = () => {
       name: newResourceName,
       course: newResourceCourse,
       type: newResourceType,
-      uploader: studyProfile.name || 'Current User',
+      uploader: studyProfile?.name || 'UniVerse User', // Use loaded profile name
       uploadDate: new Date().toISOString().split('T')[0],
       iconName: 'FileText',
     };
@@ -398,20 +346,15 @@ const StudySpherePage: FC = () => {
             <UsersRound className="h-16 w-16 text-primary mx-auto mb-3 animate-subtle-pulse" />
             <h1 className="text-4xl font-bold font-mono mb-2 bg-gradient-to-r from-primary via-accent to-primary text-transparent bg-clip-text">Study Sphere</h1>
              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Welcome, cosmic voyager! Forge academic alliances, share celestial wisdom, and coordinate your study orbits.
+                Forge academic alliances in your personal corner of the UniVerse. Your progress here is saved in your browser for this session!
             </p>
-             <p className="text-sm text-muted-foreground mt-2"> (Your profile and other progress here is saved in your browser for this demo session!)</p>
+             <p className="text-sm text-muted-foreground mt-2"> (This means your study profile, groups, resources, and session details will be remembered if you refresh the page.)</p>
         </div>
-        <p className="text-sm text-muted-foreground text-center mt-4">
-          Navigate through your profile, find study buddies, manage groups, share resources, and schedule sessions all in one place.
-        </p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 mb-8 border-b border-border pb-1">
-          <TabsTrigger value="profile" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-            <UserCircle className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> My Profile
-          </TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-1 mb-8 border-b border-border pb-1">
+          {/* "My Profile" tab removed */}
           <TabsTrigger value="browse" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
             <Search className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Find Buddies
           </TabsTrigger>
@@ -433,89 +376,23 @@ const StudySpherePage: FC = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="min-h-[400px]" // Ensure content area has some min height
+            className="min-h-[400px]" 
           >
-            {/* My Profile Tab */}
-            {activeTab === "profile" && (
-              <TabsContent value="profile" forceMount>
-                <Card className="w-full shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
-                  <CardHeader className="text-center relative">
-                    <BookUser className="mx-auto h-20 w-20 text-primary mb-3 animate-subtle-pulse" />
-                    <CardTitle className="text-3xl font-bold font-mono text-primary">{studyProfile.name}</CardTitle>
-                    <CardDescription className="text-lg text-muted-foreground">
-                      {studyProfile.department} - {studyProfile.year}
-                    </CardDescription>
-                      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button onClick={handleEditProfile} variant="ghost" size="icon" className="absolute top-4 right-4 text-muted-foreground hover:text-accent">
-                                <Pencil className="h-5 w-5" /> <span className="sr-only">Edit Profile</span>
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="bg-card border-primary/50 sm:max-w-[525px]">
-                            <DialogHeader>
-                              <DialogTitle className="font-mono text-primary flex items-center"><Pencil className="mr-2 h-5 w-5"/>Edit Your Study Coordinates</DialogTitle>
-                              <DialogDescription>Update your profile. Changes are saved locally in your browser.</DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleSaveProfile} className="space-y-4 py-2 max-h-[70vh] overflow-y-auto pr-2">
-                              <div><Label htmlFor="name">Name</Label><Input id="name" name="name" value={editForm.name || ''} onChange={handleProfileInputChange} /></div>
-                              <div><Label htmlFor="collegeId">College ID</Label><Input id="collegeId" name="collegeId" value={editForm.collegeId || ''} onChange={handleProfileInputChange} /></div>
-                              <div><Label htmlFor="year">Year</Label><Input id="year" name="year" value={editForm.year || ''} onChange={handleProfileInputChange} /></div>
-                              <div><Label htmlFor="department">Department</Label><Input id="department" name="department" value={editForm.department || ''} onChange={handleProfileInputChange} /></div>
-                              <div><Label htmlFor="profilePictureUrl">Profile Picture URL</Label><Input id="profilePictureUrl" name="profilePictureUrl" value={editForm.profilePictureUrl || ''} onChange={handleProfileInputChange} /></div>
-                              <div><Label htmlFor="skills">Skills (comma-separated)</Label><Textarea id="skills" name="skills" value={(Array.isArray(editForm.skills) ? editForm.skills : []).join(', ')} onChange={(e) => handleSkillsArrayInputChange('skills', e.target.value)} /></div>
-                              <div><Label htmlFor="interests">Interests (comma-separated)</Label><Textarea id="interests" name="interests" value={(Array.isArray(editForm.interests) ? editForm.interests : []).join(', ')} onChange={(e) => handleSkillsArrayInputChange('interests', e.target.value)} /></div>
-                              <div><Label htmlFor="projectAreas">Project Areas (comma-separated)</Label><Textarea id="projectAreas" name="projectAreas" value={(Array.isArray(editForm.projectAreas) ? editForm.projectAreas : []).join(', ')} onChange={(e) => handleSkillsArrayInputChange('projectAreas', e.target.value)} /></div>
-                              <div>
-                                <Label>Preferred Learning Styles</Label>
-                                <div className="grid grid-cols-2 gap-2 mt-1">
-                                  {LEARNING_STYLES_OPTIONS.map(style => (
-                                    <div key={style} className="flex items-center space-x-2">
-                                      <Checkbox id={`style-${style}`} checked={(Array.isArray(editForm.learningStyles) ? editForm.learningStyles : []).includes(style)} onCheckedChange={(checked) => handleLearningStylesChange(style, !!checked)} />
-                                      <Label htmlFor={`style-${style}`} className="font-normal text-sm">{style}</Label>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                              <DialogFooter className="pt-4">
-                                <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-                                <Button type="submit" className="bg-primary hover:bg-accent hover:text-accent-foreground">Save Changes</Button>
-                              </DialogFooter>
-                            </form>
-                          </DialogContent>
-                        </Dialog>
-                  </CardHeader>
-                  <CardContent className="mt-6 space-y-6">
-                    <div><h3 className="text-sm font-semibold text-muted-foreground mb-1">College ID:</h3><p className="text-foreground/90">{studyProfile.collegeId || 'Not Set'}</p></div> <Separator className="my-3 bg-border/50" />
-                    <div>
-                      <h3 className="text-sm font-semibold text-muted-foreground mb-1">Profile Picture:</h3>
-                      {studyProfile.profilePictureUrl ? (
-                        <Image src={studyProfile.profilePictureUrl} alt={studyProfile.name} width={128} height={128} className="rounded-md object-cover border border-primary/30" data-ai-hint={studyProfile.dataAiHint || 'student avatar'}/>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">No picture set.</p>
-                      )}
-                    </div> <Separator className="my-3 bg-border/50" />
-                    <div><h3 className="text-sm font-semibold text-muted-foreground mb-2">My Skills:</h3><div className="flex flex-wrap gap-2">{studyProfile.skills?.length > 0 ? studyProfile.skills.map(skill => <Badge key={skill} variant="secondary" className="bg-primary/20 text-primary-foreground hover:bg-primary/30">{skill}</Badge>) : <p className="text-sm text-muted-foreground">No skills charted.</p>}</div></div> <Separator className="my-3 bg-border/50" />
-                    <div><h3 className="text-sm font-semibold text-muted-foreground mb-2">My Interests:</h3><div className="flex flex-wrap gap-2">{studyProfile.interests?.length > 0 ? studyProfile.interests.map(interest => <Badge key={interest} className="bg-accent/80 text-accent-foreground hover:bg-accent">{interest}</Badge>) : <p className="text-sm text-muted-foreground">No interests logged.</p>}</div></div> <Separator className="my-3 bg-border/50" />
-                    <div><h3 className="text-sm font-semibold text-muted-foreground mb-2">My Project Areas:</h3><div className="flex flex-wrap gap-2">{studyProfile.projectAreas?.length > 0 ? studyProfile.projectAreas.map(area => <Badge key={area} variant="outline" className="border-primary/50 text-primary hover:bg-primary/10">{area}</Badge>) : <p className="text-sm text-muted-foreground">No project areas declared.</p>}</div></div> <Separator className="my-3 bg-border/50" />
-                    <div><h3 className="text-sm font-semibold text-muted-foreground mb-2">Preferred Learning Styles:</h3><div className="flex flex-wrap gap-2">{studyProfile.learningStyles?.length > 0 ? studyProfile.learningStyles.map(style => <Badge key={style} className="bg-muted text-muted-foreground">{style}</Badge>) : <p className="text-sm text-muted-foreground">No learning styles set.</p>}</div></div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            )}
+            {/* "My Profile" TabsContent removed */}
 
             {activeTab === "browse" && (
               <TabsContent value="browse" forceMount>
                  <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                   <CardHeader>
                     <div className="flex items-center space-x-3"><Search className="h-8 w-8 text-primary animate-subtle-pulse" /><CardTitle className="text-2xl font-mono text-primary">Find Your Constellation</CardTitle></div>
-                    <CardDescription className="text-muted-foreground">Filter and search for potential study partners. Your connections are saved locally!</CardDescription>
+                    <CardDescription className="text-muted-foreground">Filter and search for potential study partners. Connections are saved locally!</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <Input type="search" placeholder="Search by name, skill, interest..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-input placeholder:text-muted-foreground" />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <Select value={selectedCourseFilter} onValueChange={setSelectedCourseFilter}><SelectTrigger className="bg-input"><div className="flex items-center"><ListFilter className="mr-2 h-4 w-4 text-muted-foreground" />Course</div></SelectTrigger><SelectContent className="bg-popover border-primary/50">{COURSES_OPTIONS.map(course => <SelectItem key={course} value={course} className="hover:!bg-primary/20 focus:!bg-primary/20">{course}</SelectItem>)}</SelectContent></Select>
-                      <Select value={selectedStyleFilter} onValueChange={setSelectedStyleFilter}><SelectTrigger className="bg-input"><div className="flex items-center"><Palette className="mr-2 h-4 w-4 text-muted-foreground" />Learning Style</div></SelectTrigger><SelectContent className="bg-popover border-primary/50">{["All", ...LEARNING_STYLES_OPTIONS].map(style => <SelectItem key={style} value={style} className="hover:!bg-primary/20 focus:!bg-primary/20">{style}</SelectItem>)}</SelectContent></Select>
-                      <Select value={selectedDepartmentFilter} onValueChange={setSelectedDepartmentFilter}><SelectTrigger className="bg-input"><div className="flex items-center"><Briefcase className="mr-2 h-4 w-4 text-muted-foreground" />Department</div></SelectTrigger><SelectContent className="bg-popover border-primary/50">{DEPARTMENTS.map(dept => <SelectItem key={dept} value={dept} className="hover:!bg-primary/20 focus:!bg-primary/20">{dept}</SelectItem>)}</SelectContent></Select>
+                      <Select value={selectedStyleFilter} onValueChange={setSelectedStyleFilter}><SelectTrigger className="bg-input"><div className="flex items-center"><Palette className="mr-2 h-4 w-4 text-muted-foreground" />Learning Style</div></SelectTrigger><SelectContent className="bg-popover border-primary/50">{LEARNING_STYLES_OPTIONS.map(style => <SelectItem key={style} value={style} className="hover:!bg-primary/20 focus:!bg-primary/20">{style}</SelectItem>)}</SelectContent></Select>
+                      <Select value={selectedDepartmentFilter} onValueChange={setSelectedDepartmentFilter}><SelectTrigger className="bg-input"><div className="flex items-center"><Briefcase className="mr-2 h-4 w-4 text-muted-foreground" />Department</div></SelectTrigger><SelectContent className="bg-popover border-primary/50">{DEPARTMENTS_OPTIONS.map(dept => <SelectItem key={dept} value={dept} className="hover:!bg-primary/20 focus:!bg-primary/20">{dept}</SelectItem>)}</SelectContent></Select>
                     </div>
                   </CardContent>
                 </Card>
@@ -578,7 +455,7 @@ const StudySpherePage: FC = () => {
                             return (
                             <Card key={group.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                             <div className="flex items-center space-x-3 mb-3 sm:mb-0">
-                                <GroupIcon className="h-8 w-8 text-accent shrink-0" />
+                                {GroupIcon && <GroupIcon className="h-8 w-8 text-accent shrink-0" />}
                                 <div>
                                 <h4 className="font-semibold text-md text-primary">{group.name}</h4>
                                 <p className="text-xs text-muted-foreground">{group.description}</p>
@@ -630,7 +507,7 @@ const StudySpherePage: FC = () => {
                             return (
                             <Card key={res.id} className="p-3 flex items-center justify-between bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                              <div className="flex items-center space-x-3">
-                                <ResourceIcon className="h-6 w-6 text-accent shrink-0" />
+                                {ResourceIcon && <ResourceIcon className="h-6 w-6 text-accent shrink-0" />}
                                 <div>
                                     <h4 className="font-medium text-primary text-sm">{res.name}</h4>
                                     <p className="text-xs text-muted-foreground">Course: {res.course} | Type: {res.type} | Uploaded: {res.uploadDate} by {res.uploader}</p>
@@ -665,7 +542,7 @@ const StudySpherePage: FC = () => {
                             <DialogHeader><DialogTitle className="font-mono text-primary flex items-center"><PlusCircle className="mr-2 h-5 w-5"/>Synchronize a New Study Orbit</DialogTitle><DialogDescription>Coordinate your next study session.</DialogDescription></DialogHeader>
                             <form onSubmit={handleScheduleSession} className="space-y-3 py-2">
                             <div><Label htmlFor="newSessionTopic">Topic / Subject</Label><Input id="newSessionTopic" value={newSessionTopic} onChange={e => setNewSessionTopic(e.target.value)} /></div>
-                            <div><Label htmlFor="newSessionDateTime">Date & Time</Label><Input id="newSessionDateTime" value={newSessionDateTime} onChange={e => setNewSessionDateTime(e.target.value)} /></div>
+                            <div><Label htmlFor="newSessionDateTime">Date & Time</Label><Input id="newSessionDateTime" type="datetime-local" value={newSessionDateTime} onChange={e => setNewSessionDateTime(e.target.value)} /></div>
                             <div><Label htmlFor="newSessionGroup">Group / Participants</Label><Input id="newSessionGroup" value={newSessionGroup} onChange={e => setNewSessionGroup(e.target.value)} /></div>
                             <div><Label htmlFor="newSessionLocation">Location / Platform</Label><Input id="newSessionLocation" value={newSessionLocation} onChange={e => setNewSessionLocation(e.target.value)} /></div>
                             <DialogFooter className="pt-3"><DialogClose asChild><Button type="button" variant="outline">Cancel Synchronization</Button></DialogClose><Button type="submit" className="bg-primary hover:bg-accent hover:text-accent-foreground">Schedule Orbit</Button></DialogFooter>
@@ -681,7 +558,7 @@ const StudySpherePage: FC = () => {
                             <Card key={sess.id} className="p-3 bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                     <div className="flex items-center space-x-3 mb-2 sm:mb-0">
-                                        <SessionIcon className="h-6 w-6 text-accent shrink-0" />
+                                        {SessionIcon && <SessionIcon className="h-6 w-6 text-accent shrink-0" />}
                                         <div>
                                             <h4 className="font-medium text-primary text-sm">{sess.topic}</h4>
                                             <p className="text-xs text-muted-foreground">When: {sess.dateTime} | Where: {sess.location}</p>
