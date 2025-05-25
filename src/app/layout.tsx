@@ -72,27 +72,27 @@ function AppContent({ children }: { children: ReactNode }) {
     }
   }, [isMounted, user, authLoading, pathname, router]);
 
-  // Determine visibility states consistently, respecting `isMounted`
   const isPublicPage = ['/login', '/signup'].includes(pathname);
-  const showAppStructure = isMounted && (!authLoading && (user || isPublicPage));
-  const showLoader = !isMounted || (authLoading && !isPublicPage) || (!user && !authLoading && !isPublicPage);
+  const showAppStructure = isMounted && (!authLoading || isPublicPage || user); // Show structure if mounted and either not loading auth, or on public page, or user exists
+  const showLoader = !isMounted || (authLoading && !isPublicPage && !user); // Show loader if not mounted, or if loading auth and not on public page and no user yet
+
   const showSidebarAndGuide = isMounted && user && !isPublicPage;
 
   return (
-    <div className="flex min-h-screen"> {/* Consistent root structure */}
+    <div className="flex min-h-screen"> {/* Ensure this root div is always rendered */}
       {showSidebarAndGuide && <UserStatsSidebar />}
+      
       <div className="flex flex-col flex-grow">
-        {showAppStructure ? (
+        {showLoader ? (
+          <div className="flex flex-1 items-center justify-center bg-background">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+          </div>
+        ) : showAppStructure ? (
           <>
             <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <div className="container flex h-16 max-w-screen-2xl items-center px-4">
-                <Link href="/" className="flex items-center space-x-2 group mr-6">
-                  <Waypoints className="h-7 w-7 text-primary group-hover:text-accent transition-colors" />
-                  <span className="font-bold text-xl font-mono text-primary group-hover:text-accent transition-colors">
-                    UniVerse
-                  </span>
-                </Link>
-                <div className="flex-grow"></div>
+                {/* Logo is now part of the sidebar, so header can be simpler or have other elements if needed */}
+                <div className="flex-grow"></div> {/* Pushes user dropdown to the right */}
 
                 <nav className="flex items-center space-x-1 sm:space-x-2">
                   {user ? (
@@ -123,7 +123,7 @@ function AppContent({ children }: { children: ReactNode }) {
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={async () => {
-                          await logout();
+                          await logout(); // This is the mock logout
                           router.push('/login');
                         }} className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
                           <LogOut className="mr-2 h-4 w-4" />
@@ -132,7 +132,7 @@ function AppContent({ children }: { children: ReactNode }) {
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
-                    !isPublicPage && ( // Only show Login/Sign Up if not on those pages
+                    !isPublicPage && ( 
                       <Button asChild variant="outline" size="sm" className="ml-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
                         <Link href="/login">
                           <LogInIcon className="mr-2 h-4 w-4" />
@@ -144,19 +144,20 @@ function AppContent({ children }: { children: ReactNode }) {
                 </nav>
               </div>
             </header>
-            <main className={cn("flex-1 flex flex-col items-center py-8 px-4 md:px-1 z-10 relative", showSidebarAndGuide ? "md:ml-64" : "")}>
+            <main className={cn(
+              "flex-1 flex flex-col items-center py-8 z-10 relative",
+              showSidebarAndGuide ? "md:ml-[25rem]" : "", // Adjusted for new sidebar width
+              "px-4 md:px-1" // Adjusted padding for main content
+            )}>
               <div className="w-full max-w-7xl">
                 {children}
               </div>
             </main>
           </>
         ) : (
-          // Loader or redirect message fills the flex-grow space
+          // Fallback for unexpected states, though showLoader should cover most loading cases
           <div className="flex flex-1 items-center justify-center bg-background">
-            <Loader2 className="h-16 w-16 animate-spin text-primary" />
-            {isMounted && !user && !authLoading && !isPublicPage && (
-              <p className="ml-4 text-lg">Redirecting to login...</p>
-            )}
+            <p className="text-lg text-muted-foreground">Initializing UniVerse...</p>
           </div>
         )}
       </div>
@@ -164,6 +165,7 @@ function AppContent({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
 
 export default function RootLayout({
   children,

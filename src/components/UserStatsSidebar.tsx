@@ -10,10 +10,10 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  Users, Brain, FlaskConical, Link as LinkIcon, Loader2, Home, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle
+  Users, Brain, FlaskConical, Link as LinkIcon, Loader2, Home as HomeIcon, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle, Waypoints
 } from 'lucide-react';
-import type { UserProfile } from '@/app/study-sphere/page';
-import type { MockStudentProfile } from '@/app/study-sphere/page';
+import type { UserProfile } from '@/app/study-sphere/page'; // Assuming UserProfile is exported and has skills/projectAreas
+import type { MockStudentProfile } from '@/app/study-sphere/page'; // For connections count
 
 interface StoredUserProfile extends Partial<UserProfile> {}
 interface StoredConnections extends Array<MockStudentProfile> {}
@@ -40,7 +40,7 @@ const UserStatsSidebar: FC = () => {
         if (savedProfile) {
           setProfile(JSON.parse(savedProfile) as StoredUserProfile);
         } else {
-          setProfile({ skills: [], projectAreas: [] });
+          setProfile({ skills: [], projectAreas: [] }); // Default if no profile
         }
 
         const connectionsKey = `uniVerse-studySphere-connections-${user.uid}`;
@@ -52,12 +52,12 @@ const UserStatsSidebar: FC = () => {
         }
       } catch (error) {
         console.error("Error loading data from localStorage for stats sidebar:", error);
-        setProfile({ skills: [], projectAreas: [] });
+        setProfile({ skills: [], projectAreas: [] }); // Default on error
         setConnectionsCount(0);
       } finally {
         setIsLoading(false);
       }
-    } else {
+    } else if (!user) { // If user logs out, reset state
       setIsLoading(false);
       setProfile(null);
       setConnectionsCount(0);
@@ -65,12 +65,12 @@ const UserStatsSidebar: FC = () => {
   }, [user]);
 
   if (!user) {
-    return null;
+    return null; // Don't render sidebar if not logged in
   }
 
   if (isLoading) {
     return (
-      <aside className="hidden md:flex w-64 h-screen flex-col border-r border-border bg-card/50 p-4 space-y-4 sticky top-0 overflow-y-auto items-center justify-center">
+      <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border bg-card/50 p-4 space-y-4 sticky top-0 overflow-y-auto items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-sm text-muted-foreground">Loading Stats...</p>
       </aside>
@@ -81,11 +81,11 @@ const UserStatsSidebar: FC = () => {
   const projectAreas = profile?.projectAreas || [];
 
   return (
-    <aside className="hidden md:flex w-64 h-full flex-col border-r border-border bg-card/60 backdrop-blur-sm p-4 sticky top-0 overflow-y-auto">
+    <aside className="hidden md:flex w-[25rem] h-full flex-col border-r border-border bg-card/60 backdrop-blur-sm p-4 sticky top-0 overflow-y-auto">
       <div className="flex-grow space-y-6">
         {/* UniVerse Logo/Home Link */}
          <Link href="/" className="flex items-center space-x-2 mb-6 group">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary group-hover:text-accent transition-colors"><path d="M12 2a10 10 0 1 0 10 10H12V2Z"/><path d="M12 12a10 10 0 0 0-7.07 2.93L12 22V12Z"/><path d="m20 12-8 8"/></svg>
+            <Waypoints className="h-7 w-7 text-primary group-hover:text-accent transition-colors" />
             <span className="font-bold text-xl font-mono text-primary group-hover:text-accent transition-colors">
               UniVerse
             </span>
@@ -173,7 +173,7 @@ const UserStatsSidebar: FC = () => {
          <Button
               variant="ghost"
               className="w-full justify-start text-sm text-foreground/80 hover:text-primary hover:bg-primary/10"
-              onClick={() => alert("Settings Clicked (Demo)")} // Replace with actual navigation or dialog
+              onClick={() => alert("Settings Clicked (Demo)")} 
             >
               <Settings className="mr-3 h-5 w-5" />
               Settings
@@ -181,7 +181,7 @@ const UserStatsSidebar: FC = () => {
           <Button
               variant="ghost"
               className="w-full justify-start text-sm text-foreground/80 hover:text-primary hover:bg-primary/10"
-              onClick={() => alert("Help & Support Clicked (Demo)")} // Replace with actual navigation or dialog
+              onClick={() => alert("Help & Support Clicked (Demo)")} 
             >
               <HelpCircle className="mr-3 h-5 w-5" />
               Help & Support
