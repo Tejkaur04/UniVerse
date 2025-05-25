@@ -11,6 +11,11 @@ import {
   LogOut,
   Loader2,
   LogInIcon,
+  UsersRound,
+  CalendarDays,
+  MessageCircleQuestion,
+  Lightbulb,
+  Waypoints
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -49,6 +54,13 @@ const robotoMono = Roboto_Mono({
   display: 'swap',
 });
 
+const navFeatures = [
+  { href: "/study-sphere", label: "Study Sphere", icon: UsersRound },
+  { href: "/event-horizon", label: "Event Horizon", icon: CalendarDays },
+  { href: "/celestial-chats", label: "Celestial Chats", icon: MessageCircleQuestion },
+  { href: "/nebula-of-ideas", label: "Nebula of Ideas", icon: Lightbulb },
+];
+
 
 function AppContent({ children }: { children: ReactNode }) {
   const { user, loading: authLoading, logout } = useAuth();
@@ -72,33 +84,25 @@ function AppContent({ children }: { children: ReactNode }) {
   
   let contentToRender;
 
-  // Universal loader: shown until client is mounted AND auth state is resolved.
-  // Or if not on a public page and user status is not yet determined.
-  if ((!isMounted || authLoading) && !isPublicPage && user == null) { 
+  if (!isMounted || authLoading) { 
     contentToRender = (
       <div className="flex items-center justify-center flex-1">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
     );
   } else if (!user && !isPublicPage) {
-    // User is not logged in, and it's not a public page.
-    // The useEffect above handles redirection. Show a loader in the meantime.
      contentToRender = (
       <div className="flex items-center justify-center flex-1">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
     );
   } else {
-    // User is logged in OR it's a public page. Render the main app UI.
     contentToRender = (
       <>
         <header className={cn(
             "sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
-            // No md:ml-[25rem] here, header spans full width
           )}>
-          <div className="container flex h-16 max-w-screen-2xl items-center justify-end px-4"> {/* Changed justify-between to justify-end */}
-            {/* UniVerse Logo and Title REMOVED from here */}
-            
+          <div className="container flex h-16 max-w-screen-2xl items-center justify-end px-4">
             <nav className="flex items-center space-x-1 sm:space-x-2">
               {user ? (
                 <DropdownMenu>
@@ -123,7 +127,7 @@ function AppContent({ children }: { children: ReactNode }) {
                     <DropdownMenuSeparator className="bg-border/50" />
                      <DropdownMenuItem asChild className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
                         <Link href="/"> 
-                            Home
+                            UniVerse Home
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { 
@@ -148,10 +152,9 @@ function AppContent({ children }: { children: ReactNode }) {
         </header>
         <main className={cn(
           "flex-1 flex flex-col z-10 relative", 
-          showSidebarAndGuide ? "md:ml-[25rem]" : "", // Apply left margin only when sidebar is shown
-          "px-0" // No horizontal padding on main itself when sidebar is shown
+          "px-4 md:px-0" // Padding on small screens, no horizontal padding on md+
         )}>
-          <div className="w-full max-w-7xl p-4 md:py-6 md:px-8"> {/* Content wrapper with padding */}
+          <div className="w-full max-w-7xl p-4 md:py-6 md:px-8"> {/* Inner content wrapper with padding */}
             {children}
           </div>
         </main>
@@ -160,14 +163,11 @@ function AppContent({ children }: { children: ReactNode }) {
   }
   
   return (
-    <div className="flex min-h-screen"> {/* Outer flex container for sidebar and main content */}
+    <div className="flex min-h-screen">
       {showSidebarAndGuide && <UserStatsSidebar />}
-      
-      {/* This div will take up the remaining space next to the sidebar */}
       <div className="flex flex-col flex-grow"> 
         {contentToRender}
       </div>
-
       {showSidebarAndGuide && <AlienGuide />}
     </div>
   );
@@ -197,4 +197,3 @@ export default function RootLayout({
     </html>
   );
 }
-
