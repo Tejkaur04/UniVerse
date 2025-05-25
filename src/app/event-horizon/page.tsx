@@ -21,7 +21,7 @@ import { motion } from 'framer-motion';
 const iconMap: { [key: string]: LucideIcon } = {
   CalendarDays,
   Users,
-  Telescope, // Add any other icons you might use
+  Telescope, 
   // Add other icons as needed
 };
 
@@ -37,7 +37,7 @@ interface CampusEvent {
   description: string;
   organizer: string;
   tags: string[];
-  iconName: string; // Changed from icon: LucideIcon
+  iconName: string; 
   dataAiHint?: string;
 }
 
@@ -52,7 +52,7 @@ const initialHardcodedEvents: CampusEvent[] = [
     description: "Join Prof. Anya Sharma as she discusses breakthroughs in quantum computing and its impact on technology.",
     organizer: "Dept. of Physics",
     tags: ["Academia", "Tech", "Physics"],
-    iconName: "CalendarDays", // Changed
+    iconName: "CalendarDays", 
     dataAiHint: "lecture hall modern"
   },
   {
@@ -65,7 +65,7 @@ const initialHardcodedEvents: CampusEvent[] = [
     description: "Connect with leading tech companies and explore internship/job opportunities in various engineering fields.",
     organizer: "Career Services",
     tags: ["Career", "Tech", "Engineering"],
-    iconName: "Users", // Changed
+    iconName: "Users", 
     dataAiHint: "career fair students"
   },
   {
@@ -78,7 +78,7 @@ const initialHardcodedEvents: CampusEvent[] = [
     description: "Collaborative review session for the upcoming Astrophysics 101 midterm. All welcome!",
     organizer: "Alex Cosmo (Student)",
     tags: ["Study Group", "Astrophysics"],
-    iconName: "Users", // Changed
+    iconName: "Users", 
     dataAiHint: "students studying group"
   },
 ];
@@ -94,7 +94,7 @@ interface UserEventInteractions {
 
 const getLocalStorageKey = (baseKey: string) => {
   const mockUserId = "demoUser123"; 
-  return `${baseKey}-${mockUserId}`;
+  return `uniVerse-event-${baseKey}-${mockUserId}`;
 };
 
 const tabContentVariants = {
@@ -112,9 +112,7 @@ export default function EventHorizonPage() {
   
   const [allEvents, setAllEvents] = useState<CampusEvent[]>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(getLocalStorageKey('uniVerseAllEvents'));
-      // When parsing, icons will not be functions. We need to handle this.
-      // For now, we'll re-map icon names later or ensure initial data is robust.
+      const saved = localStorage.getItem(getLocalStorageKey('allEvents'));
       return saved ? JSON.parse(saved) : initialHardcodedEvents;
     }
     return initialHardcodedEvents;
@@ -124,7 +122,7 @@ export default function EventHorizonPage() {
   
   const [userInteractions, setUserInteractions] = useState<UserEventInteractions>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(getLocalStorageKey('uniVerseEventInteractions'));
+      const saved = localStorage.getItem(getLocalStorageKey('userInteractions'));
       return saved ? JSON.parse(saved) : {};
     }
     return {};
@@ -141,13 +139,13 @@ export default function EventHorizonPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem(getLocalStorageKey('uniVerseEventInteractions'), JSON.stringify(userInteractions));
+      localStorage.setItem(getLocalStorageKey('userInteractions'), JSON.stringify(userInteractions));
     }
   }, [userInteractions]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && allEvents.length >= 0) { 
-      localStorage.setItem(getLocalStorageKey('uniVerseAllEvents'), JSON.stringify(allEvents));
+      localStorage.setItem(getLocalStorageKey('allEvents'), JSON.stringify(allEvents));
     }
   }, [allEvents]);
   
@@ -252,7 +250,8 @@ export default function EventHorizonPage() {
   };
 
   const recommendedEvents = useMemo(() => {
-    return allEvents.filter(event => !(userInteractions[event.id]?.rsvpd || userInteractions[event.id]?.interested)).slice(0, 2);
+    const uninteractedEvents = allEvents.filter(event => !(userInteractions[event.id]?.rsvpd || userInteractions[event.id]?.interested));
+    return uninteractedEvents.slice(0, 2);
   }, [allEvents, userInteractions]);
   
   return (
@@ -274,17 +273,17 @@ export default function EventHorizonPage() {
       </div>
       
       <Tabs defaultValue="discover" className="w-full" onValueChange={setActiveTab} value={activeTab}>
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-8">
-          <TabsTrigger value="discover" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
-            <Search className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform animate-subtle-pulse" />Discover & Filter
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-1 mb-8 border-b border-border pb-1">
+          <TabsTrigger value="discover" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent">
+            <Search className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Discover & Filter
           </TabsTrigger>
-          <TabsTrigger value="create" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
+          <TabsTrigger value="create" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent">
             <PlusCircle className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Create Peer Event
           </TabsTrigger>
-          <TabsTrigger value="recommendations" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
+          <TabsTrigger value="recommendations" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent">
             <RecommendIcon className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />Recommended
           </TabsTrigger>
-          <TabsTrigger value="all-events" className="text-sm py-2.5 group flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-lg data-[state=active]:scale-[1.03] hover:bg-muted/80 hover:text-foreground">
+          <TabsTrigger value="all-events" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent">
             <ListChecks className="mr-2 h-4 w-4 group-hover:scale-110 transition-transform" />All Events
           </TabsTrigger>
         </TabsList>
@@ -328,13 +327,13 @@ export default function EventHorizonPage() {
                 const interactions = userInteractions[event.id] || {};
                 const isRsvpd = !!interactions.rsvpd;
                 const isInterested = !!interactions.interested;
-                const Icon = iconMap[event.iconName] || DefaultEventIcon;
+                const IconComponent = iconMap[event.iconName] || DefaultEventIcon;
 
                 return (
                   <Card key={event.id} className="bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300 overflow-hidden">
                     <CardHeader className="pb-3">
                       <div className="flex items-start space-x-3">
-                          <Icon className="h-10 w-10 text-accent mt-1 shrink-0" />
+                          <IconComponent className="h-10 w-10 text-accent mt-1 shrink-0" />
                           <div className="flex-grow">
                             <CardTitle className="text-2xl text-primary">{event.title}</CardTitle>
                             <CardDescription className="text-sm">Organized by: {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-2 text-xs'>{event.type === 'official' ? 'Official Event' : 'Peer Event'}</Badge></CardDescription>
@@ -456,11 +455,11 @@ export default function EventHorizonPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {recommendedEvents.length > 0 ? recommendedEvents.map(event => {
-                  const Icon = iconMap[event.iconName] || DefaultEventIcon;
+                  const IconComponent = iconMap[event.iconName] || DefaultEventIcon;
                   return (
                   <Card key={`rec-${event.id}`} className="p-4 bg-background/50 border-border/50">
                     <div className="flex items-start space-x-3">
-                      <Icon className="h-8 w-8 text-accent mt-1 shrink-0" />
+                      <IconComponent className="h-8 w-8 text-accent mt-1 shrink-0" />
                       <div className="flex-grow">
                         <h4 className="font-semibold text-lg text-foreground">{event.title}</h4>
                         <p className="text-sm text-muted-foreground">Organized by: {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-1 text-xs'>{event.type === 'official' ? 'Official' : 'Peer Event'}</Badge></p>
@@ -494,12 +493,12 @@ export default function EventHorizonPage() {
               </CardHeader>
               <CardContent className="space-y-3 max-h-[400px] overflow-y-auto">
                 {allEvents.length > 0 ? allEvents.map(event => {
-                  const Icon = iconMap[event.iconName] || DefaultEventIcon;
+                  const IconComponent = iconMap[event.iconName] || DefaultEventIcon;
                   return (
                   <Card key={`all-${event.id}`} className="p-3 bg-background/40 border-border/40">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-3">
-                        <Icon className="h-6 w-6 text-accent shrink-0" />
+                        <IconComponent className="h-6 w-6 text-accent shrink-0" />
                         <div>
                           <h5 className="font-medium text-foreground">{event.title}</h5>
                           <p className="text-xs text-muted-foreground">{event.date} - {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-1 text-xs'>{event.type === 'official' ? 'Official' : 'Peer'}</Badge></p>
@@ -518,3 +517,5 @@ export default function EventHorizonPage() {
     </div>
   );
 }
+
+    

@@ -11,14 +11,14 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog"; // Added DialogTrigger
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, UsersRound, Pencil, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, CheckCircle, Info, Bot, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-// AlienGuide is now global, no need to import here directly if it's in layout.
+import AlienGuide from '@/components/AlienGuide';
 
 const ALL_AVAILABLE_COURSES = ["Astrophysics 101", "Quantum Mechanics", "Calculus II", "Organic Chemistry", "Literary Theory", "Computer Science 101", "History of Art"];
 const ALL_LEARNING_STYLES = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
@@ -81,7 +81,7 @@ const initialStudyGroupsData: StudyGroup[] = [
 
 const initialSharedResourcesData: SharedResource[] = [
   { id: 1, name: "Astro Notes Ch. 1-3.pdf", type: "PDF", uploader: "Alex Cosmo", course: "Astrophysics 101" },
-  { id: 2, name: "Calculus Practice Set 1.docx", type: "DOCX", uploader: "Admin", course: "Calculus II" },
+  { id: 2, name: "Calculus Practice Set 1.docx", type: "DOCX", uploader: "Demo User", course: "Calculus II" },
 ];
 
 const initialStudySessionsData: StudySession[] = [
@@ -96,7 +96,9 @@ const tabContentVariants = {
 };
 
 const getLocalStorageKey = (baseKey: string) => {
-  const mockUserId = "demoUser123"; // Or retrieve from your mock AuthContext if available
+  // Simple mock user ID for localStorage keying.
+  // In a real app with auth, this would come from the authenticated user.
+  const mockUserId = "demoUser123"; 
   return `uniVerse-${baseKey}-${mockUserId}`;
 };
 
@@ -105,7 +107,7 @@ export default function StudySpherePage() {
   const { toast } = useToast();
 
   const [studyProfile, setStudyProfile] = useState<StudyProfileData>(initialStudyProfileData);
-  const [potentialMatches, setPotentialMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData);
+  const [potentialMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData); // Kept as static for now
   const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(initialStudyGroupsData);
   const [sharedResources, setSharedResources] = useState<SharedResource[]>(initialSharedResourcesData);
   const [studySessions, setStudySessions] = useState<StudySession[]>(initialStudySessionsData);
@@ -152,8 +154,8 @@ export default function StudySpherePage() {
     };
 
     setStudyProfile(loadData('studyProfile', initialStudyProfileData));
-    setPotentialMatches(loadData('potentialMatches', initialPotentialMatchesData)); // Though this usually comes from backend
-    setFilteredMatches(loadData('potentialMatches', initialPotentialMatchesData)); // Init with all matches
+    // potentialMatches remains static for this example
+    setFilteredMatches(loadData('potentialMatches', initialPotentialMatchesData));
     setStudyGroups(loadData('studyGroups', initialStudyGroupsData));
     setSharedResources(loadData('sharedResources', initialSharedResourcesData));
     setStudySessions(loadData('studySessions', initialStudySessionsData));
@@ -170,7 +172,6 @@ export default function StudySpherePage() {
   useEffect(() => { saveData('studyGroups', studyGroups); }, [studyGroups]);
   useEffect(() => { saveData('sharedResources', sharedResources); }, [sharedResources]);
   useEffect(() => { saveData('studySessions', studySessions); }, [studySessions]);
-  // Not saving potentialMatches as it's usually backend-driven or static for demo.
 
 
   useEffect(() => {
@@ -181,7 +182,7 @@ export default function StudySpherePage() {
   }, [studyProfile, isEditDialogOpen]);
 
   useEffect(() => {
-    let matches = [...potentialMatches]; // Start with all potential matches
+    let matches = [...potentialMatches]; 
     if (selectedCourseFilter && selectedCourseFilter !== 'all') {
       matches = matches.filter(match => match.courses.includes(selectedCourseFilter));
     }
@@ -194,7 +195,15 @@ export default function StudySpherePage() {
   const handleEditProfile = () => setIsEditDialogOpen(true);
 
   const handleSaveProfile = () => {
-    const updatedCourses = editCoursesInput.split(',').map(course => course.trim()).filter(course => course !== "");
+    const updatedCourses = editCoursesInput.split(',').map(course => course.trim()).filter(course => course !== "" && ALL_AVAILABLE_COURSES.includes(course));
+    if (updatedCourses.length === 0 && editCoursesInput.trim() !== "") {
+         toast({
+            title: "Invalid Courses",
+            description: "Please enter valid courses from the available list, separated by commas.",
+            variant: "destructive",
+        });
+        return;
+    }
     setStudyProfile({ courses: updatedCourses, learningStyles: editLearningStyles });
     setIsEditDialogOpen(false);
     toast({
@@ -214,7 +223,7 @@ export default function StudySpherePage() {
     if (!newGroupName.trim() || !newGroupCourses.trim() || !newGroupDescription.trim()) {
       toast({
         title: "Missing Information",
-        description: "Please fill out all fields for the new group.",
+        description: "Please fill out all required fields for the new group.",
         variant: "destructive",
       });
       return;
@@ -354,7 +363,7 @@ export default function StudySpherePage() {
   const handleDemoClick = (message: string) => {
     toast({
       title: "Demo Action",
-      description: message + " (Connections and real-time sharing coming soon! Your data is local for now.)",
+      description: message + " (Real connections & shared data coming soon! Your data is local for now.)",
       duration: 3000,
     });
   };
@@ -365,7 +374,7 @@ export default function StudySpherePage() {
   return (
     <div className="container mx-auto px-4 py-12 w-full max-w-4xl">
       <div className="mb-8">
-        <Button asChild variant="outline" className="mb-6">
+        <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground">
           <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to UniVerse Home
@@ -379,25 +388,25 @@ export default function StudySpherePage() {
           Your cosmic hub for collaborative learning! Find partners, join groups, and share knowledge.
         </p>
          <p className="text-md text-center text-foreground/80 mb-10">
-            Welcome, scholar! Shape your study profile and launch your academic journey. Your progress here is saved in your browser for this session!
+            Welcome, scholar! Shape your study profile, discover learning constellations, and launch your academic journey. Your progress here is saved locally in your browser!
         </p>
       </div>
 
       <Tabs defaultValue="profile" className="w-full" onValueChange={setActiveTab} value={activeTab}>
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 mb-8 border-b border-border pb-1">
-          <TabsTrigger value="profile" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold hover:text-primary">
+          <TabsTrigger value="profile" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent">
             <UserCircle className="mr-2 h-4 w-4" />My Profile
           </TabsTrigger>
-          <TabsTrigger value="find-buddies" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold hover:text-primary">
+          <TabsTrigger value="find-buddies" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent">
             <Search className="mr-2 h-4 w-4" />Find Buddies
           </TabsTrigger>
-          <TabsTrigger value="groups" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold hover:text-primary">
+          <TabsTrigger value="groups" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent">
             <Users className="mr-2 h-4 w-4" />Study Groups
           </TabsTrigger>
-          <TabsTrigger value="resources" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold hover:text-primary">
+          <TabsTrigger value="resources" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent">
             <FileText className="mr-2 h-4 w-4" />Resources
           </TabsTrigger>
-          <TabsTrigger value="sessions" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-primary data-[state=active]:border-primary data-[state=active]:font-semibold hover:text-primary">
+          <TabsTrigger value="sessions" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent">
             <Clock className="mr-2 h-4 w-4" />Sessions
           </TabsTrigger>
         </TabsList>
@@ -409,79 +418,76 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <BookOpen className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Your Study Profile
                 </CardTitle>
-                <CardDescription>Define your academic focus and learning preferences. (Changes saved in browser for this session)</CardDescription>
+                <CardDescription>Define your academic focus and learning preferences. (Changes saved in your browser)</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-
-                    <>
-                        <div>
-                            <h3 className="font-semibold text-lg mb-2 text-foreground">My Courses:</h3>
-                            <div className="flex flex-wrap gap-2">
-                            {studyProfile.courses.map(course => <Badge key={course} variant="secondary" className="text-base">{course}</Badge>)}
-                            {studyProfile.courses.length === 0 && <p className="text-sm text-muted-foreground">Add courses you're taking!</p>}
+                    <div>
+                        <h3 className="font-semibold text-lg mb-2 text-foreground">My Courses:</h3>
+                        <div className="flex flex-wrap gap-2">
+                        {studyProfile.courses.map(course => <Badge key={course} variant="secondary" className="text-base">{course}</Badge>)}
+                        {studyProfile.courses.length === 0 && <p className="text-sm text-muted-foreground">Add courses you're taking!</p>}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-lg mb-2 text-foreground">My Learning Styles:</h3>
+                        <div className="flex flex-wrap gap-2">
+                        {studyProfile.learningStyles.map(style => <Badge key={style} variant="outline" className="text-base border-accent text-accent">{style}</Badge>)}
+                        {studyProfile.learningStyles.length === 0 && <p className="text-sm text-muted-foreground">Specify your preferred learning styles!</p>}
+                        </div>
+                    </div>
+                    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                        <DialogTrigger asChild>
+                        <Button onClick={handleEditProfile} variant="outline" className="mt-2 border-accent text-accent hover:bg-accent/10">
+                            <Pencil className="mr-2 h-4 w-4" /> Edit Profile
+                        </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px] bg-card border-accent/50">
+                        <DialogHeader>
+                            <DialogTitle className="text-primary">Edit Your Study Profile (Saved Locally)</DialogTitle>
+                            <DialogDescription>
+                            Update your courses and learning preferences. Click save when you're done.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-2">
+                            <div className="space-y-1">
+                            <Label htmlFor="courses" className="text-foreground/90">
+                                Courses (comma-separated)
+                            </Label>
+                            <Textarea
+                                id="courses"
+                                value={editCoursesInput}
+                                onChange={(e) => setEditCoursesInput(e.target.value)}
+                                placeholder="Enter courses, separated by commas. e.g., Astrophysics 101, Quantum Mechanics"
+                                className="bg-background/70 min-h-[60px]"
+                            />
+                            <p className="text-xs text-muted-foreground">Available: {ALL_AVAILABLE_COURSES.join(', ')}</p>
+                            </div>
+                            <div className="space-y-1">
+                            <Label className="text-foreground/90">
+                                Learning Styles
+                            </Label>
+                            <div className="grid grid-cols-2 gap-2 pt-1">
+                                {ALL_LEARNING_STYLES.map((style) => (
+                                <div key={style} className="flex items-center space-x-2">
+                                    <Checkbox
+                                    id={`style-${style}`}
+                                    checked={editLearningStyles.includes(style)}
+                                    onCheckedChange={(checked) => handleLearningStyleChange(style, checked)}
+                                    />
+                                    <Label htmlFor={`style-${style}`} className="font-normal text-foreground/80">{style}</Label>
+                                </div>
+                                ))}
+                            </div>
                             </div>
                         </div>
-                        <div>
-                            <h3 className="font-semibold text-lg mb-2 text-foreground">My Learning Styles:</h3>
-                            <div className="flex flex-wrap gap-2">
-                            {studyProfile.learningStyles.map(style => <Badge key={style} variant="outline" className="text-base border-accent text-accent">{style}</Badge>)}
-                            {studyProfile.learningStyles.length === 0 && <p className="text-sm text-muted-foreground">Specify your preferred learning styles!</p>}
-                            </div>
-                        </div>
-                        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                            <DialogTrigger asChild>
-                            <Button onClick={handleEditProfile} variant="outline" className="mt-2 border-accent text-accent hover:bg-accent/10">
-                                <Pencil className="mr-2 h-4 w-4" /> Edit Profile
-                            </Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-[425px] bg-card border-accent/50">
-                            <DialogHeader>
-                                <DialogTitle className="text-primary">Edit Your Study Profile (Saved Locally)</DialogTitle>
-                                <DialogDescription>
-                                Update your courses and learning preferences. Click save when you're done.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="courses" className="text-right text-foreground/90 col-span-1">
-                                    Courses
-                                </Label>
-                                <Textarea
-                                    id="courses"
-                                    value={editCoursesInput}
-                                    onChange={(e) => setEditCoursesInput(e.target.value)}
-                                    placeholder="Enter courses, separated by commas"
-                                    className="col-span-3 bg-background/70"
-                                />
-                                </div>
-                                <div className="grid grid-cols-4 items-start gap-4">
-                                <Label className="text-right text-foreground/90 col-span-1 pt-1">
-                                    Learning Styles
-                                </Label>
-                                <div className="col-span-3 space-y-2">
-                                    {ALL_LEARNING_STYLES.map((style) => (
-                                    <div key={style} className="flex items-center space-x-2">
-                                        <Checkbox
-                                        id={`style-${style}`}
-                                        checked={editLearningStyles.includes(style)}
-                                        onCheckedChange={(checked) => handleLearningStyleChange(style, checked)}
-                                        />
-                                        <Label htmlFor={`style-${style}`} className="font-normal text-foreground/80">{style}</Label>
-                                    </div>
-                                    ))}
-                                </div>
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <DialogClose asChild>
-                                <Button type="button" variant="outline">Cancel</Button>
-                                </DialogClose>
-                                <Button type="button" onClick={handleSaveProfile} className="bg-accent hover:bg-accent/90 text-accent-foreground">Save Changes</Button>
-                            </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </>
-
+                        <DialogFooter>
+                            <DialogClose asChild>
+                            <Button type="button" variant="outline">Cancel</Button>
+                            </DialogClose>
+                            <Button type="button" onClick={handleSaveProfile} className="bg-accent hover:bg-accent/90 text-accent-foreground">Save Changes</Button>
+                        </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </CardContent>
             </Card>
             </TabsContent>
@@ -555,7 +561,7 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <Group className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Collaborative Orbits (Study Groups)
                 </CardTitle>
-                <CardDescription>Launch your own study group or join an existing constellation. (Group data saved in browser for this session).</CardDescription>
+                <CardDescription>Launch your own study group or join an existing constellation. (Group data saved in your browser).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <Dialog open={isCreateGroupDialogOpen} onOpenChange={setIsCreateGroupDialogOpen}>
@@ -571,7 +577,7 @@ export default function StudySpherePage() {
                                 Fill in the details to launch your new study group constellation!
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="grid gap-4 py-4">
+                            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-2">
                                 <div className="space-y-1">
                                     <Label htmlFor="group-name" className="text-foreground/90">Group Name</Label>
                                     <Input
@@ -648,7 +654,7 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <FileText className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Knowledge Nebula (Shared Resources)
                 </CardTitle>
-                <CardDescription>Exchange notes and materials. (Resource data saved in browser for this session).</CardDescription>
+                <CardDescription>Exchange notes and materials. (Resource data saved in your browser).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                 <Dialog open={isUploadResourceDialogOpen} onOpenChange={setIsUploadResourceDialogOpen}>
@@ -664,7 +670,7 @@ export default function StudySpherePage() {
                         Share your knowledge with the UniVerse community!
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-2">
                         <div className="space-y-1">
                             <Label htmlFor="resource-name" className="text-foreground/90">Resource Name</Label>
                             <Input
@@ -733,7 +739,7 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <Clock className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Synchronized Orbits (Study Sessions)
                 </CardTitle>
-                <CardDescription>Plan and schedule study times. (Session data saved in browser for this session).</CardDescription>
+                <CardDescription>Plan and schedule study times. (Session data saved in your browser).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                 <Dialog open={isScheduleSessionDialogOpen} onOpenChange={setIsScheduleSessionDialogOpen}>
@@ -749,7 +755,7 @@ export default function StudySpherePage() {
                             Coordinate your learning efforts with the UniVerse crew!
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
+                    <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-2">
                         <div className="space-y-1">
                             <Label htmlFor="session-topic" className="text-foreground/90">Topic</Label>
                             <Input
@@ -825,7 +831,8 @@ export default function StudySpherePage() {
             </TabsContent>
         </motion.div>
       </Tabs>
-      {/* AlienGuide is now global and takes care of its own messaging */}
     </div>
   );
 }
+
+    
