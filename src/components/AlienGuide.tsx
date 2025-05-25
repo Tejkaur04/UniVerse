@@ -53,11 +53,11 @@ const AlienGuide: React.FC<AlienGuideProps> = ({ message = DEFAULT_MESSAGE, clas
         variant="ghost"
         size="icon"
         onClick={toggleMessageVisibility}
-        className="p-0 h-16 w-16 rounded-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+        className="p-0 h-20 w-20 rounded-full focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
         aria-label={isMessageVisible ? "Hide guide message" : "Show guide message"}
         title={isMessageVisible ? "Hide guide message" : "Show guide message"}
       >
-        <Bot className="h-16 w-16 text-primary drop-shadow-[0_0_10px_hsl(var(--primary))] animate-bounce" />
+        <Bot className="h-20 w-20 text-primary drop-shadow-[0_0_10px_hsl(var(--primary))] animate-bounce" />
       </Button>
     </motion.div>
   );
