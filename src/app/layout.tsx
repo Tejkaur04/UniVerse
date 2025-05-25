@@ -17,6 +17,8 @@ import {
   CalendarDays,
   MessageCircleQuestion,
   Lightbulb,
+  Settings,
+  HelpCircle,
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -161,7 +163,7 @@ function AppContent({ children }: { children: ReactNode }) {
             </nav>
           </div>
         </header>
-        <main className={cn("flex-1 flex flex-col items-center py-8 px-4 md:px-2 z-10 relative", showSidebarAndGuide ? "md:ml-64" : "")}> 
+        <main className={cn("flex-1 flex flex-col items-center py-8 px-4 md:px-1 z-10 relative", showSidebarAndGuide ? "md:ml-64" : "")}> 
           <div className="w-full max-w-7xl">
             {children}
           </div>
@@ -182,7 +184,7 @@ export default function RootLayout({
       <head></head>
       <body
         className={cn(
-          "antialiased min-h-screen flex flex-col relative font-sans" 
+          "min-h-screen bg-background text-foreground font-sans antialiased"
       )}>
         <StarryBackground />
         <AuthProvider>
