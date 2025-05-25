@@ -35,7 +35,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.push('/dashboard');
+      router.push('/'); // Redirect to main landing page
     }
   }, [user, authLoading, router]);
 
@@ -63,7 +63,8 @@ export default function LoginPage() {
     } else if (result && 'uid' in result) {
       // Successful mock login handled by useEffect watching `user` state
     } else {
-        setPageError("An unexpected issue occurred during mock login.");
+        // This case should ideally not be reached if login returns MockUser or {error}
+        // setPageError("An unexpected issue occurred during mock login.");
     }
     setIsLoading(false);
   };

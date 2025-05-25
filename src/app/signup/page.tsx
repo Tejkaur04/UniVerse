@@ -34,7 +34,7 @@ export default function SignupPage() {
 
  useEffect(() => {
     if (!authLoading && user) {
-      router.push('/dashboard');
+      router.push('/'); // Redirect to main landing page
     }
   }, [user, authLoading, router]);
 
@@ -67,7 +67,8 @@ export default function SignupPage() {
     } else if (result && 'uid' in result) {
         // Successful mock signup handled by useEffect watching `user` state
     } else {
-        setPageError("An unexpected issue occurred during mock signup.");
+        // This case should ideally not be reached if signup returns MockUser or {error}
+        // setPageError("An unexpected issue occurred during mock signup.");
     }
     setIsLoading(false);
   };
