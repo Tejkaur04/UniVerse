@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog"; // Added DialogTrigger
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,7 @@ interface StudyProfileData {
 }
 
 interface PotentialMatch {
-  id: number; 
+  id: number;
   name: string;
   courses: string[];
   learningStyles: string[];
@@ -38,7 +38,7 @@ interface PotentialMatch {
 }
 
 interface StudyGroup {
-  id: number; 
+  id: number;
   name: string;
   courses: string[];
   members: number;
@@ -47,7 +47,7 @@ interface StudyGroup {
 }
 
 interface SharedResource {
-  id: number; 
+  id: number;
   name: string;
   type: string;
   uploader: string;
@@ -55,7 +55,7 @@ interface SharedResource {
 }
 
 interface StudySession {
-  id: number; 
+  id: number;
   topic: string;
   dateTime: string;
   group: string;
@@ -96,8 +96,6 @@ const tabContentVariants = {
 };
 
 const getLocalStorageKey = (baseKey: string) => {
-  // In a real app, you'd use the actual logged-in user's ID.
-  // For this demo with mock auth, we'll use a static ID or a mock one.
   const mockUserId = "demoUser123"; // Or retrieve from your mock AuthContext if available
   return `uniVerse-${baseKey}-${mockUserId}`;
 };
@@ -105,20 +103,20 @@ const getLocalStorageKey = (baseKey: string) => {
 
 export default function StudySpherePage() {
   const { toast } = useToast();
-  
+
   const [studyProfile, setStudyProfile] = useState<StudyProfileData>(initialStudyProfileData);
   const [potentialMatches, setPotentialMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData);
   const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(initialStudyGroupsData);
   const [sharedResources, setSharedResources] = useState<SharedResource[]>(initialSharedResourcesData);
   const [studySessions, setStudySessions] = useState<StudySession[]>(initialStudySessionsData);
-  
+
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editCoursesInput, setEditCoursesInput] = useState('');
   const [editLearningStyles, setEditLearningStyles] = useState<string[]>([]);
 
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('');
   const [selectedStyleFilter, setSelectedStyleFilter] = useState<string>('');
-  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData); 
+  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData);
 
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -135,36 +133,44 @@ export default function StudySpherePage() {
   const [newSessionDateTime, setNewSessionDateTime] = useState('');
   const [newSessionGroup, setNewSessionGroup] = useState('');
   const [newSessionLocation, setNewSessionLocation] = useState('');
-  
+
   const [activeTab, setActiveTab] = useState("profile");
-  
+
   // Load data from localStorage on mount
   useEffect(() => {
-    const savedProfile = localStorage.getItem(getLocalStorageKey('studyProfile'));
-    if (savedProfile) setStudyProfile(JSON.parse(savedProfile));
+    const loadData = <T,>(key: string, initialData: T): T => {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem(getLocalStorageKey(key));
+        try {
+          return saved ? JSON.parse(saved) : initialData;
+        } catch (error) {
+          console.error(`Error parsing ${key} from localStorage:`, error);
+          return initialData;
+        }
+      }
+      return initialData;
+    };
 
-    const savedGroups = localStorage.getItem(getLocalStorageKey('studyGroups'));
-    if (savedGroups) setStudyGroups(JSON.parse(savedGroups)); else setStudyGroups(initialStudyGroupsData);
-
-
-    const savedResources = localStorage.getItem(getLocalStorageKey('sharedResources'));
-    if (savedResources) setSharedResources(JSON.parse(savedResources)); else setSharedResources(initialSharedResourcesData);
-
-    const savedSessions = localStorage.getItem(getLocalStorageKey('studySessions'));
-    if (savedSessions) setStudySessions(JSON.parse(savedSessions)); else setStudySessions(initialStudySessionsData);
-    
-    // Initialize potential matches (not typically saved this way but for demo consistency)
-    setPotentialMatches(initialPotentialMatchesData);
-    setFilteredMatches(initialPotentialMatchesData);
-
-
+    setStudyProfile(loadData('studyProfile', initialStudyProfileData));
+    setPotentialMatches(loadData('potentialMatches', initialPotentialMatchesData)); // Though this usually comes from backend
+    setFilteredMatches(loadData('potentialMatches', initialPotentialMatchesData)); // Init with all matches
+    setStudyGroups(loadData('studyGroups', initialStudyGroupsData));
+    setSharedResources(loadData('sharedResources', initialSharedResourcesData));
+    setStudySessions(loadData('studySessions', initialStudySessionsData));
   }, []);
 
   // Save data to localStorage when it changes
-  useEffect(() => {localStorage.setItem(getLocalStorageKey('studyProfile'), JSON.stringify(studyProfile));}, [studyProfile]);
-  useEffect(() => {localStorage.setItem(getLocalStorageKey('studyGroups'), JSON.stringify(studyGroups));}, [studyGroups]);
-  useEffect(() => {localStorage.setItem(getLocalStorageKey('sharedResources'), JSON.stringify(sharedResources));}, [sharedResources]);
-  useEffect(() => {localStorage.setItem(getLocalStorageKey('studySessions'), JSON.stringify(studySessions));}, [studySessions]);
+  const saveData = <T,>(key: string, data: T) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getLocalStorageKey(key), JSON.stringify(data));
+    }
+  };
+
+  useEffect(() => { saveData('studyProfile', studyProfile); }, [studyProfile]);
+  useEffect(() => { saveData('studyGroups', studyGroups); }, [studyGroups]);
+  useEffect(() => { saveData('sharedResources', sharedResources); }, [sharedResources]);
+  useEffect(() => { saveData('studySessions', studySessions); }, [studySessions]);
+  // Not saving potentialMatches as it's usually backend-driven or static for demo.
 
 
   useEffect(() => {
@@ -175,7 +181,7 @@ export default function StudySpherePage() {
   }, [studyProfile, isEditDialogOpen]);
 
   useEffect(() => {
-    let matches = [...initialPotentialMatchesData]; 
+    let matches = [...potentialMatches]; // Start with all potential matches
     if (selectedCourseFilter && selectedCourseFilter !== 'all') {
       matches = matches.filter(match => match.courses.includes(selectedCourseFilter));
     }
@@ -183,7 +189,7 @@ export default function StudySpherePage() {
       matches = matches.filter(match => match.learningStyles.includes(selectedStyleFilter));
     }
     setFilteredMatches(matches);
-  }, [selectedCourseFilter, selectedStyleFilter]); 
+  }, [selectedCourseFilter, selectedStyleFilter, potentialMatches]);
 
   const handleEditProfile = () => setIsEditDialogOpen(true);
 
@@ -214,12 +220,12 @@ export default function StudySpherePage() {
       return;
     }
     const newGroup: StudyGroup = {
-      id: Date.now(), 
+      id: Date.now(),
       name: newGroupName.trim(),
       courses: newGroupCourses.split(',').map(c => c.trim()).filter(c => c),
-      members: 1, 
+      members: 1,
       description: newGroupDescription.trim(),
-      isJoinedByCurrentUser: true, 
+      isJoinedByCurrentUser: true,
     };
     setStudyGroups(prevGroups => [newGroup, ...prevGroups]);
     setIsCreateGroupDialogOpen(false);
@@ -245,7 +251,7 @@ export default function StudySpherePage() {
         return group;
       })
     );
-    
+
     if (groupJoinedSuccessfully && groupName) {
         toast({
             title: "Joined Group! (Locally)",
@@ -257,7 +263,6 @@ export default function StudySpherePage() {
             toast({
                 title: "Already Joined",
                 description: `You are already a member of "${group.name}".`,
-                variant: "default", // Or remove variant for default toast
             });
         }
     }
@@ -277,7 +282,7 @@ export default function StudySpherePage() {
       name: newResourceName.trim(),
       course: newResourceCourse.trim(),
       type: newResourceType.trim(),
-      uploader: "Demo User", 
+      uploader: "Demo User",
     };
     setSharedResources(prevResources => [newResource, ...prevResources]);
     setIsUploadResourceDialogOpen(false);
@@ -305,7 +310,7 @@ export default function StudySpherePage() {
       dateTime: newSessionDateTime.trim(),
       group: newSessionGroup.trim(),
       location: newSessionLocation.trim(),
-      isJoinedByCurrentUser: true, 
+      isJoinedByCurrentUser: true,
     };
     setStudySessions(prevSessions => [newSession, ...prevSessions]);
     setIsScheduleSessionDialogOpen(false);
@@ -326,20 +331,20 @@ export default function StudySpherePage() {
     setStudySessions(prevSessions =>
       prevSessions.map(session => {
         if (session.id === sessionId) {
-          sessionJoinedInitially = !!session.isJoinedByCurrentUser; 
+          sessionJoinedInitially = !!session.isJoinedByCurrentUser;
           sessionTopic = session.topic;
           return { ...session, isJoinedByCurrentUser: !session.isJoinedByCurrentUser };
         }
         return session;
       })
     );
-    
+
     if (sessionTopic) {
       const nowJoined = !sessionJoinedInitially;
         toast({
             title: nowJoined ? "Joined Session! (Locally)" : "Left Session (Locally)",
-            description: (nowJoined 
-                ? `You have successfully joined "${sessionTopic}".` 
+            description: (nowJoined
+                ? `You have successfully joined "${sessionTopic}".`
                 : `You have left "${sessionTopic}".`) + " Status saved in your browser.",
         });
     }
@@ -353,14 +358,14 @@ export default function StudySpherePage() {
       duration: 3000,
     });
   };
-  
+
   const motionKey = activeTab;
 
 
   return (
     <div className="container mx-auto px-4 py-12 w-full max-w-4xl">
       <div className="mb-8">
-        <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground">
+        <Button asChild variant="outline" className="mb-6">
           <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to UniVerse Home
@@ -374,7 +379,7 @@ export default function StudySpherePage() {
           Your cosmic hub for collaborative learning! Find partners, join groups, and share knowledge.
         </p>
          <p className="text-md text-center text-foreground/80 mb-10">
-            Welcome, scholar! Shape your study profile and launch your academic journey. Your progress here is saved locally in your browser!
+            Welcome, scholar! Shape your study profile and launch your academic journey. Your progress here is saved in your browser for this session!
         </p>
       </div>
 
@@ -407,7 +412,7 @@ export default function StudySpherePage() {
                 <CardDescription>Define your academic focus and learning preferences. (Changes saved in browser for this session)</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                
+
                     <>
                         <div>
                             <h3 className="font-semibold text-lg mb-2 text-foreground">My Courses:</h3>
@@ -476,7 +481,7 @@ export default function StudySpherePage() {
                             </DialogContent>
                         </Dialog>
                     </>
-                
+
                 </CardContent>
             </Card>
             </TabsContent>
@@ -534,7 +539,7 @@ export default function StudySpherePage() {
                         <p className="text-sm text-muted-foreground">Courses: {match.courses.join(', ')}</p>
                         <p className="text-sm text-muted-foreground">Learning Styles: {match.learningStyles.join(', ')}</p>
                         </div>
-                        <Button onClick={() => handleDemoClick(`Connection request sent to ${match.name}!`)} size="sm" variant="outline" className="shrink-0 self-start sm:self-center border-accent text-accent hover:bg-accent/10">
+                        <Button onClick={() => handleDemoClick(`Connection request sent to ${match.name}! (Demo: Real connections coming soon!)`)} size="sm" variant="outline" className="shrink-0 self-start sm:self-center border-accent text-accent hover:bg-accent/10">
                         <UserPlus className="mr-2 h-4 w-4" /> Connect (Demo)
                         </Button>
                     </Card>
@@ -543,7 +548,7 @@ export default function StudySpherePage() {
                 </Card>
             </div>
             </TabsContent>
-            
+
             <TabsContent value="groups">
             <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                 <CardHeader>
@@ -569,30 +574,30 @@ export default function StudySpherePage() {
                             <div className="grid gap-4 py-4">
                                 <div className="space-y-1">
                                     <Label htmlFor="group-name" className="text-foreground/90">Group Name</Label>
-                                    <Input 
-                                        id="group-name" 
-                                        value={newGroupName} 
-                                        onChange={(e: ChangeEvent<HTMLInputElement>) => setNewGroupName(e.target.value)} 
-                                        placeholder="e.g., Quantum Physicists United" 
+                                    <Input
+                                        id="group-name"
+                                        value={newGroupName}
+                                        onChange={(e: ChangeEvent<HTMLInputElement>) => setNewGroupName(e.target.value)}
+                                        placeholder="e.g., Quantum Physicists United"
                                         className="bg-background/70"
                                     />
                                 </div>
                                 <div className="space-y-1">
                                     <Label htmlFor="group-courses" className="text-foreground/90">Relevant Courses (comma-separated)</Label>
-                                    <Input 
-                                        id="group-courses" 
-                                        value={newGroupCourses} 
-                                        onChange={(e: ChangeEvent<HTMLInputElement>) => setNewGroupCourses(e.target.value)} 
+                                    <Input
+                                        id="group-courses"
+                                        value={newGroupCourses}
+                                        onChange={(e: ChangeEvent<HTMLInputElement>) => setNewGroupCourses(e.target.value)}
                                         placeholder="e.g., Quantum Mechanics, Astrophysics 101"
                                         className="bg-background/70"
                                     />
                                 </div>
                                 <div className="space-y-1">
                                     <Label htmlFor="group-description" className="text-foreground/90">Description</Label>
-                                    <Textarea 
-                                        id="group-description" 
-                                        value={newGroupDescription} 
-                                        onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewGroupDescription(e.target.value)} 
+                                    <Textarea
+                                        id="group-description"
+                                        value={newGroupDescription}
+                                        onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewGroupDescription(e.target.value)}
                                         placeholder="What's your group about? What are your goals?"
                                         className="min-h-[80px] bg-background/70"
                                     />
@@ -620,12 +625,12 @@ export default function StudySpherePage() {
                         <p className="text-sm text-foreground/80 mt-1">{group.description}</p>
                         <Badge variant="secondary" className="mt-2">{group.members} members</Badge>
                         </div>
-                        <Button 
-                            onClick={() => handleJoinGroup(group.id)} 
-                            size="sm" 
+                        <Button
+                            onClick={() => handleJoinGroup(group.id)}
+                            size="sm"
                             variant={group.isJoinedByCurrentUser ? "default" : "outline"}
-                            disabled={!!group.isJoinedByCurrentUser} 
-                            className={`mt-1 border-accent ${group.isJoinedByCurrentUser ? 'bg-accent text-accent-foreground cursor-not-allowed' : 'text-accent hover:bg-accent/10'} self-start sm:self-center`}
+                            disabled={!!group.isJoinedByCurrentUser}
+                            className={`mt-1 self-start sm:self-center ${group.isJoinedByCurrentUser ? 'bg-primary text-primary-foreground cursor-not-allowed' : 'border-accent text-accent hover:bg-accent/10'}`}
                         >
                         {group.isJoinedByCurrentUser ? <><CheckCircle className="mr-2 h-4 w-4" />Joined</> : <><UserPlus className="mr-2 h-4 w-4" />Join Group</>}
                         </Button>
@@ -662,30 +667,30 @@ export default function StudySpherePage() {
                     <div className="grid gap-4 py-4">
                         <div className="space-y-1">
                             <Label htmlFor="resource-name" className="text-foreground/90">Resource Name</Label>
-                            <Input 
-                                id="resource-name" 
-                                value={newResourceName} 
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewResourceName(e.target.value)} 
-                                placeholder="e.g., Astro Chapter 5 Summary.pdf" 
+                            <Input
+                                id="resource-name"
+                                value={newResourceName}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewResourceName(e.target.value)}
+                                placeholder="e.g., Astro Chapter 5 Summary.pdf"
                                 className="bg-background/70"
                             />
                         </div>
                         <div className="space-y-1">
                             <Label htmlFor="resource-course" className="text-foreground/90">Relevant Course</Label>
-                            <Input 
-                                id="resource-course" 
-                                value={newResourceCourse} 
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewResourceCourse(e.target.value)} 
+                            <Input
+                                id="resource-course"
+                                value={newResourceCourse}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewResourceCourse(e.target.value)}
                                 placeholder="e.g., Astrophysics 101"
                                 className="bg-background/70"
                             />
                         </div>
                         <div className="space-y-1">
                             <Label htmlFor="resource-type" className="text-foreground/90">Resource Type (e.g., PDF, Notes, Link)</Label>
-                            <Input 
-                                id="resource-type" 
-                                value={newResourceType} 
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewResourceType(e.target.value)} 
+                            <Input
+                                id="resource-type"
+                                value={newResourceType}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewResourceType(e.target.value)}
                                 placeholder="e.g., PDF, DOCX, Google Doc Link"
                                 className="bg-background/70"
                             />
@@ -701,7 +706,7 @@ export default function StudySpherePage() {
                     </DialogFooter>
                     </DialogContent>
                 </Dialog>
-                
+
                 <Separator className="my-6 bg-border/50" />
                 <h3 className="font-semibold text-lg mb-2 text-foreground">Available Resources:</h3>
                 {sharedResources.map(resource => (
@@ -747,40 +752,40 @@ export default function StudySpherePage() {
                     <div className="grid gap-4 py-4">
                         <div className="space-y-1">
                             <Label htmlFor="session-topic" className="text-foreground/90">Topic</Label>
-                            <Input 
-                                id="session-topic" 
-                                value={newSessionTopic} 
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionTopic(e.target.value)} 
-                                placeholder="e.g., Quantum Mechanics Midterm Prep" 
+                            <Input
+                                id="session-topic"
+                                value={newSessionTopic}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionTopic(e.target.value)}
+                                placeholder="e.g., Quantum Mechanics Midterm Prep"
                                 className="bg-background/70"
                             />
                         </div>
                         <div className="space-y-1">
                             <Label htmlFor="session-datetime" className="text-foreground/90">Date & Time</Label>
-                            <Input 
-                                id="session-datetime" 
-                                value={newSessionDateTime} 
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionDateTime(e.target.value)} 
+                            <Input
+                                id="session-datetime"
+                                value={newSessionDateTime}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionDateTime(e.target.value)}
                                 placeholder="e.g., November 10, 2024, 3:00 PM"
                                 className="bg-background/70"
                             />
                         </div>
                         <div className="space-y-1">
                             <Label htmlFor="session-group" className="text-foreground/90">Group / Participants</Label>
-                            <Input 
-                                id="session-group" 
-                                value={newSessionGroup} 
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionGroup(e.target.value)} 
+                            <Input
+                                id="session-group"
+                                value={newSessionGroup}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionGroup(e.target.value)}
                                 placeholder="e.g., Astro Alliance, or 'Open to all'"
                                 className="bg-background/70"
                             />
                         </div>
                         <div className="space-y-1">
                             <Label htmlFor="session-location" className="text-foreground/90">Location / Meeting Link</Label>
-                            <Input 
-                                id="session-location" 
-                                value={newSessionLocation} 
-                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionLocation(e.target.value)} 
+                            <Input
+                                id="session-location"
+                                value={newSessionLocation}
+                                onChange={(e: ChangeEvent<HTMLInputElement>) => setNewSessionLocation(e.target.value)}
                                 placeholder="e.g., Library Room 2A, or Virtual via UniMeet"
                                 className="bg-background/70"
                             />
@@ -804,11 +809,11 @@ export default function StudySpherePage() {
                     <h4 className="font-semibold text-lg text-foreground">{session.topic}</h4>
                     <p className="text-sm text-muted-foreground">When: {session.dateTime}</p>
                     <p className="text-sm text-muted-foreground">With: {session.group} | Where: {session.location}</p>
-                    <Button 
-                        onClick={() => handleToggleJoinSession(session.id)} 
-                        size="sm" 
+                    <Button
+                        onClick={() => handleToggleJoinSession(session.id)}
+                        size="sm"
                         variant={session.isJoinedByCurrentUser ? "default" : "outline"}
-                        className={`mt-2 border-accent ${session.isJoinedByCurrentUser ? 'bg-accent text-accent-foreground' : 'text-accent hover:bg-accent/10'}`}
+                        className={`mt-2 ${session.isJoinedByCurrentUser ? 'bg-primary text-primary-foreground' : 'border-accent text-accent hover:bg-accent/10'}`}
                     >
                         {session.isJoinedByCurrentUser ? <><CheckCircle className="mr-2 h-4 w-4" />Joined</> : <><CalendarPlus className="mr-2 h-4 w-4" />Join Session</>}
                     </Button>
