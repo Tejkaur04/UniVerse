@@ -3,26 +3,22 @@
 
 import type { ReactNode } from 'react';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-  onAuthStateChanged,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  type User,
-  type AuthError
-} from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase'; // db is imported for Firestore
+
+// Define a simpler User type for mock auth
+interface MockUser {
+  uid: string;
+  email: string;
+}
 
 // Define the shape of the auth context
 interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  error: string | null; // Add error state to the context
-  login: (credentials: LoginCredentials) => Promise<User | AuthError | null>;
-  signup: (credentials: SignupCredentials) => Promise<User | AuthError | null>;
+  user: MockUser | null;
+  loading: boolean; // Keep loading for potential UI consistency, though it will be quick
+  error: string | null;
+  login: (credentials: LoginCredentials) => Promise<MockUser | { error: string } | null>;
+  signup: (credentials: SignupCredentials) => Promise<MockUser | { error: string } | null>;
   logout: () => Promise<void>;
-  clearError: () => void; // Add a function to clear errors
+  clearError: () => void;
 }
 
 interface LoginCredentials {
@@ -30,114 +26,108 @@ interface LoginCredentials {
   password: string;
 }
 
-interface SignupCredentials extends LoginCredentials {
-  // Potentially add other signup fields here if needed in future
-}
+interface SignupCredentials extends LoginCredentials {}
 
-// Create the context with a default undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// AuthProvider component
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 export function AuthProvider({ children }: AuthProviderProps): JSX.Element {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null); // Add error state
+  const [user, setUser] = useState<MockUser | null>(null);
+  const [loading, setLoading] = useState(false); // Default to false as it's mock
+  const [error, setError] = useState<string | null>(null);
 
+  // Simulate checking auth state on mount (e.g., from localStorage if you extend this)
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe(); // Cleanup subscription on unmount
+    // For a truly simple mock, we can start logged out.
+    // Or, you could try to load a mock user from localStorage here.
+    // For now, just ensure loading is false.
+    setLoading(false);
   }, []);
 
   const clearError = () => {
     setError(null);
   };
 
-  const login = async ({ email, password }: LoginCredentials): Promise<User | AuthError | null> => {
+  const login = async ({ email, password }: LoginCredentials): Promise<MockUser | { error: string } | null> => {
     setLoading(true);
-    setError(null); // Clear previous errors
-    console.log("AuthContext: Attempting login with email:", email);
-    try {
-      console.log("AuthContext: Firebase auth.app.options before login:", JSON.stringify(auth.app.options, null, 2));
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      setUser(userCredential.user); // Set user on successful login
-      return userCredential.user;
-    } catch (e) {
-      const authError = e as AuthError;
-      console.error("AuthContext: Firebase Login Error:", authError);
-      setError(authError.message || "An unexpected error occurred during login.");
-      return authError;
-    } finally {
+    setError(null);
+    console.log("AuthContext (Mock): Attempting login with email:", email);
+
+    // Basic validation (can be expanded)
+    if (!email || !password) {
+      setError("Email and password are required.");
       setLoading(false);
+      return { error: "Email and password are required." };
     }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters (mock validation).");
+      setLoading(false);
+      return { error: "Password must be at least 6 characters (mock validation)." };
+    }
+
+    // Simulate a successful login
+    const mockUser: MockUser = {
+      email: email,
+      uid: `mock-uid-${Date.now()}`,
+    };
+    setUser(mockUser);
+    setLoading(false);
+    console.log("AuthContext (Mock): Login successful. User:", mockUser);
+    return mockUser;
   };
 
-  const signup = async ({ email, password }: SignupCredentials): Promise<User | AuthError | null> => {
+  const signup = async ({ email, password }: SignupCredentials): Promise<MockUser | { error: string } | null> => {
     setLoading(true);
-    setError(null); // Clear previous errors
-    console.log("AuthContext: Attempting signup with email:", email);
-    try {
-      console.log("AuthContext: Firebase auth.app.options before signup:", JSON.stringify(auth.app.options, null, 2));
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const newUser = userCredential.user;
-      if (newUser) {
-        const userDocRef = doc(db, "users", newUser.uid);
-        await setDoc(userDocRef, {
-          uid: newUser.uid,
-          email: newUser.email,
-          courses: ["Astrophysics 101", "Calculus I"], // Default initial courses
-          learningStyles: ["Visual"], // Default initial learning style
-          createdAt: serverTimestamp(),
-        });
-        console.log("AuthContext: User profile created in Firestore for UID:", newUser.uid);
-        setUser(newUser); // Set user on successful signup
-      }
-      return newUser;
-    } catch (e) {
-      const authError = e as AuthError;
-      console.error("AuthContext: Firebase Signup Error:", authError);
-      setError(authError.message || "An unexpected error occurred during signup.");
-      return authError;
-    } finally {
+    setError(null);
+    console.log("AuthContext (Mock): Attempting signup with email:", email);
+
+    if (!email || !password) {
+      setError("Email and password are required.");
       setLoading(false);
+      return { error: "Email and password are required." };
     }
+     if (password.length < 6) {
+        setError("Password must be at least 6 characters (mock validation).");
+        setLoading(false);
+        return { error: "Password must be at least 6 characters (mock validation)." };
+    }
+
+
+    // Simulate successful signup
+    const newUser: MockUser = {
+      email: email,
+      uid: `mock-uid-${Date.now()}`,
+    };
+    setUser(newUser); // Log the user in immediately after signup
+    setLoading(false);
+    console.log("AuthContext (Mock): Signup successful. User:", newUser);
+    return newUser;
   };
 
   const logout = async (): Promise<void> => {
     setLoading(true);
     setError(null);
-    try {
-      await signOut(auth);
-      setUser(null);
-    } catch (e) {
-      const authError = e as AuthError;
-      console.error("AuthContext: Firebase Logout Error:", authError);
-      setError(authError.message || "An unexpected error occurred during logout.");
-    } finally {
-      setLoading(false);
-    }
+    setUser(null);
+    console.log("AuthContext (Mock): Logout successful.");
+    setLoading(false);
   };
 
   const value = {
     user,
     loading,
-    error, // Expose error state
+    error,
     login,
     signup,
     logout,
-    clearError, // Expose clearError function
+    clearError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Custom hook to use the auth context
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {

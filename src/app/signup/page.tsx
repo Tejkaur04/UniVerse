@@ -11,17 +11,26 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, UserPlus, Loader2 } from "lucide-react";
-import type { AuthError } from "firebase/auth";
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup, user, loading: authLoading } = useAuth();
+  const { signup, user, loading: authLoading, error: authError, clearError } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [pageError, setPageError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
+
+  useEffect(() => {
+    if (authError) {
+        setPageError(authError);
+    }
+  }, [authError]);
 
  useEffect(() => {
     if (!authLoading && user) {
@@ -33,44 +42,34 @@ export default function SignupPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
-    setError(null);
+    setPageError(null);
+    clearError();
 
     if (!email || !password || !confirmPassword) {
-      setError("Please fill in all fields.");
+      setPageError("Please fill in all fields.");
       setIsLoading(false);
       return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      setPageError("Password must be at least 6 characters long.");
       setIsLoading(false);
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setPageError("Passwords do not match.");
       setIsLoading(false);
       return;
     }
 
-    try {
-      const result = await signup({ email, password });
-      if (result && 'code' in result) { // Check if it's an AuthError
-        const authError = result as AuthError;
-        if (authError.code === 'auth/email-already-in-use') {
-          setError("This email address is already in use. Please try another or login.");
-        } else if (authError.code === 'auth/weak-password') {
-          setError("The password is too weak. Please choose a stronger password.");
-        } else {
-          setError(authError.message || "An unexpected error occurred. Please try again.");
-        }
-      } else {
-         // Successful signup is handled by the useEffect watching the `user` state
-        // which will redirect to /dashboard
-      }
-    } catch (e: any) {
-      setError(e.message || "An unexpected error occurred during signup.");
-    } finally {
-      setIsLoading(false);
+    const result = await signup({ email, password });
+    if (result && 'error' in result && result.error) {
+        setPageError(result.error); // Display error from mock signup
+    } else if (result && 'uid' in result) {
+        // Successful mock signup handled by useEffect watching `user` state
+    } else {
+        setPageError("An unexpected issue occurred during mock signup.");
     }
+    setIsLoading(false);
   };
 
   if (authLoading || (!authLoading && user)) {
@@ -88,15 +87,15 @@ export default function SignupPage() {
           <UserPlus className="mx-auto h-12 w-12 text-primary mb-4" />
           <CardTitle className="text-3xl font-bold text-primary">Join UniVerse!</CardTitle>
           <CardDescription className="text-muted-foreground">
-            Create your account to explore the cosmos of learning.
+            Create your account to explore (Demo Mode).
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {error && (
+          {pageError && (
             <Alert variant="destructive" className="mb-4">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Signup Failed</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{pageError}</AlertDescription>
             </Alert>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -117,7 +116,7 @@ export default function SignupPage() {
               <Input 
                 id="password" 
                 type="password" 
-                placeholder="Choose a strong password (min. 6 characters)" 
+                placeholder="Choose a password (min. 6 characters)" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required 
@@ -136,14 +135,14 @@ export default function SignupPage() {
                 autoComplete="new-password"
               />
             </div>
-            <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" className="w-full text-lg py-6 bg-primary hover:bg-primary/90" disabled={isLoading || authLoading}>
+              {isLoading || authLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Creating Account...
                 </>
               ) : (
-                "Sign Up"
+                "Sign Up (Demo)"
               )}
             </Button>
           </form>
@@ -160,4 +159,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
