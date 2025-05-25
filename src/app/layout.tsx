@@ -7,16 +7,12 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Inter, Roboto_Mono } from 'next/font/google';
 import {
-  Waypoints, // UniVerse Logo
-  UsersRound, // Study Sphere
-  CalendarDays, // Event Horizon
-  MessageCircleQuestion, // Celestial Chats
-  Lightbulb, // Nebula of Ideas
   UserRound,
   LogOut,
   Loader2,
   LogInIcon,
-  Home as HomeIcon // For Dashboard link
+  Home as HomeIcon,
+  Waypoints // Logo icon
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -34,7 +30,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import StarryBackground from '@/components/starry-background';
 import AlienGuide from '@/components/AlienGuide';
-import UserStatsSidebar from '@/components/UserStatsSidebar'; // Import the new sidebar
+import UserStatsSidebar from '@/components/UserStatsSidebar';
 import {
   Tooltip,
   TooltipContent,
@@ -54,15 +50,9 @@ const robotoMono = Roboto_Mono({
   display: 'swap',
 });
 
-const navFeatures = [
-  { href: "/study-sphere", label: "Study Sphere", icon: UsersRound },
-  { href: "/event-horizon", label: "Event Horizon", icon: CalendarDays },
-  { href: "/celestial-chats", label: "Celestial Chats", icon: MessageCircleQuestion },
-  { href: "/nebula-of-ideas", label: "Nebula of Ideas", icon: Lightbulb },
-];
-
 function AppContent({ children }: { children: ReactNode }) {
-  const { user, loading, logout } = useAuth();
+  const { user, loading: authLoading, logout } // Correctly named variable
+    = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
@@ -72,10 +62,10 @@ function AppContent({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (isMounted && !loading && !user && pathname !== '/login' && pathname !== '/signup') {
+    if (isMounted && !authLoading && !user && pathname !== '/login' && pathname !== '/signup') {
       router.push('/login');
     }
-  }, [isMounted, user, loading, pathname, router]);
+  }, [isMounted, user, authLoading, pathname, router]);
 
   if (!isMounted) {
     return (
@@ -85,7 +75,7 @@ function AppContent({ children }: { children: ReactNode }) {
     );
   }
   
-  if (loading && !['/login', '/signup'].includes(pathname)) {
+  if (authLoading && !['/login', '/signup'].includes(pathname)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -93,7 +83,7 @@ function AppContent({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user && !loading && !['/login', '/signup'].includes(pathname)) {
+  if (!user && !authLoading && !['/login', '/signup'].includes(pathname)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -102,39 +92,20 @@ function AppContent({ children }: { children: ReactNode }) {
     );
   }
 
-  // Determine if sidebar should be shown (e.g., not on login/signup pages)
   const showSidebarAndGuide = user && !['/login', '/signup'].includes(pathname);
 
   return (
     <div className="flex min-h-screen">
       {showSidebarAndGuide && <UserStatsSidebar />}
       <div className="flex flex-col flex-grow">
-        <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-16 max-w-screen-2xl items-center">
-            <Link href="/" className="mr-6 flex items-center space-x-2">
-              <Waypoints className="h-7 w-7 text-primary" />
-              <span className="font-bold sm:inline-block text-xl font-mono text-primary">
-                UniVerse
-              </span>
-            </Link>
+        <header className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="container flex h-16 max-w-screen-2xl items-center px-4">
+            {/* Logo and App Name are now part of the sidebar, keeping header clean */}
+            {/* If sidebar is hidden on mobile, a mobile menu trigger might be needed here */}
+            <div className="flex-grow"></div> {/* Pushes user menu to the right */}
 
-            <nav className="ml-auto flex items-center space-x-1 sm:space-x-2">
-              {navFeatures.map((feature) => (
-                <Tooltip key={feature.label}>
-                  <TooltipTrigger asChild>
-                    <Button asChild variant="ghost" size="icon" className="text-foreground/80 hover:text-accent-foreground hover:bg-accent/20 rounded-md overflow-hidden">
-                      <Link href={feature.href}>
-                        <feature.icon className="h-5 w-5" />
-                        <span className="sr-only">{feature.label}</span>
-                      </Link>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="bg-card border-primary/50 text-foreground">
-                    <p>{feature.label}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-
+            <nav className="flex items-center space-x-1 sm:space-x-2">
+              {/* Removed feature icons from here, they are now in UserStatsSidebar */}
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -159,7 +130,7 @@ function AppContent({ children }: { children: ReactNode }) {
                     <DropdownMenuItem asChild className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
                         <Link href="/">
                             <HomeIcon className="mr-2 h-4 w-4" />
-                            <span>Home / Dashboard</span>
+                            <span>Home / Main View</span>
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={async () => {
@@ -185,8 +156,7 @@ function AppContent({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main className={cn("flex-1 flex flex-col items-center py-8 px-4 z-10 relative", showSidebarAndGuide ? "md:ml-64" : "")}> 
-          {/* Apply margin-left only if sidebar is shown on desktop */}
-          <div className="w-full max-w-7xl"> {/* Ensure content within main is constrained */}
+          <div className="w-full max-w-7xl">
             {children}
           </div>
         </main>
