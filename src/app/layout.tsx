@@ -151,7 +151,7 @@ function AppContent({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main className={cn(
-          "flex-1 flex flex-col z-10 relative", 
+          "flex-1  m-auto flex flex-col z-10 relative", 
           "px-4 md:px-0" // Padding on small screens, no horizontal padding on md+
         )}>
           <div className="w-full max-w-7xl p-4 md:py-6 md:px-8"> {/* Inner content wrapper with padding */}

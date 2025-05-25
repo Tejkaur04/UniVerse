@@ -76,14 +76,14 @@ export default function LoginPage() {
   if (user) {
     // User is logged in, waiting for redirect from useEffect. Show a minimal loader.
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-screen ">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-background via-background to-secondary/20 p-4">
+    <div className="flex items-center justify-center min-h-screen  p-4">
       <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm border-border/70">
         <CardHeader className="text-center">
           <LogIn className="mx-auto h-12 w-12 text-primary mb-4 font-mono animate-subtle-pulse" />
