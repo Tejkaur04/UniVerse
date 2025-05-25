@@ -21,6 +21,7 @@ import {
   Brain, FlaskConical, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle, Waypoints, Pencil, CheckCircle as CheckCircleIcon, Link2 as ConnectionsIcon
 } from 'lucide-react';
 import type { MockStudentProfile } from '@/app/study-sphere/page'; // For connection object structure
+import { cn } from '@/lib/utils';
 
 
 // Define UserProfile interface
@@ -196,7 +197,7 @@ const UserStatsSidebar: FC = () => {
       return;
     }
     const profileToSave: UserProfile = {
-        ...initialProfileData, // Ensure all fields are present
+        ...initialProfileData, 
         ...editForm,
         skills: Array.isArray(editForm.skills) ? editForm.skills : [],
         interests: Array.isArray(editForm.interests) ? editForm.interests : [],
@@ -252,9 +253,14 @@ const UserStatsSidebar: FC = () => {
     <>
     <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border/70 bg-card/70 backdrop-blur-sm p-6 sticky top-0 overflow-y-auto shadow-lg">
       <div className="flex-grow space-y-6">
-         {/* Removed UniVerse logo and title from here */}
+        <Link href="/" className="flex items-center space-x-2 group mb-6">
+            <Waypoints className="h-8 w-8 text-primary group-hover:text-accent transition-colors" />
+            <span className="font-bold text-2xl font-mono text-primary group-hover:text-accent transition-colors">
+                UniVerse
+            </span>
+        </Link>
 
-        <nav className="space-y-1 mt-4"> {/* Added mt-4 for spacing if logo was above */}
+        <nav className="space-y-1"> {/* Removed mt-4 */}
           <h3 className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Navigate</h3>
           {navFeatures.map((item) => (
             <Button

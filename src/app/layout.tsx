@@ -11,12 +11,6 @@ import {
   LogOut,
   Loader2,
   LogInIcon,
-  Waypoints, 
-  UsersRound,
-  CalendarDays,
-  MessageCircleQuestion,
-  Lightbulb,
-  Home as HomeIcon,
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -61,6 +55,7 @@ function AppContent({ children }: { children: ReactNode }) {
   const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname(); 
+  
   const isPublicPage = pathname === '/login' || pathname === '/signup';
 
   useEffect(() => {
@@ -77,9 +72,9 @@ function AppContent({ children }: { children: ReactNode }) {
   
   let contentToRender;
 
-  if (!isMounted || authLoading) {
-    // Universal loader: shown until client is mounted AND auth state is resolved.
-    // Or if not on a public page and user status is not yet determined.
+  // Universal loader: shown until client is mounted AND auth state is resolved.
+  // Or if not on a public page and user status is not yet determined.
+  if ((!isMounted || authLoading) && !isPublicPage && user == null) { 
     contentToRender = (
       <div className="flex items-center justify-center flex-1">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -99,14 +94,10 @@ function AppContent({ children }: { children: ReactNode }) {
       <>
         <header className={cn(
             "sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+            // No md:ml-[25rem] here, header spans full width
           )}>
-          <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4">
-            <Link href="/" className="flex items-center space-x-2 group">
-              <Waypoints className="h-7 w-7 text-primary group-hover:text-accent transition-colors" />
-              <span className="font-bold text-xl font-mono text-primary group-hover:text-accent transition-colors">
-                UniVerse
-              </span>
-            </Link>
+          <div className="container flex h-16 max-w-screen-2xl items-center justify-end px-4"> {/* Changed justify-between to justify-end */}
+            {/* UniVerse Logo and Title REMOVED from here */}
             
             <nav className="flex items-center space-x-1 sm:space-x-2">
               {user ? (
@@ -132,8 +123,7 @@ function AppContent({ children }: { children: ReactNode }) {
                     <DropdownMenuSeparator className="bg-border/50" />
                      <DropdownMenuItem asChild className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
                         <Link href="/"> 
-                            <HomeIcon className="mr-2 h-4 w-4" />
-                            <span>UniVerse Home</span>
+                            Home
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { 
@@ -158,7 +148,8 @@ function AppContent({ children }: { children: ReactNode }) {
         </header>
         <main className={cn(
           "flex-1 flex flex-col z-10 relative", 
-          "md:px-0" // No horizontal padding on main itself when sidebar is shown
+          showSidebarAndGuide ? "md:ml-[25rem]" : "", // Apply left margin only when sidebar is shown
+          "px-0" // No horizontal padding on main itself when sidebar is shown
         )}>
           <div className="w-full max-w-7xl p-4 md:py-6 md:px-8"> {/* Content wrapper with padding */}
             {children}
@@ -206,3 +197,4 @@ export default function RootLayout({
     </html>
   );
 }
+
