@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Rocket, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Orbit, Sparkles, Telescope } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import AnimatedHeroText from '@/components/AnimatedHeroText'; // Import the new component
 
 interface FeatureInfo {
   icon: LucideIcon;
@@ -113,15 +114,14 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="w-full max-w-4xl mb-20 sm:mb-24 md:mb-32 relative">
         <Orbit className="h-20 w-20 sm:h-24 sm:w-24 text-primary mx-auto mb-6 animate-pulse" />
-        <h1 
-          className="text-5xl sm:text-6xl md:text-7xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-accent animate-fade-in-up"
-          style={{ animationFillMode: 'forwards' }}
-        >
-          Welcome to UniVerse
-        </h1>
+        <AnimatedHeroText 
+          text="Welcome to UniVerse"
+          className="font-mono text-5xl sm:text-6xl md:text-7xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-primary via-purple-400 to-accent"
+          el="h1"
+        />
         <p 
           className="text-lg sm:text-xl md:text-2xl text-foreground/90 font-medium mb-10 max-w-2xl mx-auto animate-fade-in-up"
-          style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}
+          style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }} // Adjusted delay for hero text animation
         >
           Your all-in-one cosmic portal to navigate university life, connect with peers, discover events, and launch your brightest ideas.
         </p>
@@ -129,9 +129,9 @@ export default function LandingPage() {
           asChild 
           size="lg" 
           className="bg-accent hover:bg-accent/90 text-accent-foreground text-base sm:text-lg px-6 py-3 sm:px-8 sm:py-6 shadow-lg hover:shadow-accent/40 transition-all duration-300 ease-in-out transform hover:scale-105 animate-fade-in-up"
-          style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}
+          style={{ animationDelay: '1s', animationFillMode: 'forwards' }} // Adjusted delay
         >
-          <Link href="/"> {/* Button now effectively reloads/confirms landing page */}
+          <Link href="/">
             <Rocket className="mr-2 h-5 w-5" />
             Explore Your Universe
           </Link>
@@ -141,11 +141,12 @@ export default function LandingPage() {
       {/* Dashboard Cards Section - Merged */}
       <section 
         className="w-full max-w-5xl mb-20 sm:mb-24 md:mb-32 animate-fade-in-up"
-        style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}
+        style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}
       >
         <div className="text-center mb-12 sm:mb-16">
             <h2
-            className="text-3xl sm:text-4xl font-bold text-primary mb-3 tracking-tight"
+              className="text-3xl sm:text-4xl font-bold text-primary mb-3 tracking-tight bg-gradient-to-r from-primary via-purple-300 to-accent bg-clip-text text-transparent animate-text-shimmer"
+              style={{ backgroundSize: '200% auto' }} // Required for shimmer effect
             >
             UniVerse Command Center
             </h2>
@@ -164,7 +165,7 @@ export default function LandingPage() {
                 description={feature.description}
                 icon={feature.icon}
                 href={feature.href}
-                animationDelay={`${0.8 + index * 0.15}s`}
+                animationDelay={`${1.4 + index * 0.15}s`}
               />
             ))}
           </div>
@@ -175,8 +176,8 @@ export default function LandingPage() {
       {/* Features Overview Section (Full-width explanations) */}
       <section className="w-full max-w-7xl mb-20 sm:mb-24 md:mb-32">
         <h2 
-          className="text-3xl sm:text-4xl font-bold mb-12 sm:mb-16 md:mb-20 text-primary flex items-center justify-center animate-fade-in-up"
-          style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }} 
+          className="text-3xl sm:text-4xl font-bold mb-12 sm:mb-16 md:mb-20 text-primary flex items-center justify-center animate-fade-in-up bg-gradient-to-r from-accent via-yellow-300 to-primary bg-clip-text text-transparent animate-text-shimmer"
+          style={{ animationDelay: '1.8s', animationFillMode: 'forwards', backgroundSize: '200% auto' }} 
         >
           <Telescope className="mr-3 h-8 w-8 sm:h-10 sm:w-10 text-accent transition-transform duration-300 group-hover:rotate-[-5deg]" />
           What Awaits You?
@@ -189,7 +190,7 @@ export default function LandingPage() {
                 "w-3/4 mx-auto py-12 sm:py-16 md:py-20 backdrop-blur-md border border-primary/40 animate-fade-in-up rounded-xl shadow-2xl overflow-hidden",
                 "bg-card/60"
               )}
-              style={{ animationDelay: `${1.4 + index * 0.2}s`, animationFillMode: 'forwards' }}
+              style={{ animationDelay: `${2.0 + index * 0.2}s`, animationFillMode: 'forwards' }}
             >
               <div className="container mx-auto px-6 sm:px-8">
                 <div 
@@ -199,7 +200,7 @@ export default function LandingPage() {
                     <feature.icon className={`h-28 w-28 sm:h-36 sm:w-36 ${feature.iconColor} drop-shadow-[0_0_15px_var(--tw-shadow-color)]`} style={{'--tw-shadow-color': `hsl(var(--${feature.color.replace('text-','')}))`} as React.CSSProperties} />
                   </div>
                   <div className="md:w-2/3 text-center md:text-left">
-                    <h3 className={`text-3xl sm:text-4xl font-bold ${feature.color} mb-4`}>{feature.title}</h3>
+                    <h3 className={`text-3xl sm:text-4xl font-bold ${feature.color} mb-4 font-mono`}>{feature.title}</h3>
                     <p className="text-lg sm:text-xl text-foreground/85 mb-3 leading-relaxed">{feature.description}</p>
                     <p className="text-md sm:text-lg text-foreground/70 leading-relaxed">{feature.details}</p>
                   </div>
@@ -213,13 +214,13 @@ export default function LandingPage() {
       {/* Footer Call to Action */}
       <section 
         className="w-full max-w-2xl animate-fade-in-up"
-        style={{ animationDelay: `${1.4 + features.length * 0.2 + 0.2}s`, animationFillMode: 'forwards' }}
+        style={{ animationDelay: `${2.0 + features.length * 0.2 + 0.2}s`, animationFillMode: 'forwards' }}
       >
          <p className="text-md sm:text-lg text-foreground/80 mb-6">
           Ready to embark on your stellar university adventure?
         </p>
         <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent text-base sm:text-lg px-6 py-3 sm:px-8 sm:py-6 transition-all duration-300 ease-in-out transform hover:scale-105">
-          <Link href="/"> {/* Changed to / if they are already on landing page */}
+          <Link href="/">
             Explore UniVerse Features
             <Sparkles className="ml-2 h-5 w-5" />
           </Link>

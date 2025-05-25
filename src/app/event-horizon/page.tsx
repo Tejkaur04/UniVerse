@@ -90,18 +90,35 @@ export default function EventHorizonPage() {
           </Link>
         </Button>
         <div className="flex items-center justify-center mb-4 pt-16 sm:pt-0">
-          <Telescope className="h-16 w-16 text-primary mr-4 animate-pulse" />
-          <h1 className="text-4xl font-bold text-primary">Event Horizon</h1>
+          <Telescope className="h-16 w-16 text-primary mr-4 animate-bounce" />
+          <h1 className="text-4xl font-bold text-primary font-mono">Event Horizon</h1>
         </div>
-        <p className="text-xl text-center text-muted-foreground mb-10">
+        <p className="text-xl text-center text-muted-foreground mb-6">
           Discover exciting campus events, workshops, and seminars. Your telescope to opportunities!
         </p>
+        <Card className="bg-card/80 backdrop-blur-sm border-primary/30 shadow-lg p-6 mb-10 text-left">
+          <CardTitle className="text-2xl text-primary mb-3 flex items-center">
+            <RecommendIcon className="h-7 w-7 mr-3 text-accent animate-pulse" />
+            What You'll Discover (Coming Soon!):
+          </CardTitle>
+          <ul className="list-disc list-inside space-y-2 text-foreground/90">
+            <li><strong className="text-accent/90">Comprehensive Calendar:</strong> View all listed campus events, workshops, and seminars in one place.</li>
+            <li><strong className="text-accent/90">Filter by Interests:</strong> Select tags like "coding," "literature," "sports," or "entrepreneurship" to find relevant events.</li>
+            <li><strong className="text-accent/90">Keyword Search:</strong> Use keywords to find particular happenings you're interested in.</li>
+            <li><strong className="text-accent/90">Detailed Info:</strong> Access date, time, location, description, and organizer details for each event.</li>
+            <li><strong className="text-accent/90">RSVP & Interest:</strong> Indicate your attendance to stay updated.</li>
+            <li><strong className="text-accent/90">Peer Events:</strong> Find study sessions and informal gatherings organized by fellow students.</li>
+            <li><strong className="text-accent/90">Share with Friends:</strong> Easily spread the word about interesting opportunities.</li>
+            <li><strong className="text-accent/90">Personalized Recommendations:</strong> Get event suggestions based on your profile and interests!</li>
+          </ul>
+          <p className="mt-4 text-center text-primary font-semibold">Stay tuned, explorer! The Event Horizon is expanding.</p>
+        </Card>
       </div>
 
       <div className="space-y-10">
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><Search className="mr-3 h-7 w-7 text-accent" />Filter Your Cosmos</CardTitle>
+            <CardTitle className="text-2xl flex items-center text-primary"><Search className="mr-3 h-7 w-7 text-accent" />Filter Your Cosmos (Demo)</CardTitle>
             <CardDescription>Search for specific events or filter by your interests.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -153,7 +170,7 @@ export default function EventHorizonPage() {
               <div className="mt-3 flex flex-wrap gap-2 justify-start">
                 <Button onClick={() => handleDemoAction(`Viewing details for ${event.title} (Demo)`)} size="sm" variant="outline"><Telescope className="mr-1 h-4 w-4" />View Details</Button>
                 <Button onClick={() => handleDemoAction(`RSVPing to ${event.title} (Demo)`)} size="sm" variant="outline"><CalendarDays className="mr-1 h-4 w-4" />RSVP</Button>
-                <Button onClick={() => handleDemoAction(`Marking interest in ${event.title} (Demo)`)} size="sm" variant="ghost" className="text-accent hover:text-accent/80"><Sparkles className="mr-1 h-4 w-4" />Mark Interest</Button>
+                <Button onClick={() => handleDemoAction(`Marking interest in ${event.title} (Demo)`)} size="sm" variant="ghost" className="text-accent hover:text-accent/80"><RecommendIcon className="mr-1 h-4 w-4" />Mark Interest</Button>
                 <Button onClick={() => handleDemoAction(`Sharing ${event.title} (Demo)`)} size="sm" variant="ghost" className="text-accent hover:text-accent/80"><Share2 className="mr-1 h-4 w-4" />Share</Button>
               </div>
             </CardContent>
@@ -162,18 +179,6 @@ export default function EventHorizonPage() {
         {hardcodedEvents.length === 0 && (
             <p className="text-muted-foreground text-center py-6">No events currently listed. Check back soon for cosmic happenings!</p>
         )}
-        
-        <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
-            <CardHeader>
-                <CardTitle className="text-2xl flex items-center text-primary"><RecommendIcon className="mr-3 h-7 w-7 text-accent" />Personalized Navigation (Coming Soon!)</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p className="text-muted-foreground">
-                    Soon, UniVerse will analyze your cosmic trajectory (profile and interests) to suggest stellar events you won't want to miss! This feature is currently under construction by our top astro-engineers.
-                </p>
-            </CardContent>
-        </Card>
-
       </div>
     </div>
   );

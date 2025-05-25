@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle, UserPlus, Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast"; // Import toast
 
 export default function SignupPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function SignupPage() {
 
  useEffect(() => {
     if (!authLoading && user) {
-      router.push('/'); // Redirect to main landing page
+      router.push('/'); 
     }
   }, [user, authLoading, router]);
 
@@ -61,14 +62,13 @@ export default function SignupPage() {
       return;
     }
 
+    // Using mock signup from AuthContext
     const result = await signup({ email, password });
     if (result && 'error' in result && result.error) {
-        setPageError(result.error); // Display error from mock signup
+        setPageError(result.error);
     } else if (result && 'uid' in result) {
-        // Successful mock signup handled by useEffect watching `user` state
-    } else {
-        // This case should ideally not be reached if signup returns MockUser or {error}
-        // setPageError("An unexpected issue occurred during mock signup.");
+        toast({ title: "Account Created (Demo)", description: `Welcome to UniVerse, ${result.email}!`});
+        // Successful mock signup, useEffect will handle redirect
     }
     setIsLoading(false);
   };
@@ -86,7 +86,7 @@ export default function SignupPage() {
       <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm border-border/70">
         <CardHeader className="text-center">
           <UserPlus className="mx-auto h-12 w-12 text-primary mb-4" />
-          <CardTitle className="text-3xl font-bold text-primary">Join UniVerse!</CardTitle>
+          <CardTitle className="text-3xl font-bold text-primary font-mono">Join UniVerse!</CardTitle>
           <CardDescription className="text-muted-foreground">
             Create your account to explore (Demo Mode).
           </CardDescription>

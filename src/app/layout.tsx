@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Geist } from 'next/font/google';
+import { Inter, Roboto_Mono } from 'next/font/google'; // Changed font imports
 import { Waypoints, UserRound, LogOut, Loader2, LogInIcon, UsersRound as StudySphereIcon, CalendarDays as EventHorizonIcon, MessageCircleQuestion as CelestialChatsIcon, Lightbulb as NebulaOfIdeasIcon } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -23,10 +23,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import AlienGuide from '@/components/AlienGuide'; // Import AlienGuide
+import AlienGuide from '@/components/AlienGuide';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({ // Initialized Inter
+  variable: '--font-inter',
+  subsets: ['latin'],
+  display: 'swap',
+});
+
+const robotoMono = Roboto_Mono({ // Initialized Roboto_Mono
+  variable: '--font-roboto-mono',
   subsets: ['latin'],
   display: 'swap',
 });
@@ -61,8 +67,8 @@ function AppContent({ children }: { children: ReactNode }) {
       </div>
     );
   }
-
-  if (loading && pathname !== '/') { // Allow landing page to show content even if auth is loading
+  
+  if (loading && pathname !== '/' && pathname !== '/login' && pathname !== '/signup') {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -85,7 +91,7 @@ function AppContent({ children }: { children: ReactNode }) {
         <div className="container flex h-16 max-w-screen-2xl items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Waypoints className="h-6 w-6 text-primary" />
-            <span className="font-bold sm:inline-block text-lg">
+            <span className="font-bold sm:inline-block text-lg font-mono">
               UniVerse
             </span>
           </Link>
@@ -153,7 +159,7 @@ function AppContent({ children }: { children: ReactNode }) {
       <main className="flex-1 flex flex-col items-center justify-start py-8 px-4 z-10">
         {children}
       </main>
-      <AlienGuide /> {/* Add AlienGuide globally */}
+      <AlienGuide />
     </>
   );
 }
@@ -164,7 +170,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("dark", geistSans.variable)}>
+    <html lang="en" className={cn("dark", inter.variable, robotoMono.variable)}>
       <head></head>
       <body
         className={cn(

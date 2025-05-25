@@ -1,6 +1,6 @@
 
 import type { Config } from "tailwindcss";
-const defaultTheme = require('tailwindcss/defaultTheme'); // Import defaultTheme
+const defaultTheme = require('tailwindcss/defaultTheme');
 
 export default {
     darkMode: ["class"],
@@ -11,8 +11,9 @@ export default {
   ],
   theme: {
   	extend: {
-      fontFamily: { // Add Geist Sans as the default sans-serif
-        sans: ['var(--font-geist-sans)', ...defaultTheme.fontFamily.sans],
+      fontFamily: {
+        sans: ['var(--font-inter)', ...defaultTheme.fontFamily.sans], // Changed to Inter
+        mono: ['var(--font-roboto-mono)', ...defaultTheme.fontFamily.mono], // Changed to Roboto Mono
       },
   		colors: {
   			background: 'hsl(var(--background))',
@@ -109,7 +110,11 @@ export default {
               transform: 'translateY(0)',
               animationTimingFunction: 'cubic-bezier(0,0,0.2,1)'
             }
-          }
+          },
+          'text-shimmer': { 
+            '0%': { backgroundPosition: '200% center' },
+            '100%': { backgroundPosition: '-200% center' },
+          },
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
@@ -118,6 +123,7 @@ export default {
         'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
         'subtle-pulse': 'subtle-pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'bounce': 'bounce 1s infinite',
+        'text-shimmer': 'text-shimmer 3s linear infinite', 
   		}
   	}
   },

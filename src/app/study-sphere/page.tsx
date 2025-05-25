@@ -18,8 +18,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, UsersRound, Pencil, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, CheckCircle, Info, Bot, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-// AlienGuide is now global, so remove local import and usage
-import { useAuth } from '@/contexts/AuthContext'; 
+import AlienGuide from '@/components/AlienGuide';
 
 const ALL_AVAILABLE_COURSES = ["Astrophysics 101", "Quantum Mechanics", "Calculus II", "Organic Chemistry", "Literary Theory", "Computer Science 101", "History of Art"];
 const ALL_LEARNING_STYLES = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
@@ -27,8 +26,6 @@ const ALL_LEARNING_STYLES = ["Visual", "Auditory", "Kinesthetic", "Reading/Writi
 interface StudyProfileData {
   courses: string[];
   learningStyles: string[];
-  email?: string; 
-  uid?: string;
 }
 
 interface PotentialMatch {
@@ -72,9 +69,9 @@ const initialStudyProfileData: StudyProfileData = {
 };
 
 const initialPotentialMatchesData: PotentialMatch[] = [
-  { id: 1, name: "Alex Cosmo", courses: ["Astrophysics 101", "Calculus II"], learningStyles: ["Visual", "Kinesthetic"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person student" },
-  { id: 2, name: "Nova Stellar", courses: ["Quantum Mechanics", "Organic Chemistry"], learningStyles: ["Auditory", "Reading/Writing"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person learner" },
-  { id: 3, name: "Orion Byte", courses: ["Calculus II", "Astrophysics 101"], learningStyles: ["Kinesthetic", "Reading/Writing"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person tech" },
+  { id: 1, name: "Alex Cosmo", courses: ["Astrophysics 101", "Calculus II"], learningStyles: ["Visual", "Kinesthetic"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile student" },
+  { id: 2, name: "Nova Stellar", courses: ["Quantum Mechanics", "Organic Chemistry"], learningStyles: ["Auditory", "Reading/Writing"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile learner" },
+  { id: 3, name: "Orion Byte", courses: ["Calculus II", "Astrophysics 101"], learningStyles: ["Kinesthetic", "Reading/Writing"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile tech" },
 ];
 
 const initialStudyGroupsData: StudyGroup[] = [
@@ -94,21 +91,25 @@ const initialStudySessionsData: StudySession[] = [
 
 
 const tabContentVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeInOut" } },
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeInOut" } },
 };
+
+const getLocalStorageKey = (baseKey: string, userId?: string) => {
+  // For mock auth, we'll use a generic key if no userId, or a user-specific one if available.
+  // This part might need adjustment depending on your actual mock auth user object structure.
+  // Assuming `userId` might be from a mock `user.uid`
+  return userId ? `${baseKey}-${userId}` : `${baseKey}-guest`; 
+};
+
 
 export default function StudySpherePage() {
   const { toast } = useToast();
-  const { user } = useAuth(); 
+  // Mock user ID for localStorage key differentiation - replace with actual from AuthContext if re-integrated
+  const mockUserId = "demoUser123"; 
 
   const [studyProfile, setStudyProfile] = useState<StudyProfileData>(initialStudyProfileData);
-  const [loadingProfile, setLoadingProfile] = useState(true);
-
-  const getLocalStorageKey = (baseKey: string) => {
-    return user?.uid ? `${baseKey}-${user.uid}` : `${baseKey}-guest`; // Provide a fallback for guest
-  };
-
+  const [potentialMatches, setPotentialMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData);
   const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(initialStudyGroupsData);
   const [sharedResources, setSharedResources] = useState<SharedResource[]>(initialSharedResourcesData);
   const [studySessions, setStudySessions] = useState<StudySession[]>(initialStudySessionsData);
@@ -119,7 +120,7 @@ export default function StudySpherePage() {
 
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('');
   const [selectedStyleFilter, setSelectedStyleFilter] = useState<string>('');
-  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(initialPotentialMatchesData); 
+  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(potentialMatches); 
 
   const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
@@ -139,67 +140,61 @@ export default function StudySpherePage() {
   
   const [activeTab, setActiveTab] = useState("profile");
 
-  // Load data from localStorage on mount or user change
+  // Load data from localStorage on mount
   useEffect(() => {
-    setLoadingProfile(true);
     if (typeof window !== 'undefined') {
-      const savedProfile = localStorage.getItem(getLocalStorageKey('uniVerseStudyProfile'));
-      if (savedProfile) {
-        setStudyProfile(JSON.parse(savedProfile));
-      } else {
-        const profileToSave = { ...initialStudyProfileData, email: user?.email, uid: user?.uid };
-        setStudyProfile(profileToSave);
-        localStorage.setItem(getLocalStorageKey('uniVerseStudyProfile'), JSON.stringify(profileToSave));
-      }
+      const savedProfile = localStorage.getItem(getLocalStorageKey('uniVerseStudyProfile', mockUserId));
+      if (savedProfile) setStudyProfile(JSON.parse(savedProfile));
 
-      const savedGroups = localStorage.getItem(getLocalStorageKey('uniVerseStudyGroups'));
-      setStudyGroups(savedGroups ? JSON.parse(savedGroups) : initialStudyGroupsData);
-
-      const savedResources = localStorage.getItem(getLocalStorageKey('uniVerseSharedResources'));
-      setSharedResources(savedResources ? JSON.parse(savedResources) : initialSharedResourcesData);
+      const savedGroups = localStorage.getItem(getLocalStorageKey('uniVerseStudyGroups', mockUserId));
+      if (savedGroups) setStudyGroups(JSON.parse(savedGroups));
       
-      const savedSessions = localStorage.getItem(getLocalStorageKey('uniVerseStudySessions'));
-      setStudySessions(savedSessions ? JSON.parse(savedSessions) : initialStudySessionsData);
+      const savedResources = localStorage.getItem(getLocalStorageKey('uniVerseSharedResources', mockUserId));
+      if (savedResources) setSharedResources(JSON.parse(savedResources));
+      
+      const savedSessions = localStorage.getItem(getLocalStorageKey('uniVerseStudySessions', mockUserId));
+      if (savedSessions) setStudySessions(JSON.parse(savedSessions));
     }
-    setLoadingProfile(false);
-  }, [user]);
+  }, [mockUserId]); // mockUserId won't change, so this runs once on mount essentially
 
-  // Save profile to localStorage
+  // Save studyProfile to localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined' && studyProfile && !loadingProfile) {
-      localStorage.setItem(getLocalStorageKey('uniVerseStudyProfile'), JSON.stringify(studyProfile));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getLocalStorageKey('uniVerseStudyProfile', mockUserId), JSON.stringify(studyProfile));
     }
-  }, [studyProfile, user, loadingProfile]);
+  }, [studyProfile, mockUserId]);
 
-  // Save other data to localStorage effects
+  // Save studyGroups to localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined' && !loadingProfile) { // Ensure not saving during initial load
-      localStorage.setItem(getLocalStorageKey('uniVerseStudyGroups'), JSON.stringify(studyGroups));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getLocalStorageKey('uniVerseStudyGroups', mockUserId), JSON.stringify(studyGroups));
     }
-  }, [studyGroups, user, loadingProfile]);
+  }, [studyGroups, mockUserId]);
 
+  // Save sharedResources to localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined' && !loadingProfile) {
-      localStorage.setItem(getLocalStorageKey('uniVerseSharedResources'), JSON.stringify(sharedResources));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getLocalStorageKey('uniVerseSharedResources', mockUserId), JSON.stringify(sharedResources));
     }
-  }, [sharedResources, user, loadingProfile]);
+  }, [sharedResources, mockUserId]);
 
+  // Save studySessions to localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined' && !loadingProfile) {
-      localStorage.setItem(getLocalStorageKey('uniVerseStudySessions'), JSON.stringify(studySessions));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(getLocalStorageKey('uniVerseStudySessions', mockUserId), JSON.stringify(studySessions));
     }
-  }, [studySessions, user, loadingProfile]);
+  }, [studySessions, mockUserId]);
 
 
   useEffect(() => {
-    if (isEditDialogOpen && studyProfile) {
+    if (isEditDialogOpen) {
         setEditCoursesInput(studyProfile.courses.join(', '));
         setEditLearningStyles([...studyProfile.learningStyles]);
     }
   }, [studyProfile, isEditDialogOpen]);
 
   useEffect(() => {
-    let matches = [...initialPotentialMatchesData]; 
+    let matches = [...potentialMatches]; 
     if (selectedCourseFilter && selectedCourseFilter !== 'all') {
       matches = matches.filter(match => match.courses.includes(selectedCourseFilter));
     }
@@ -207,38 +202,17 @@ export default function StudySpherePage() {
       matches = matches.filter(match => match.learningStyles.includes(selectedStyleFilter));
     }
     setFilteredMatches(matches);
-  }, [selectedCourseFilter, selectedStyleFilter]); 
+  }, [selectedCourseFilter, selectedStyleFilter, potentialMatches]); 
 
-  const handleEditProfile = () => {
-    if (studyProfile) {
-        setIsEditDialogOpen(true);
-    } else {
-        toast({ title: "Profile Not Loaded", description: "Please wait for your profile to load or try 'logging in' again.", variant: "destructive"});
-    }
-  };
+  const handleEditProfile = () => setIsEditDialogOpen(true);
 
   const handleSaveProfile = () => {
-    if (!studyProfile) { 
-      toast({ title: "Error", description: "Profile not loaded.", variant: "destructive" });
-      return;
-    }
     const updatedCourses = editCoursesInput.split(',').map(course => course.trim()).filter(course => course !== "");
-    
-    const currentEmail = studyProfile.email || user?.email;
-    const currentUid = studyProfile.uid || user?.uid;
-
-    const newProfileData: StudyProfileData = {
-        ...studyProfile,
-        courses: updatedCourses,
-        learningStyles: editLearningStyles,
-        email: currentEmail,
-        uid: currentUid,
-    };
-    setStudyProfile(newProfileData); 
+    setStudyProfile({ courses: updatedCourses, learningStyles: editLearningStyles });
     setIsEditDialogOpen(false);
     toast({
         title: "Profile Updated (Locally)",
-        description: "Your study profile has been saved in your browser.",
+        description: "Your study profile has been saved in your browser for this session. Real saving to your UniVerse account coming soon!",
     });
   };
 
@@ -273,7 +247,7 @@ export default function StudySpherePage() {
     setNewGroupDescription('');
     toast({
       title: "Study Group Created! (Locally)",
-      description: `The group "${newGroup.name}" has been successfully created and saved in your browser.`,
+      description: `The group "${newGroup.name}" has been successfully created and saved in your browser for this session.`,
     });
   };
 
@@ -294,7 +268,7 @@ export default function StudySpherePage() {
     if (groupJoinedSuccessfully && groupName) {
         toast({
             title: "Joined Group! (Locally)",
-            description: `You have successfully joined "${groupName}". Status saved in your browser.`,
+            description: `You have successfully joined "${groupName}". Status saved in your browser for this session.`,
         });
     } else {
         const group = studyGroups.find(g => g.id === groupId);
@@ -322,7 +296,7 @@ export default function StudySpherePage() {
       name: newResourceName.trim(),
       course: newResourceCourse.trim(),
       type: newResourceType.trim(),
-      uploader: user?.email || "Demo User", 
+      uploader: "Demo User", 
     };
     setSharedResources(prevResources => [newResource, ...prevResources]);
     setIsUploadResourceDialogOpen(false);
@@ -331,7 +305,7 @@ export default function StudySpherePage() {
     setNewResourceType('');
     toast({
       title: "Resource Uploaded! (Locally)",
-      description: `"${newResource.name}" has been added and saved in your browser.`,
+      description: `"${newResource.name}" has been added and saved in your browser for this session.`,
     });
   };
 
@@ -360,7 +334,7 @@ export default function StudySpherePage() {
     setNewSessionLocation('');
     toast({
       title: "Study Session Scheduled! (Locally)",
-      description: `"${newSession.topic}" has been added and saved in your browser.`,
+      description: `"${newSession.topic}" has been added and saved in your browser for this session.`,
     });
   };
 
@@ -384,7 +358,7 @@ export default function StudySpherePage() {
             title: sessionJoined ? "Joined Session! (Locally)" : "Left Session (Locally)",
             description: (sessionJoined 
                 ? `You have successfully joined "${sessionTopic}".` 
-                : `You have left "${sessionTopic}".`) + " Status saved in your browser.",
+                : `You have left "${sessionTopic}".`) + " Status saved in your browser for this session.",
         });
     }
   };
@@ -392,25 +366,16 @@ export default function StudySpherePage() {
   const handleDemoClick = (message: string) => {
     toast({
       title: "Demo Action",
-      description: message + " (Real connections coming soon!)",
+      description: message + " (Real connections coming soon! Data is local for now.)",
       duration: 3000,
     });
   };
   
-  if (loadingProfile) { 
-    return (
-      <div className="container mx-auto px-4 py-12 w-full max-w-4xl flex justify-center items-center min-h-[50vh]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-4 text-lg text-muted-foreground">Loading your Study Sphere Profile...</p>
-      </div>
-    );
-  }
-
   const motionKey = activeTab;
 
 
   return (
-    <div className="container mx-auto px-4 py-12 w-full max-w-4xl relative">
+    <div className="container mx-auto px-4 py-12 w-full max-w-4xl">
       <div className="mb-8">
         <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground">
           <Link href="/">
@@ -420,13 +385,13 @@ export default function StudySpherePage() {
         </Button>
         <div className="flex items-center justify-center mb-2 text-center">
           <UsersRound className="h-16 w-16 text-primary mr-4 animate-pulse" />
-          <h1 className="text-4xl font-bold text-primary">Study Sphere</h1>
+          <h1 className="text-4xl font-bold text-primary font-mono">Study Sphere</h1>
         </div>
          <p className="text-xl text-center text-muted-foreground mb-4">
           Your cosmic hub for collaborative learning! Find partners, join groups, and share knowledge.
         </p>
          <p className="text-md text-center text-foreground/80 mb-10">
-          Welcome, scholar! Shape your study profile (saved locally in your browser for demo), explore connections, and launch your academic journey to new heights.
+          Welcome, scholar! Shape your study profile, explore connections, and launch your academic journey to new heights. Your progress here is saved in your browser for this session!
         </p>
       </div>
 
@@ -456,10 +421,10 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <BookOpen className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Your Study Profile
                 </CardTitle>
-                <CardDescription>Define your academic focus and learning preferences. (Changes saved in browser for demo)</CardDescription>
+                <CardDescription>Define your academic focus and learning preferences. (Changes saved in browser for this session)</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                {studyProfile ? (
+                
                     <>
                         <div>
                             <h3 className="font-semibold text-lg mb-2 text-foreground">My Courses:</h3>
@@ -528,9 +493,7 @@ export default function StudySpherePage() {
                             </DialogContent>
                         </Dialog>
                     </>
-                ) : (
-                    <p className="text-muted-foreground">Your profile is loading or you might not be 'logged in' (mock mode).</p>
-                )}
+                
                 </CardContent>
             </Card>
             </TabsContent>
@@ -542,12 +505,12 @@ export default function StudySpherePage() {
                     <CardTitle className="text-2xl flex items-center text-primary">
                     <Search className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Find Your Constellation
                     </CardTitle>
-                    <CardDescription>Filter by courses and learning preferences to discover compatible study partners. (Buddy list is for demo purposes).</CardDescription>
+                    <CardDescription>Filter by courses and learning preferences to discover compatible study partners. (Buddy list is for demo purposes). Results update as you filter.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
                     <Label htmlFor="course-filter" className="text-base text-foreground/90">Filter by Course:</Label>
-                    <Select onValueChange={(value) => setSelectedCourseFilter(value === 'all' ? '' : value)} defaultValue={selectedCourseFilter || "all"}>
+                    <Select onValueChange={(value) => setSelectedCourseFilter(value === 'all' ? '' : value)} value={selectedCourseFilter || "all"}>
                         <SelectTrigger id="course-filter" className="w-full bg-background/70">
                         <SelectValue placeholder="Select a course to find peers" />
                         </SelectTrigger>
@@ -559,7 +522,7 @@ export default function StudySpherePage() {
                     </div>
                     <div className="space-y-2">
                     <Label htmlFor="style-filter" className="text-base text-foreground/90">Filter by Learning Style:</Label>
-                    <Select onValueChange={(value) => setSelectedStyleFilter(value === 'all' ? '' : value)} defaultValue={selectedStyleFilter || "all"}>
+                    <Select onValueChange={(value) => setSelectedStyleFilter(value === 'all' ? '' : value)} value={selectedStyleFilter || "all"}>
                         <SelectTrigger id="style-filter" className="w-full bg-background/70">
                         <SelectValue placeholder="Select a preferred learning style" />
                         </SelectTrigger>
@@ -577,7 +540,7 @@ export default function StudySpherePage() {
                     <CardTitle className="text-2xl flex items-center text-primary">
                         <Handshake className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Potential Study Buddies
                     </CardTitle>
-                    <CardDescription>Discover students who align with your academic journey (results update as you filter).</CardDescription>
+                    <CardDescription>Discover students who align with your academic journey.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {filteredMatches.length > 0 ? filteredMatches.map(match => (
@@ -604,7 +567,7 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <Group className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Collaborative Orbits (Study Groups)
                 </CardTitle>
-                <CardDescription>Launch your own study group or join an existing constellation. (Group data saved in browser for demo).</CardDescription>
+                <CardDescription>Launch your own study group or join an existing constellation. (Group data saved in browser for this session).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <Dialog open={isCreateGroupDialogOpen} onOpenChange={setIsCreateGroupDialogOpen}>
@@ -697,7 +660,7 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <FileText className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Knowledge Nebula (Shared Resources)
                 </CardTitle>
-                <CardDescription>Exchange notes and materials. (Resource data saved in browser for demo).</CardDescription>
+                <CardDescription>Exchange notes and materials. (Resource data saved in browser for this session).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                 <Dialog open={isUploadResourceDialogOpen} onOpenChange={setIsUploadResourceDialogOpen}>
@@ -782,7 +745,7 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <Clock className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Synchronized Orbits (Study Sessions)
                 </CardTitle>
-                <CardDescription>Plan and schedule study times. (Session data saved in browser for demo).</CardDescription>
+                <CardDescription>Plan and schedule study times. (Session data saved in browser for this session).</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                 <Dialog open={isScheduleSessionDialogOpen} onOpenChange={setIsScheduleSessionDialogOpen}>
@@ -874,7 +837,6 @@ export default function StudySpherePage() {
             </TabsContent>
         </motion.div>
       </Tabs>
-      {/* AlienGuide is now global, no longer rendered here */}
     </div>
   );
 }

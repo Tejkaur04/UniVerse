@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Rocket, Lightbulb, Search, UserPlus, Users, MessageSquare, Star, CheckSquare } from 'lucide-react';
+import { ArrowLeft, Rocket, Lightbulb, Search, UserPlus, Users, MessageSquare, Star, CheckSquare, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,7 +25,7 @@ interface CollaboratorProfile {
   id: string;
   name: string;
   skills: string[];
-  interestedIn?: string; // e.g., project title
+  interestedIn?: string; 
   avatar: string;
   dataAiHint?: string;
 }
@@ -81,18 +81,35 @@ export default function NebulaOfIdeasPage() {
         </Button>
         <div className="flex items-center justify-center mb-4 pt-16 sm:pt-0">
           <Rocket className="h-16 w-16 text-primary mr-4 animate-bounce" />
-          <h1 className="text-4xl font-bold text-primary">Nebula of Ideas</h1>
+          <h1 className="text-4xl font-bold text-primary font-mono">Nebula of Ideas</h1>
         </div>
-        <p className="text-xl text-center text-muted-foreground mb-10">
+        <p className="text-xl text-center text-muted-foreground mb-6">
           Ignite innovation! Share your project concepts, find collaborators, and bring your visions to life.
         </p>
+        <Card className="bg-card/80 backdrop-blur-sm border-primary/30 shadow-lg p-6 mb-10 text-left">
+          <CardTitle className="text-2xl text-primary mb-3 flex items-center">
+            <Sparkles className="h-7 w-7 mr-3 text-accent animate-pulse" />
+            Your Creative Cosmos (Coming Soon!):
+          </CardTitle>
+          <ul className="list-disc list-inside space-y-2 text-foreground/90">
+            <li><strong className="text-accent/90">Share Project Ideas:</strong> Describe your concept, goals, and the skills you seek.</li>
+            <li><strong className="text-accent/90">Tag Your Skills:</strong> Showcase your expertise so others can find you.</li>
+            <li><strong className="text-accent/90">Browse & Search Projects:</strong> Explore ideas by keywords or required skills.</li>
+            <li><strong className="text-accent/90">View Project Details:</strong> Learn about project goals and skill needs.</li>
+            <li><strong className="text-accent/90">Express Interest:</strong> Connect with initiators to collaborate.</li>
+            <li><strong className="text-accent/90">Find Teammates:</strong> Discover students with complementary skills.</li>
+            <li><strong className="text-accent/90">Collaborate:</strong> Use the platform for team communication and coordination.</li>
+            <li><strong className="text-accent/90">Showcase Achievements:</strong> Display your completed collaborative projects.</li>
+          </ul>
+          <p className="mt-4 text-center text-primary font-semibold">Get ready to launch your brilliance!</p>
+        </Card>
       </div>
 
       <div className="space-y-10">
         {/* Share Your Project Idea */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><Lightbulb className="mr-3 h-7 w-7 text-accent" />Launch Your Project Spark</CardTitle>
+            <CardTitle className="text-2xl flex items-center text-primary"><Lightbulb className="mr-3 h-7 w-7 text-accent" />Launch Your Project Spark (Demo)</CardTitle>
             <CardDescription>Describe your concept, goals, and the skills you're seeking in collaborators.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -108,7 +125,7 @@ export default function NebulaOfIdeasPage() {
         {/* Tag Your Skills */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><Star className="mr-3 h-7 w-7 text-accent" />Showcase Your Talents</CardTitle>
+            <CardTitle className="text-2xl flex items-center text-primary"><Star className="mr-3 h-7 w-7 text-accent" />Showcase Your Talents (Demo)</CardTitle>
             <CardDescription>Let others know your areas of expertise. (This is a demo display).</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -124,7 +141,7 @@ export default function NebulaOfIdeasPage() {
         {/* Explore Existing Ideas */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><Search className="mr-3 h-7 w-7 text-accent" />Explore Project Constellations</CardTitle>
+            <CardTitle className="text-2xl flex items-center text-primary"><Search className="mr-3 h-7 w-7 text-accent" />Explore Project Constellations (Demo)</CardTitle>
             <CardDescription>Browse projects shared by other UniVerse explorers or search by keywords/skills.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -166,7 +183,7 @@ export default function NebulaOfIdeasPage() {
         {/* Find Co-Creators */}
         <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
           <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><Users className="mr-3 h-7 w-7 text-accent" />Find Your Co-Creators</CardTitle>
+            <CardTitle className="text-2xl flex items-center text-primary"><Users className="mr-3 h-7 w-7 text-accent" />Find Your Co-Creators (Demo)</CardTitle>
             <CardDescription>Discover students whose skills complement your project needs (Demo profiles).</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -185,32 +202,6 @@ export default function NebulaOfIdeasPage() {
                     </Button>
                 </Card>
              ))}
-          </CardContent>
-        </Card>
-
-        {/* Project Collaboration Hub */}
-        <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
-          <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><MessageSquare className="mr-3 h-7 w-7 text-accent" />Project Command Center (Coming Soon!)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              This will be your dedicated space for team communication, task management, and progress tracking once you've assembled your star-fleet! Features like shared task lists, discussion threads, and file sharing are on the horizon.
-              <Badge variant="outline" className="ml-2 border-accent text-accent">Coming Soon!</Badge>
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Galaxy of Achievements */}
-        <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
-          <CardHeader>
-            <CardTitle className="text-2xl flex items-center text-primary"><CheckSquare className="mr-3 h-7 w-7 text-accent" />Galaxy of Achievements (Coming Soon!)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              A future constellation in UniVerse will be dedicated to showcasing successfully completed projects. Inspire others and display your collaborative triumphs here!
-              <Badge variant="outline" className="ml-2 border-accent text-accent">Coming Soon!</Badge>
-            </p>
           </CardContent>
         </Card>
       </div>

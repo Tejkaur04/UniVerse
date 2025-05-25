@@ -121,7 +121,7 @@ export default function CelestialChatsPage() {
         </Button>
         <div className="flex items-center justify-center mb-4 text-center">
           <MessageCircleQuestion className="h-16 w-16 text-primary mr-4 animate-pulse" />
-          <h1 className="text-4xl font-bold text-primary">Celestial Chats</h1>
+          <h1 className="text-4xl font-bold text-primary font-mono">Celestial Chats</h1>
         </div>
         <p className="text-xl text-center text-muted-foreground mb-10">
           Gain wisdom from experienced navigators – university seniors and alumni. Ask questions, join AMAs, and explore shared knowledge.

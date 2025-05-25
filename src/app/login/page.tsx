@@ -18,11 +18,10 @@ export default function LoginPage() {
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [pageError, setPageError] = useState<string | null>(null); // Separate from authError for form-specific issues
+  const [pageError, setPageError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Clear auth errors when component mounts or authError changes
     clearError();
   }, [clearError]);
   
@@ -35,15 +34,15 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.push('/'); // Redirect to main landing page
+      router.push('/'); 
     }
   }, [user, authLoading, router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
-    setPageError(null); // Clear previous page-specific errors
-    clearError(); // Clear previous global auth errors
+    setPageError(null); 
+    clearError(); 
 
     if (!email || !password) {
       setPageError("Please enter both email and password.");
@@ -56,21 +55,18 @@ export default function LoginPage() {
         return;
     }
 
+    // Using mock login from AuthContext
     const result = await login({ email, password });
     
     if (result && 'error' in result && result.error) {
-        setPageError(result.error); // Display error from mock login
+        setPageError(result.error);
     } else if (result && 'uid' in result) {
-      // Successful mock login handled by useEffect watching `user` state
-    } else {
-        // This case should ideally not be reached if login returns MockUser or {error}
-        // setPageError("An unexpected issue occurred during mock login.");
+      // Successful mock login, useEffect will handle redirect
+      toast({ title: "Login Successful (Demo)", description: `Welcome back, ${result.email}!`});
     }
     setIsLoading(false);
   };
 
-  // This covers the initial page load flicker before auth state is confirmed (even for mock)
-  // And also handles redirect if user becomes available
   if (authLoading || (!authLoading && user)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -85,7 +81,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-2xl bg-card/90 backdrop-blur-sm border-border/70">
         <CardHeader className="text-center">
           <LogIn className="mx-auto h-12 w-12 text-primary mb-4" />
-          <CardTitle className="text-3xl font-bold text-primary">Welcome Back to UniVerse!</CardTitle>
+          <CardTitle className="text-3xl font-bold text-primary font-mono">Welcome Back to UniVerse!</CardTitle>
           <CardDescription className="text-muted-foreground">
             Log in to continue your cosmic journey (Demo Mode).
           </CardDescription>
@@ -147,3 +143,6 @@ export default function LoginPage() {
     </div>
   );
 }
+
+// Added missing import for toast
+import { toast } from "@/hooks/use-toast";
