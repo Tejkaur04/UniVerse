@@ -10,19 +10,19 @@ interface FeatureCardProps {
   description: string;
   icon: LucideIcon;
   href: string;
-  children?: React.ReactNode; 
+  children?: React.ReactNode;
   animationDelay?: string;
 }
 
 const FeatureCard = ({ title, description, icon: Icon, href, children, animationDelay }: FeatureCardProps) => (
-  <Link 
-    href={href} 
+  <Link
+    href={href}
     className={cn(
       "block group rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background animate-fade-in-up"
     )}
     style={{ animationDelay, animationFillMode: 'forwards' }}
   >
-    <Card className="bg-card/70 backdrop-blur-sm border-border/60 shadow-xl hover:shadow-primary/30 hover:scale-[1.03] transition-all duration-300 ease-in-out flex flex-col h-full overflow-hidden">
+    <Card className="bg-card/80 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-accent/50 hover:border-accent/80 hover:scale-[1.02] transition-all duration-300 ease-in-out flex flex-col h-full overflow-hidden">
       <CardHeader className="items-center text-center pt-8">
         <Icon className="h-16 w-16 text-accent mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-[-5deg]" />
         <CardTitle className="text-2xl font-bold text-primary group-hover:text-accent transition-colors duration-300">{title}</CardTitle>
@@ -66,13 +66,13 @@ export default function DashboardPage() {
   return (
     <div className="container mx-auto px-4 py-12 w-full">
       <div className="text-center mb-16">
-        <h1 
+        <h1
           className="text-4xl sm:text-5xl font-bold text-primary mb-4 tracking-tight animate-fade-in-up"
           style={{ animationFillMode: 'forwards' }}
         >
           Welcome to UniVerse Dashboard
         </h1>
-        <p 
+        <p
           className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto animate-fade-in-up"
           style={{ animationDelay: '0.2s', animationFillMode: 'forwards' }}
         >
@@ -80,7 +80,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="max-w-4xl mx-auto"> {/* Constraining wrapper for the grid */}
+      <div className="max-w-4xl mx-auto p-6 md:p-8 rounded-xl bg-card/40 backdrop-blur-sm border border-border/30 shadow-2xl">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
           {features.map((feature, index) => (
             <FeatureCard
