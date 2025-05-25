@@ -12,8 +12,8 @@ export default {
   theme: {
   	extend: {
       fontFamily: {
-        sans: ['var(--font-inter)', ...defaultTheme.fontFamily.sans], // Changed to Inter
-        mono: ['var(--font-roboto-mono)', ...defaultTheme.fontFamily.mono], // Changed to Roboto Mono
+        sans: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
+        mono: ['var(--font-roboto-mono)', ...defaultTheme.fontFamily.mono],
       },
   		colors: {
   			background: 'hsl(var(--background))',
@@ -89,41 +89,15 @@ export default {
   					height: '0'
   				}
   			},
-          'ping-slow': {
-            '0%, 100%': { transform: 'scale(1)', opacity: '1' },
-            '50%': { transform: 'scale(1.1)', opacity: '0.7' },
-          },
-          'fade-in-up': {
-            '0%': { opacity: '0', transform: 'translateY(20px)' },
-            '100%': { opacity: '1', transform: 'translateY(0)' },
-          },
-          'subtle-pulse': {
-            '0%, 100%': { opacity: '1', transform: 'scale(1)' },
-            '50%': { opacity: '0.85', transform: 'scale(1.03)' },
-          },
-          'bounce': {
-            '0%, 100%': {
-              transform: 'translateY(-10%)',
-              animationTimingFunction: 'cubic-bezier(0.8,0,1,1)'
-            },
-            '50%': {
-              transform: 'translateY(0)',
-              animationTimingFunction: 'cubic-bezier(0,0,0.2,1)'
-            }
-          },
-          'text-shimmer': { 
-            '0%': { backgroundPosition: '200% center' },
-            '100%': { backgroundPosition: '-200% center' },
-          },
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out',
-        'ping-slow': 'ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite',
-        'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
-        'subtle-pulse': 'subtle-pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'bounce': 'bounce 1s infinite',
-        'text-shimmer': 'text-shimmer 3s linear infinite', 
+        'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
   		}
   	}
   },

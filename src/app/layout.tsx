@@ -6,11 +6,10 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Inter, Roboto_Mono } from 'next/font/google';
-import { Waypoints, UserRound, LogOut, Loader2, LogInIcon, UsersRound as StudySphereIcon, CalendarDays as EventHorizonIcon, MessageCircleQuestion as CelestialChatsIcon, Lightbulb as NebulaOfIdeasIcon } from 'lucide-react';
+import { Users, UserRound, LogOut, Loader2, LogInIcon } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
-import StarryBackground from '@/components/starry-background';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,9 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"; // Removed AvatarImage as it's not used for fallback
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import AlienGuide from '@/components/AlienGuide';
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const inter = Inter({
   variable: '--font-inter',
@@ -37,15 +34,8 @@ const robotoMono = Roboto_Mono({
   display: 'swap',
 });
 
-const navFeatures = [
-  { href: "/study-sphere", Icon: StudySphereIcon, label: "Study Sphere" },
-  { href: "/event-horizon", Icon: EventHorizonIcon, label: "Event Horizon" },
-  { href: "/celestial-chats", Icon: CelestialChatsIcon, label: "Celestial Chats" },
-  { href: "/nebula-of-ideas", Icon: NebulaOfIdeasIcon, label: "Nebula of Ideas" },
-];
-
 function AppContent({ children }: { children: ReactNode }) {
-  const { user, loading, logout, error: authError } = useAuth(); // Added authError
+  const { user, loading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
@@ -54,13 +44,11 @@ function AppContent({ children }: { children: ReactNode }) {
     setIsMounted(true);
   }, []);
 
-  // Simplified redirection logic
   useEffect(() => {
-    if (isMounted && !loading && !user && pathname !== '/login' && pathname !== '/signup' && pathname !== '/') {
+    if (isMounted && !loading && !user && pathname !== '/login' && pathname !== '/signup') {
       router.push('/login');
     }
   }, [isMounted, user, loading, pathname, router]);
-
 
   if (!isMounted) {
     return (
@@ -70,9 +58,7 @@ function AppContent({ children }: { children: ReactNode }) {
     );
   }
   
-  // Show loader if auth is loading AND we are not on a public page (/, /login, /signup)
-  // or if we are trying to redirect.
-  if (loading && !['/', '/login', '/signup'].includes(pathname)) {
+  if (loading && !['/login', '/signup'].includes(pathname)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -80,10 +66,7 @@ function AppContent({ children }: { children: ReactNode }) {
     );
   }
 
-  // If not authenticated and trying to access a protected page
-  if (!user && !loading && !['/', '/login', '/signup'].includes(pathname)) {
-     // This case should ideally be handled by the useEffect redirect,
-     // but as a fallback, show a loader or minimal content.
+  if (!user && !loading && !['/login', '/signup'].includes(pathname)) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -92,40 +75,19 @@ function AppContent({ children }: { children: ReactNode }) {
     );
   }
 
-
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 max-w-screen-2xl items-center">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Waypoints className="h-6 w-6 text-primary" />
+            <Users className="h-6 w-6 text-primary" /> {/* Changed Icon */}
             <span className="font-bold sm:inline-block text-lg font-mono">
-              UniVerse
+              PeerConnect {/* Changed App Name */}
             </span>
           </Link>
 
-          <nav className="ml-auto flex items-center space-x-1 sm:space-x-2"> {/* Reduced space-x slightly */}
-            {navFeatures.map((feature) => (
-              <Tooltip key={feature.href}>
-                <TooltipTrigger asChild>
-                  <Button 
-                    asChild 
-                    variant="ghost" 
-                    size="icon" // Uses h-10 w-10 by default
-                    className="text-foreground/80 hover:text-accent hover:bg-accent/10 rounded-md" // Ensure rounded-md for hover bg
-                  >
-                    <Link href={feature.href}>
-                      <feature.Icon className="h-5 w-5" /> {/* Icon size is 5, button is 10. Good padding. */}
-                      <span className="sr-only">{feature.label}</span>
-                    </Link>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>{feature.label}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-
+          <nav className="ml-auto flex items-center space-x-1 sm:space-x-2">
+            {/* Navbar feature shortcuts removed */}
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -148,7 +110,7 @@ function AppContent({ children }: { children: ReactNode }) {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={async () => {
-                    await logout(); // This is the mock logout
+                    await logout(); 
                     router.push('/login'); 
                   }}>
                     <LogOut className="mr-2 h-4 w-4" />
@@ -158,7 +120,7 @@ function AppContent({ children }: { children: ReactNode }) {
               </DropdownMenu>
             ) : (
               (pathname !== '/login' && pathname !== '/signup') && (
-                <Button asChild variant="outline" size="sm" className="ml-2 bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button asChild variant="outline" size="sm" className="ml-2"> {/* Removed accent colors */}
                   <Link href="/login">
                     <LogInIcon className="mr-2 h-4 w-4" />
                     Login/Sign Up
@@ -169,10 +131,10 @@ function AppContent({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="flex-1 flex flex-col items-center justify-start py-8 px-4 z-10 relative"> {/* Added relative for main content */}
+      <main className="flex-1 flex flex-col items-center py-8 px-4 z-10 relative"> {/* Removed justify-start */}
         {children}
       </main>
-      <AlienGuide /> {/* AlienGuide is global */}
+      {/* AlienGuide removed */}
     </>
   );
 }
@@ -189,11 +151,10 @@ export default function RootLayout({
         className={cn(
           "antialiased min-h-screen flex flex-col relative font-sans" 
       )}>
-        <StarryBackground />
+        {/* StarryBackground removed */}
         <AuthProvider>
-          <TooltipProvider>
+          {/* TooltipProvider removed as navbar shortcuts are gone, can be added back if needed */}
              <AppContent>{children}</AppContent>
-          </TooltipProvider>
         </AuthProvider>
         <Toaster />
       </body>
