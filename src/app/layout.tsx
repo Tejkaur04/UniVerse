@@ -16,7 +16,7 @@ import {
   CalendarDays,
   MessageCircleQuestion,
   Lightbulb,
-  Home as HomeIcon, // Added HomeIcon
+  Home as HomeIcon,
 } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -55,13 +55,6 @@ const robotoMono = Roboto_Mono({
   display: 'swap',
 });
 
-const navFeatures = [
-  { href: "/study-sphere", label: "Study Sphere", icon: UsersRound },
-  { href: "/event-horizon", label: "Event Horizon", icon: CalendarDays },
-  { href: "/celestial-chats", label: "Celestial Chats", icon: MessageCircleQuestion },
-  { href: "/nebula-of-ideas", label: "Nebula of Ideas", icon: Lightbulb },
-];
-
 
 function AppContent({ children }: { children: ReactNode }) {
   const { user, loading: authLoading, logout } = useAuth();
@@ -81,11 +74,12 @@ function AppContent({ children }: { children: ReactNode }) {
   }, [isMounted, authLoading, user, isPublicPage, router, pathname]); 
 
   const showSidebarAndGuide = isMounted && user && !isPublicPage;
-
-  // Main content rendering logic
+  
   let contentToRender;
+
   if (!isMounted || authLoading) {
     // Universal loader: shown until client is mounted AND auth state is resolved.
+    // Or if not on a public page and user status is not yet determined.
     contentToRender = (
       <div className="flex items-center justify-center flex-1">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -94,7 +88,7 @@ function AppContent({ children }: { children: ReactNode }) {
   } else if (!user && !isPublicPage) {
     // User is not logged in, and it's not a public page.
     // The useEffect above handles redirection. Show a loader in the meantime.
-    contentToRender = (
+     contentToRender = (
       <div className="flex items-center justify-center flex-1">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
@@ -106,18 +100,15 @@ function AppContent({ children }: { children: ReactNode }) {
         <header className={cn(
             "sticky top-0 z-40 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
           )}>
-          <div className="container flex h-16 max-w-screen-2xl items-center px-4">
-            <Link href="/" className="flex items-center space-x-2 group mr-6">
+          <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4">
+            <Link href="/" className="flex items-center space-x-2 group">
               <Waypoints className="h-7 w-7 text-primary group-hover:text-accent transition-colors" />
               <span className="font-bold text-xl font-mono text-primary group-hover:text-accent transition-colors">
                 UniVerse
               </span>
             </Link>
             
-            <div className="flex-grow"></div> 
-
             <nav className="flex items-center space-x-1 sm:space-x-2">
-              {/* Feature Icons are now in UserStatsSidebar */}
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -141,8 +132,8 @@ function AppContent({ children }: { children: ReactNode }) {
                     <DropdownMenuSeparator className="bg-border/50" />
                      <DropdownMenuItem asChild className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
                         <Link href="/"> 
-                            <HomeIcon className="mr-2 h-4 w-4" /> {/* Changed to HomeIcon */}
-                            <span>Home / Main</span>
+                            <HomeIcon className="mr-2 h-4 w-4" />
+                            <span>UniVerse Home</span>
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { 
@@ -167,23 +158,25 @@ function AppContent({ children }: { children: ReactNode }) {
         </header>
         <main className={cn(
           "flex-1 flex flex-col z-10 relative", 
-          "px-4 md:px-0" 
+          "md:px-0" // No horizontal padding on main itself when sidebar is shown
         )}>
-          <div className="w-full max-w-7xl p-4 md:py-6 md:px-4"> {/* Content wrapper with padding */}
+          <div className="w-full max-w-7xl p-4 md:py-6 md:px-8"> {/* Content wrapper with padding */}
             {children}
           </div>
         </main>
       </>
     );
   }
-
+  
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen"> {/* Outer flex container for sidebar and main content */}
       {showSidebarAndGuide && <UserStatsSidebar />}
       
-      <div className="flex flex-col flex-grow"> {/* This is the div from original line 84 */}
+      {/* This div will take up the remaining space next to the sidebar */}
+      <div className="flex flex-col flex-grow"> 
         {contentToRender}
       </div>
+
       {showSidebarAndGuide && <AlienGuide />}
     </div>
   );
