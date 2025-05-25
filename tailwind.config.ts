@@ -1,5 +1,6 @@
 
 import type { Config } from "tailwindcss";
+const defaultTheme = require('tailwindcss/defaultTheme'); // Import defaultTheme
 
 export default {
     darkMode: ["class"],
@@ -10,6 +11,9 @@ export default {
   ],
   theme: {
   	extend: {
+      fontFamily: { // Add Geist Sans as the default sans-serif
+        sans: ['var(--font-geist-sans)', ...defaultTheme.fontFamily.sans],
+      },
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
@@ -96,7 +100,7 @@ export default {
             '0%, 100%': { opacity: '1', transform: 'scale(1)' },
             '50%': { opacity: '0.85', transform: 'scale(1.03)' },
           },
-          'bounce': { // Added bounce animation
+          'bounce': {
             '0%, 100%': {
               transform: 'translateY(-10%)',
               animationTimingFunction: 'cubic-bezier(0.8,0,1,1)'
@@ -113,7 +117,7 @@ export default {
         'ping-slow': 'ping-slow 2s cubic-bezier(0, 0, 0.2, 1) infinite',
         'fade-in-up': 'fade-in-up 0.8s ease-out forwards',
         'subtle-pulse': 'subtle-pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-        'bounce': 'bounce 1s infinite', // Added bounce animation utility
+        'bounce': 'bounce 1s infinite',
   		}
   	}
   },

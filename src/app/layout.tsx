@@ -1,11 +1,11 @@
 
-"use client"; 
+"use client";
 
 import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Geist } from 'next/font/google'; // Removed Geist_Mono as it wasn't used
+import { Geist } from 'next/font/google';
 import { Waypoints, UserRound, LogOut, Loader2, LogInIcon } from 'lucide-react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -28,7 +28,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
-  // weight: ['300', '400', '500', '700'] // If you need specific weights
+  display: 'swap', // Added display: 'swap' for better font loading
 });
 
 
@@ -50,10 +50,8 @@ function AppContent({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  
-  // Allow access to landing page even if not logged in.
+
   if (!user && pathname !== '/login' && pathname !== '/signup' && pathname !== '/') {
-     // This case should be handled by the useEffect redirect, but as a fallback:
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -73,14 +71,13 @@ function AppContent({ children }: { children: ReactNode }) {
               UniVerse
             </span>
           </Link>
-          
+
           <div className="ml-auto flex items-center space-x-4">
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
                     <Avatar className="h-9 w-9">
-                      {/* Placeholder for user avatar image if available */}
                       {/* <AvatarImage src="/path-to-user-image.png" alt={user.email || "User"} /> */}
                       <AvatarFallback className="bg-primary text-primary-foreground">
                         {user.email ? user.email.charAt(0).toUpperCase() : <UserRound size={20}/>}
@@ -100,7 +97,7 @@ function AppContent({ children }: { children: ReactNode }) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={async () => {
                     await logout();
-                    router.push('/login'); // Redirect to login after logout
+                    router.push('/login');
                   }}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
@@ -134,12 +131,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body 
+    <html lang="en" className={cn("dark", geistSans.variable)}> {/* Added geistSans.variable here */}
+      <body
         className={cn(
-          geistSans.variable,
-          // geistMono.variable, // Removed as Geist_Mono was removed
-          "antialiased min-h-screen flex flex-col relative"
+          // geistSans.variable, // Removed from here, applied to html
+          "antialiased min-h-screen flex flex-col relative font-sans" // Added font-sans
       )}>
         <StarryBackground />
         <AuthProvider>

@@ -2,32 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Removed explicit body font-family to allow Tailwind's font-sans (now Geist) to apply */
+/*
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+*/
 
 @layer base {
   :root {
     --background: 240 60% 2%; /* Even deeper, more void-like blue-black */
-    --foreground: 210 40% 98%; 
+    --foreground: 210 40% 98%;
     --card: 235 45% 7%; /* Slightly darker card */
-    --card-foreground: 210 40% 95%; 
+    --card-foreground: 210 40% 95%;
     --popover: 240 45% 5%; /* Darker popover */
-    --popover-foreground: 210 40% 95%; 
+    --popover-foreground: 210 40% 95%;
     --primary: 265 95% 72%; /* More vibrant nebula purple */
-    --primary-foreground: 210 40% 98%; 
+    --primary-foreground: 210 40% 98%;
     --secondary: 230 25% 12%; /* Darker secondary */
-    --secondary-foreground: 210 40% 98%; 
+    --secondary-foreground: 210 40% 98%;
     --muted: 230 20% 18%; /* Adjusted muted */
     --muted-foreground: 220 20% 65%; /* Softer text for muted */
     --accent: 50 100% 65%; /* Brighter starlight gold/yellow */
     --accent-foreground: 240 50% 4%; /* Darker text on bright accent */
-    --destructive: 0 84.2% 60.2%; 
-    --destructive-foreground: 0 0% 98%; 
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
     --border: 220 25% 50%; /* Lighter, more visible borders */
     --input: 235 35% 14%; /* Adjusted input fields */
     --ring: 265 95% 78%; /* Primary color for rings, slightly lighter */
-    --chart-1: 220 70% 55%; 
+    --chart-1: 220 70% 55%;
     --chart-2: 160 60% 50%;
     --chart-3: 30 80% 60%;
     --chart-4: 280 65% 65%;
@@ -44,25 +47,25 @@ body {
   }
 
   .dark {
-    --background: 240 60% 2%; 
-    --foreground: 210 40% 98%; 
-    --card: 235 45% 7%; 
+    --background: 240 60% 2%;
+    --foreground: 210 40% 98%;
+    --card: 235 45% 7%;
     --card-foreground: 210 40% 95%;
-    --popover: 240 45% 5%; 
+    --popover: 240 45% 5%;
     --popover-foreground: 210 40% 95%;
-    --primary: 265 95% 72%; 
+    --primary: 265 95% 72%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 230 25% 12%; 
+    --secondary: 230 25% 12%;
     --secondary-foreground: 210 40% 98%;
     --muted: 230 20% 18%;
-    --muted-foreground: 220 20% 65%; 
-    --accent: 50 100% 65%; 
-    --accent-foreground: 240 50% 4%; 
-    --destructive: 0 70% 50%; 
+    --muted-foreground: 220 20% 65%;
+    --accent: 50 100% 65%;
+    --accent-foreground: 240 50% 4%;
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 25% 50%; 
-    --input: 235 35% 14%; 
-    --ring: 265 95% 78%; 
+    --border: 220 25% 50%;
+    --input: 235 35% 14%;
+    --ring: 265 95% 78%;
     --chart-1: 220 70% 55%;
     --chart-2: 160 60% 50%;
     --chart-3: 30 80% 60%;
@@ -87,10 +90,10 @@ body {
     @apply bg-background text-foreground;
     /* Subtle, large-scale radial gradient for depth/texture */
     background-image: radial-gradient(ellipse at center, hsla(240, 50%, 10%, 0.15) 0%, transparent 60%);
-    background-size: 150% 150%; 
+    background-size: 150% 150%;
     background-position: center center;
     background-repeat: no-repeat;
-    background-attachment: fixed; 
+    background-attachment: fixed;
   }
 }
 
@@ -101,12 +104,11 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: 0; 
+    z-index: 0;
     pointer-events: none;
     overflow: hidden;
     background: transparent; /* Ensure tsparticles canvas is transparent */
   }
 
  /* Old CSS star styles are removed from here */
- /* Keyframes for old stars (twinkle-opacity, move-stars-*) are also removed */
 }
