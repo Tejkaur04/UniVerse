@@ -1,56 +1,48 @@
 
 "use client";
 
-import { Bot, MessageSquareText, X } from 'lucide-react';
+import { Bot, MessageSquareText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
 interface AlienGuideProps {
-  message?: string; // Make message optional
+  // Message prop is no longer needed here as it's managed by pathname
 }
 
-export default function AlienGuide({ message: initialMessage }: AlienGuideProps) {
+export default function AlienGuide({}: AlienGuideProps) {
   const [isMessageVisible, setIsMessageVisible] = useState(true);
-  const [currentMessage, setCurrentMessage] = useState(initialMessage || "Greetings, Earthling! Welcome to UniVerse. Click me to hide this message!");
+  const [currentMessage, setCurrentMessage] = useState("Greetings, Earthling! Welcome to UniVerse. Click my icon to toggle this message!");
   const pathname = usePathname();
 
   useEffect(() => {
-    if (initialMessage) {
-      setCurrentMessage(initialMessage);
-    } else {
-      // Set default message based on path if no specific message is passed
-      switch (pathname) {
-        case '/':
-          setCurrentMessage("Welcome to UniVerse! Explore the cosmos of possibilities. Click my icon to toggle this message.");
-          break;
-        case '/study-sphere':
-          setCurrentMessage("You've entered the Study Sphere! Define your learning constellation and find study partners. Click my icon to hide this.");
-          break;
-        case '/event-horizon':
-          setCurrentMessage("Welcome to the Event Horizon! Discover exciting campus events and workshops. Need help? Click my icon!");
-          break;
-        case '/celestial-chats':
-          setCurrentMessage("Celestial Chats is where you gain wisdom. Ask our AI or join AMAs! Toggle my message with a click.");
-          break;
-        case '/nebula-of-ideas':
-          setCurrentMessage("The Nebula of Ideas awaits! Share your brilliant projects and find collaborators. Click me to hide this tip.");
-          break;
-        default:
-          setCurrentMessage("Exploring UniVerse? Click my icon if you need to toggle this message!");
-      }
+    // Set default message based on path
+    switch (pathname) {
+      case '/':
+        setCurrentMessage("Welcome to UniVerse! Explore the cosmos of possibilities. Click my icon to toggle this guidance.");
+        break;
+      case '/study-sphere':
+        setCurrentMessage("You've entered the Study Sphere! Define your learning constellation, find partners, and manage groups. This is your local hub!");
+        break;
+      case '/event-horizon':
+        setCurrentMessage("Welcome to the Event Horizon! Discover campus events, create your own, and RSVP. Your choices are saved locally.");
+        break;
+      case '/celestial-chats':
+        setCurrentMessage("Celestial Chats is where you gain wisdom. Ask our AI or join AMAs! Your connections here are saved locally.");
+        break;
+      case '/nebula-of-ideas':
+        setCurrentMessage("The Nebula of Ideas awaits! Share projects and find collaborators. Ideas you submit are saved in your browser.");
+        break;
+      case '/my-connections':
+        setCurrentMessage("Here are all your cosmic connections from across UniVerse! Manage your network here. Saved locally.");
+        break;
+      default:
+        setCurrentMessage("Exploring UniVerse? Click my icon if you need to toggle this message!");
     }
-  }, [pathname, initialMessage]);
+    setIsMessageVisible(true); // Show message when path changes
+  }, [pathname]);
   
-  useEffect(() => {
-    // If an initial message is provided, show it immediately.
-    // Otherwise, the message is based on pathname.
-    if (initialMessage) {
-        setIsMessageVisible(true);
-    }
-  }, [initialMessage]);
-
 
   const toggleMessage = () => {
     setIsMessageVisible(!isMessageVisible);

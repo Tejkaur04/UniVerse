@@ -15,9 +15,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import {
-  Users, Brain, FlaskConical, Link as LinkIcon, Loader2, Home as HomeIcon, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle, Waypoints, UserCircle, Pencil, CheckCircle as CheckCircleIcon
+  Users, Brain, FlaskConical, Link as LinkIconLucide, Loader2, Home as HomeIcon, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle, Waypoints, UserCircle, Pencil, CheckCircle as CheckCircleIcon
 } from 'lucide-react';
 
 // Define UserProfile interface directly or import if it becomes shared
@@ -59,13 +60,16 @@ const navFeatures = [
   { href: "/event-horizon", label: "Event Horizon", icon: CalendarDays },
   { href: "/celestial-chats", label: "Celestial Chats", icon: MessageCircleQuestion },
   { href: "/nebula-of-ideas", label: "Nebula of Ideas", icon: Lightbulb },
+  { href: "/my-connections", label: "My Connections", icon: LinkIconLucide }, // New Connection Link
 ];
 
 const UserStatsSidebar: FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const userLocalStorageKey = (dataKey: string) => user ? `uniVerse-${dataKey}-${user.uid}` : null;
+  const userLocalStorageKey = (dataKey: string): string | null => {
+    return user ? `uniVerse-${dataKey}-${user.uid}` : null;
+  };
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [connectionsCount, setConnectionsCount] = useState<number>(0);
@@ -78,17 +82,16 @@ const UserStatsSidebar: FC = () => {
   useEffect(() => {
     if (user && user.uid) {
       setIsLoading(true);
-      const profileKey = userLocalStorageKey('studyProfile');
-      const connectionsKey = userLocalStorageKey('studySphere-connections'); // Assuming Study Sphere connections
+      const profileKey = userLocalStorageKey('studyProfile'); // Adjusted key from studySphere-studyProfile
+      const connectionsKey = userLocalStorageKey('connections'); // Centralized key
 
       if (profileKey) {
         const savedProfile = localStorage.getItem(profileKey);
         if (savedProfile) {
           const parsedProfile = JSON.parse(savedProfile) as UserProfile;
           setProfile(parsedProfile);
-          setEditForm(parsedProfile); // Initialize edit form with loaded profile
+          setEditForm(parsedProfile); 
         } else {
-          // Initialize a new profile if none exists for this mock user
           const newProfile: UserProfile = {
             ...initialProfileData,
             id: user.uid,
@@ -97,7 +100,7 @@ const UserStatsSidebar: FC = () => {
           };
           setProfile(newProfile);
           setEditForm(newProfile);
-          localStorage.setItem(profileKey, JSON.stringify(newProfile)); // Save initial profile
+          localStorage.setItem(profileKey, JSON.stringify(newProfile));
         }
       }
 
@@ -113,13 +116,12 @@ const UserStatsSidebar: FC = () => {
       setProfile(null);
       setConnectionsCount(0);
     }
-  }, [user]); // Removed userLocalStorageKey from dependencies as it's a function defined in scope
+  }, [user]);
 
   const handleEditProfile = () => {
     if (profile) {
       setEditForm({ ...profile }); 
     } else if (user) {
-      // Fallback to ensure editForm is initialized if profile somehow null for a logged-in user
       const newProfile: UserProfile = {
         ...initialProfileData,
         id: user.uid,
@@ -137,8 +139,8 @@ const UserStatsSidebar: FC = () => {
       toast({ variant: 'destructive', title: 'Missing Information', description: 'Name and College ID are required.'});
       return;
     }
-    setProfile(editForm); // Update profile state in sidebar
-    const profileKey = userLocalStorageKey('studyProfile');
+    setProfile(editForm); 
+    const profileKey = userLocalStorageKey('studyProfile'); // Adjusted key
     if (profileKey) {
       localStorage.setItem(profileKey, JSON.stringify(editForm));
     }
@@ -151,9 +153,9 @@ const UserStatsSidebar: FC = () => {
     setEditForm(prev => ({ ...prev, [name]: value }));
   };
   
-  const handleSkillsArrayInputChange = (field: keyof UserProfile, value: string) => {
+  const handleSkillsArrayInputChange = (field: keyof Pick<UserProfile, 'skills' | 'interests' | 'projectAreas'>, value: string) => {
     const valuesArray = value.split(',').map(s => s.trim()).filter(s => s);
-    setEditForm(prev => ({ ...prev, [field]: valuesArray as any })); 
+    setEditForm(prev => ({ ...prev, [field]: valuesArray })); 
   };
 
   const handleLearningStylesChange = (style: string, checked: boolean) => {
@@ -218,7 +220,7 @@ const UserStatsSidebar: FC = () => {
             <Card className="bg-background/50 border-primary/30 shadow-sm">
                 <CardHeader className="pb-2 pt-3">
                 <CardTitle className="text-md font-mono text-primary flex items-center">
-                    <LinkIcon className="mr-2 h-4 w-4" />
+                    <LinkIconLucide className="mr-2 h-4 w-4" />
                     Connections
                 </CardTitle>
                 </CardHeader>
@@ -281,7 +283,7 @@ const UserStatsSidebar: FC = () => {
          <Button
               variant="ghost"
               className="w-full justify-start text-base py-3 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
-              onClick={() => alert("Settings Clicked (Demo)")} 
+              onClick={() => toast({title: "Settings (Demo)", description: "This would open application settings."})} 
             >
               <Settings className="mr-3 h-5 w-5" />
               Settings
@@ -289,7 +291,7 @@ const UserStatsSidebar: FC = () => {
           <Button
               variant="ghost"
               className="w-full justify-start text-base py-3 text-foreground/80 hover:text-primary hover:bg-primary/10 rounded-md"
-              onClick={() => alert("Help & Support Clicked (Demo)")} 
+              onClick={() => toast({title: "Help & Support (Demo)", description: "This would open a help center."})} 
             >
               <HelpCircle className="mr-3 h-5 w-5" />
               Help & Support
@@ -311,8 +313,8 @@ const UserStatsSidebar: FC = () => {
                 <Label htmlFor="edit-year">Year</Label>
                 <Select name="year" value={editForm.year || ''} onValueChange={(value) => setEditForm(prev => ({...prev, year: value}))}>
                     <SelectTrigger id="edit-year"><SelectValue placeholder="Select year" /></SelectTrigger>
-                    <SelectContent>
-                        {YEARS.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                    <SelectContent className="bg-popover border-primary/50">
+                        {YEARS.map(year => <SelectItem key={year} value={year} className="hover:!bg-primary/20 focus:!bg-primary/20">{year}</SelectItem>)}
                     </SelectContent>
                 </Select>
             </div>
@@ -320,16 +322,18 @@ const UserStatsSidebar: FC = () => {
                 <Label htmlFor="edit-department">Department</Label>
                 <Select name="department" value={editForm.department || ''} onValueChange={(value) => setEditForm(prev => ({...prev, department: value}))}>
                      <SelectTrigger id="edit-department"><SelectValue placeholder="Select department" /></SelectTrigger>
-                     <SelectContent>
-                        {DEPARTMENTS.map(dept => <SelectItem key={dept} value={dept}>{dept}</SelectItem>)}
+                     <SelectContent className="bg-popover border-primary/50">
+                        {DEPARTMENTS.map(dept => <SelectItem key={dept} value={dept} className="hover:!bg-primary/20 focus:!bg-primary/20">{dept}</SelectItem>)}
                     </SelectContent>
                 </Select>
             </div>
 
             <div><Label htmlFor="edit-profilePictureUrl">Profile Picture URL</Label><Input id="edit-profilePictureUrl" name="profilePictureUrl" value={editForm.profilePictureUrl || ''} onChange={handleProfileInputChange} placeholder="https://placehold.co/128x128.png" /></div>
-            <div><Label htmlFor="edit-skills">Skills (comma-separated)</Label><Textarea id="edit-skills" name="skills" value={(Array.isArray(editForm.skills) ? editForm.skills : []).join(', ')} onChange={(e) => handleSkillsArrayInputChange('skills', e.target.value)} placeholder="e.g., Quantum Physics, FTL Piloting" /></div>
-            <div><Label htmlFor="edit-interests">Interests (comma-separated)</Label><Textarea id="edit-interests" name="interests" value={(Array.isArray(editForm.interests) ? editForm.interests : []).join(', ')} onChange={(e) => handleSkillsArrayInputChange('interests', e.target.value)} placeholder="e.g., Black Holes, Xenobotany" /></div>
-            <div><Label htmlFor="edit-projectAreas">Project Areas (comma-separated)</Label><Textarea id="edit-projectAreas" name="projectAreas" value={(Array.isArray(editForm.projectAreas) ? editForm.projectAreas : []).join(', ')} onChange={(e) => handleSkillsArrayInputChange('projectAreas', e.target.value)} placeholder="e.g., Dark Matter Research, Alien Diplomacy"/></div>
+            <div><Label htmlFor="edit-dataAiHint">Profile Picture AI Hint (Optional)</Label><Input id="edit-dataAiHint" name="dataAiHint" value={editForm.dataAiHint || ''} onChange={handleProfileInputChange} placeholder="e.g., student avatar" /></div>
+
+            <div><Label htmlFor="edit-skills">Skills (comma-separated)</Label><Textarea id="edit-skills" value={(Array.isArray(editForm.skills) ? editForm.skills : []).join(', ')} onChange={(e) => handleSkillsArrayInputChange('skills', e.target.value)} placeholder="e.g., Quantum Physics, FTL Piloting" /></div>
+            <div><Label htmlFor="edit-interests">Interests (comma-separated)</Label><Textarea id="edit-interests" value={(Array.isArray(editForm.interests) ? editForm.interests : []).join(', ')} onChange={(e) => handleSkillsArrayInputChange('interests', e.target.value)} placeholder="e.g., Black Holes, Xenobotany" /></div>
+            <div><Label htmlFor="edit-projectAreas">Project Areas (comma-separated)</Label><Textarea id="edit-projectAreas" value={(Array.isArray(editForm.projectAreas) ? editForm.projectAreas : []).join(', ')} onChange={(e) => handleSkillsArrayInputChange('projectAreas', e.target.value)} placeholder="e.g., Dark Matter Research, Alien Diplomacy"/></div>
             <div>
             <Label>Preferred Learning Styles</Label>
             <div className="grid grid-cols-2 gap-2 mt-1">
@@ -351,9 +355,5 @@ const UserStatsSidebar: FC = () => {
     </>
   );
 };
-
-// Need to import Select components for the dialog
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
 
 export default UserStatsSidebar;

@@ -4,6 +4,7 @@
 import type { FC, FormEvent, ChangeEvent } from 'react';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,13 +16,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
-  UsersRound, // Added UsersRound here
-  Search, Users, FileText, CalendarCheck, Home,
-  Briefcase, Palette, ThumbsUp, Link2, MessageSquare, XCircle, Pencil, PlusCircle,
+  Home, UsersRound, Search as SearchIcon, Users as UsersIcon, FileText, CalendarCheck, CalendarPlus, Star,
+  Briefcase, Palette, ThumbsUp, Link2, MessageSquare, XCircle, Pencil, PlusCircle, Filter as FilterIcon,
   UploadCloud, BookOpen, CheckCircle as CheckCircleIcon, ListFilter, Info, BookUser, GripVertical, UserCircle
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -29,7 +28,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { UserProfile } from '@/components/UserStatsSidebar';
 
-// Interfaces (ensure these are robust for localStorage)
+
+// Interfaces
 export interface MockStudentProfile {
   id: string;
   name: string;
@@ -41,8 +41,8 @@ export interface MockStudentProfile {
   interests: string[];
   projectAreas: string[];
   learningStyles: string[];
-  role?: 'Student' | 'Mentor' | 'Initiator'; // Added role for My Connections
-  courses?: string[]; // Added courses for filtering
+  role?: 'Student' | 'Mentor' | 'Initiator';
+  courses?: string[];
 }
 
 export interface StudyGroup {
@@ -77,17 +77,17 @@ export interface StudySession {
 
 
 const COURSES_OPTIONS = ["All", "Astrophysics 101", "Quantum Mechanics", "Alien Civilizations", "Starship Engineering", "Cosmic Economics"];
-const LEARNING_STYLES_OPTIONS = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
+const LEARNING_STYLES_OPTIONS_FILTER = ["All", ...LEARNING_STYLES_OPTIONS]; // For filter dropdown
 const DEPARTMENTS_OPTIONS = ["All", "Computer Science", "Quantum Engineering", "Astrobiology", "Xenolinguistics", "Galactic History", "Business Administration", "Undeclared", "Starship Engineering"];
 
 
 const iconMap: { [key: string]: LucideIcon } = {
-  Users: Users,
+  Users: UsersIcon,
   FileText: FileText,
   CalendarCheck: CalendarCheck,
   DefaultIcon: Info,
   UserCircle: UserCircle,
-  Search: Search,
+  Search: SearchIcon,
   BookOpen: BookOpen,
   UploadCloud: UploadCloud,
   PlusCircle: PlusCircle,
@@ -98,13 +98,7 @@ const iconMap: { [key: string]: LucideIcon } = {
   GripVertical: GripVertical,
 };
 
-// Initial Data (Fallbacks)
-const initialStudyProfileData: UserProfile = {
-  id: 'currentUser', name: 'New Explorer', collegeId: 'N/A', year: 'Fresher', department: 'Undeclared',
-  skills: ['Curiosity'], interests: ['Space'], projectAreas: ['Exploration'], learningStyles: ['Visual'],
-  profilePictureUrl: 'https://placehold.co/128x128.png?text=U', dataAiHint: 'student avatar',
-};
-
+// Initial Data (Fallbacks) - For when localStorage is empty or user is new
 const initialPotentialMatchesData: MockStudentProfile[] = [
   { id: 'student1', name: 'Nova Stargazer', year: 'Sophomore', department: 'Xenolinguistics', skills: ['React', 'Node.js', 'UI/UX'], interests: ['AI', 'Web Development', 'Alien Languages'], projectAreas: ['EdTech App'], profilePictureUrl: 'https://placehold.co/80x80.png?text=NS', dataAiHint: 'student multilingual', learningStyles: ['Auditory', 'Kinesthetic'], courses: ['Alien Civilizations', 'Galactic History'] },
   { id: 'student2', name: 'Orion Nebula', year: 'Junior', department: 'Starship Engineering', skills: ['CAD', 'Prototyping', '3D Printing'], interests: ['Robotics', 'Sustainable Design', 'FTL Drives'], projectAreas: ['Automated Rover', 'Warp Core Design'], profilePictureUrl: 'https://placehold.co/80x80.png?text=ON', dataAiHint: 'engineer student space', learningStyles: ['Kinesthetic', 'Visual'], courses: ['Starship Engineering', 'Quantum Mechanics'] },
@@ -130,43 +124,36 @@ const initialStudySessionsData: StudySession[] = [
 const StudySpherePage: FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<string>("browse");
+  const [activeTab, setActiveTab] = useState<string>("browse"); // Default to "Find Buddies"
 
   const userLocalStorageKey = (baseKey: string): string | null => {
     return user ? `uniVerse-${baseKey}-${user.uid}` : null;
   };
 
-  const loadData = <T,>(baseKey: string, fallbackData: T): T => {
+  const loadData = <T,>(keySuffix: string, fallbackData: T): T => {
     if (typeof window === 'undefined') return fallbackData;
-    const key = userLocalStorageKey(baseKey);
-    if (!key) return fallbackData; // No user, return fallback
-
+    const key = userLocalStorageKey(keySuffix);
+    if (!key) return fallbackData;
     const saved = localStorage.getItem(key);
     if (saved) {
       try { return JSON.parse(saved) as T; }
-      catch (error) { console.error(`Failed to parse ${key} from localStorage`, error); return fallbackData; }
+      catch (error) { console.error(`Failed to parse ${keySuffix} from localStorage`, error); return fallbackData; }
     }
     return fallbackData;
   };
 
-  const saveData = <T,>(baseKey: string, data: T) => {
-    if (typeof window === 'undefined' || !user) return; // No user, don't save
-    const key = userLocalStorageKey(baseKey);
+  const saveData = <T,>(keySuffix: string, data: T) => {
+    if (typeof window === 'undefined' || !user) return;
+    const key = userLocalStorageKey(keySuffix);
     if (!key) return;
     localStorage.setItem(key, JSON.stringify(data));
   };
 
-  // Profile State (This component now primarily *reads* profile for context, editing is in sidebar)
+  // Profile State (read-only for this page, edited in sidebar)
   const [studyProfile, setStudyProfile] = useState<UserProfile | null>(null);
-  // Dialog states for My Profile (now handled in UserStatsSidebar)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editForm, setEditForm] = useState<UserProfile>(initialStudyProfileData);
-
-
-  // Load profile for context (e.g., uploader name)
-  useEffect(() => {
+   useEffect(() => {
     if (user) {
-      setStudyProfile(loadData('studySphere-studyProfile', initialStudyProfileData));
+      setStudyProfile(loadData('studyProfile', null)); // Load profile for context (e.g. uploader name)
     }
   }, [user]);
 
@@ -179,12 +166,13 @@ const StudySpherePage: FC = () => {
   const [selectedStyleFilter, setSelectedStyleFilter] = useState('All');
   const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState('All');
   
-  // Centralized Connections State
+  // Centralized Connections State (read for "sent requests", write for new connections)
   const [sentRequests, setSentRequests] = useState<string[]>(() => loadData('sentRequests', []));
   const [connections, setConnections] = useState<MockStudentProfile[]>(() => loadData('connections', []));
   
   useEffect(() => { saveData('sentRequests', sentRequests); }, [sentRequests, user]);
   useEffect(() => { saveData('connections', connections); }, [connections, user]);
+
 
   // Study Groups State
   const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(() => loadData('studyGroups', initialStudyGroupsData));
@@ -249,23 +237,15 @@ const StudySpherePage: FC = () => {
     });
     setConnections(prev => {
       if (!prev.find(c => c.id === student.id)) {
-        const newConnections = [...prev, {...student, role: 'Student'}];
+        const newConnections = [...prev, {...student, role: 'Student'}]; // Add role for My Connections page
         saveData('connections', newConnections);
         return newConnections;
       }
       return prev;
     });
-    toast({ title: 'Connection Request Transmitted!', description: `Signal sent to ${student.name}. (Simulated auto-acceptance for demo). Your connections list is updated locally. Real connections coming soon!`, action: <ThumbsUp className="h-5 w-5 text-green-500" /> });
+    toast({ title: 'Connection Request Transmitted!', description: `Signal sent to ${student.name}. (Simulated auto-acceptance). Your connections list is updated locally.`, action: <ThumbsUp className="h-5 w-5 text-green-500" /> });
   };
 
-  const handleRemoveConnection = (studentId: string) => {
-    setConnections(prev => {
-        const newConnections = prev.filter(conn => conn.id !== studentId);
-        saveData('connections', newConnections);
-        return newConnections;
-    });
-    toast({ title: "Connection Severed", description: `You've disconnected from this entity.`, action: <XCircle className="h-5 w-5 text-red-500" /> });
-  };
 
   const handleCreateGroup = (e: FormEvent) => {
     e.preventDefault();
@@ -364,24 +344,6 @@ const StudySpherePage: FC = () => {
     });
   };
 
-  // Alien guide message logic
-  const [guideMessage, setGuideMessage] = useState("Welcome to the Study Sphere! Define your learning constellation and find study partners.");
-
-  useEffect(() => {
-    let newMessage = "Welcome to the Study Sphere! Your progress here is saved in your browser for this session.";
-    if (activeTab === "browse") {
-      newMessage = "Looking for study buddies? Use the filters to narrow down your search! Your choices are saved locally.";
-    } else if (activeTab === "connections") {
-      newMessage = "Here are your current connections. Remember, this is a demo, but your list is saved in your browser!";
-    } else if (activeTab === "groups") {
-      newMessage = "Form or join Study Groups! Your created groups and memberships are saved in this browser session.";
-    } else if (activeTab === "resources") {
-      newMessage = "Share or discover study materials. Uploaded resources are saved locally for this demo.";
-    } else if (activeTab === "sessions") {
-      newMessage = "Plan your study sessions here. Scheduled sessions are remembered in your browser.";
-    }
-    setGuideMessage(newMessage);
-  }, [activeTab]);
 
   const tabContentVariants = {
     hidden: { opacity: 0, y: 10 },
@@ -402,32 +364,27 @@ const StudySpherePage: FC = () => {
           <h1 className="text-4xl font-bold font-mono mb-2 bg-gradient-to-r from-primary via-accent to-primary text-transparent bg-clip-text">Study Sphere</h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Forge academic alliances in your personal corner of the UniVerse.
-          </p>
-           <p className="text-sm text-muted-foreground mt-2">
-            Your progress and profile here are saved locally in your browser for this demo session!
+            Navigate using the tabs below to manage your profile, find partners, join groups, share resources, and schedule study sessions.
           </p>
            <p className="text-sm text-muted-foreground mt-1">
-            Use the tabs below to navigate different features within the Study Sphere.
+            Your progress here is saved in your browser for this demo session!
           </p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-1 mb-8 border-b border-border pb-1">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-1 mb-8 border-b border-border pb-1">
             <TabsTrigger value="browse" className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-                <Search className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform animate-subtle-pulse" /> Find Buddies
-            </TabsTrigger>
-            <TabsTrigger value="connections"  className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-                <Link2 className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform animate-subtle-pulse" /> My Connections
+                <SearchIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Find Buddies
             </TabsTrigger>
             <TabsTrigger value="groups"  className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-                <Users className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform animate-subtle-pulse" /> Study Groups
+                <UsersIcon className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Study Groups
             </TabsTrigger>
             <TabsTrigger value="resources"  className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-                <FileText className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform animate-subtle-pulse" /> Resources
+                <FileText className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Resources
             </TabsTrigger>
             <TabsTrigger value="sessions"  className="inline-flex items-center justify-center whitespace-nowrap rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:text-accent data-[state=active]:border-accent data-[state=active]:font-semibold hover:text-accent group">
-                <CalendarCheck className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform animate-subtle-pulse" /> Sessions
+                <CalendarCheck className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" /> Sessions
             </TabsTrigger>
         </TabsList>
 
@@ -444,14 +401,14 @@ const StudySpherePage: FC = () => {
               <TabsContent value="browse" forceMount>
                 <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                   <CardHeader>
-                    <div className="flex items-center space-x-3"><Search className="h-8 w-8 text-primary animate-subtle-pulse" /><CardTitle className="text-2xl font-mono text-primary">Find Your Constellation</CardTitle></div>
-                    <CardDescription className="text-muted-foreground">Filter and search for potential study partners. Connections are saved locally!</CardDescription>
+                    <div className="flex items-center space-x-3"><SearchIcon className="h-8 w-8 text-primary animate-subtle-pulse" /><CardTitle className="text-2xl font-mono text-primary">Find Your Constellation</CardTitle></div>
+                    <CardDescription className="text-muted-foreground">Filter and search for potential study partners. Your choices are saved locally.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <Input type="search" placeholder="Search by name, skill, interest..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full bg-input placeholder:text-muted-foreground" />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <Select value={selectedCourseFilter} onValueChange={setSelectedCourseFilter}><SelectTrigger className="bg-input"><div className="flex items-center"><ListFilter className="mr-2 h-4 w-4 text-muted-foreground" />Course</div></SelectTrigger><SelectContent className="bg-popover border-primary/50">{COURSES_OPTIONS.map(course => <SelectItem key={course} value={course} className="hover:!bg-primary/20 focus:!bg-primary/20">{course}</SelectItem>)}</SelectContent></Select>
-                      <Select value={selectedStyleFilter} onValueChange={setSelectedStyleFilter}><SelectTrigger className="bg-input"><div className="flex items-center"><Palette className="mr-2 h-4 w-4 text-muted-foreground" />Learning Style</div></SelectTrigger><SelectContent className="bg-popover border-primary/50">{LEARNING_STYLES_OPTIONS.map(style => <SelectItem key={style} value={style} className="hover:!bg-primary/20 focus:!bg-primary/20">{style}</SelectItem>)}</SelectContent></Select>
+                      <Select value={selectedStyleFilter} onValueChange={setSelectedStyleFilter}><SelectTrigger className="bg-input"><div className="flex items-center"><Palette className="mr-2 h-4 w-4 text-muted-foreground" />Learning Style</div></SelectTrigger><SelectContent className="bg-popover border-primary/50">{LEARNING_STYLES_OPTIONS_FILTER.map(style => <SelectItem key={style} value={style} className="hover:!bg-primary/20 focus:!bg-primary/20">{style}</SelectItem>)}</SelectContent></Select>
                       <Select value={selectedDepartmentFilter} onValueChange={setSelectedDepartmentFilter}><SelectTrigger className="bg-input"><div className="flex items-center"><Briefcase className="mr-2 h-4 w-4 text-muted-foreground" />Department</div></SelectTrigger><SelectContent className="bg-popover border-primary/50">{DEPARTMENTS_OPTIONS.map(dept => <SelectItem key={dept} value={dept} className="hover:!bg-primary/20 focus:!bg-primary/20">{dept}</SelectItem>)}</SelectContent></Select>
                     </div>
                   </CardContent>
@@ -481,57 +438,16 @@ const StudySpherePage: FC = () => {
                         </Card>
                       ))}
                     </div>
-                  ) : (<Card className="text-center py-10 bg-background/50 border border-border/50 shadow-md"><CardContent><Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" /><h3 className="text-xl font-semibold text-primary">No Comets in This Sector</h3><p className="text-muted-foreground">Try adjusting your scan parameters (filters).</p></CardContent></Card>)}
+                  ) : (<Card className="text-center py-10 bg-background/50 border border-border/50 shadow-md"><CardContent><UsersIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" /><h3 className="text-xl font-semibold text-primary">No Comets in This Sector</h3><p className="text-muted-foreground">Try adjusting your scan parameters (filters).</p></CardContent></Card>)}
                 </div>
               </TabsContent>
-            )}
-
-            {activeTab === "connections" && (
-                <TabsContent value="connections" forceMount>
-                    <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
-                        <CardHeader>
-                            <div className="flex items-center space-x-3"><Link2 className="h-8 w-8 text-primary animate-subtle-pulse" /><CardTitle className="text-2xl font-mono text-primary">My Cosmic Connections</CardTitle></div>
-                            <CardDescription className="text-muted-foreground">View and manage your established connections. Interactions are saved locally.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {connections.length > 0 ? (
-                                <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-                                    {connections.map(conn => (
-                                        <Card key={conn.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
-                                            <div className="flex items-center space-x-4 mb-3 sm:mb-0">
-                                                <Avatar className="h-12 w-12 border-2 border-accent">
-                                                    <Image src={conn.profilePictureUrl || `https://placehold.co/80x80.png?text=${conn.name.charAt(0)}`} alt={conn.name} width={48} height={48} className="rounded-full object-cover" data-ai-hint={conn.dataAiHint || 'person avatar'}/>
-                                                    <AvatarFallback>{conn.name.charAt(0)}</AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <h3 className="font-semibold text-md text-primary">{conn.name}</h3>
-                                                    <p className="text-xs text-muted-foreground">{conn.role || conn.department} {conn.role && conn.year ? `- ${conn.year}` : conn.year || ''}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex space-x-2 self-start sm:self-center">
-                                                <Button variant="outline" size="sm" className="border-accent text-accent hover:bg-accent/10" onClick={() => toast({ title: "Message (Demo)", description: `Simulating message to ${conn.name}. Real chat coming soon!` })}>
-                                                    <MessageSquare className="mr-1 h-3 w-3" /> Message
-                                                </Button>
-                                                <Button variant="destructive" size="sm" onClick={() => handleRemoveConnection(conn.id)}>
-                                                    <XCircle className="mr-1 h-3 w-3" /> Disconnect
-                                                </Button>
-                                            </div>
-                                        </Card>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-10"><Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" /><p className="text-muted-foreground">No connections established yet. Explore the 'Find Buddies' tab!</p></div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
             )}
 
             {activeTab === "groups" && (
               <TabsContent value="groups" forceMount>
                 <Card className="shadow-xl bg-card/90 backdrop-blur-md border-primary/30">
                   <CardHeader>
-                    <div className="flex items-center space-x-3"><Users className="h-8 w-8 text-primary animate-subtle-pulse" /><CardTitle className="text-2xl font-mono text-primary">Collaborative Orbits</CardTitle></div>
+                    <div className="flex items-center space-x-3"><UsersIcon className="h-8 w-8 text-primary animate-subtle-pulse" /><CardTitle className="text-2xl font-mono text-primary">Collaborative Orbits</CardTitle></div>
                     <CardDescription className="text-muted-foreground">Form or join study constellations. Groups are saved locally.</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -670,7 +586,7 @@ const StudySpherePage: FC = () => {
                                   </div>
                                 </div>
                                 <Button onClick={() => handleJoinSession(sess.id)} variant={sess.isJoinedByCurrentUser ? "default" : "outline"} size="sm" className={sess.isJoinedByCurrentUser ? "bg-accent text-accent-foreground hover:bg-accent/80" : "border-accent text-accent hover:bg-accent/10"}>
-                                  {sess.isJoinedByCurrentUser ? <><CheckCircleIcon className="mr-2 h-4 w-4" />Joined Orbit</> : <><CalendarCheck className="mr-2 h-4 w-4" />Join Orbit</>}
+                                  {sess.isJoinedByCurrentUser ? <><CheckCircleIcon className="mr-2 h-4 w-4" />Joined Orbit</> : <><CalendarPlus className="mr-2 h-4 w-4" />Join Orbit</>}
                                 </Button>
                               </div>
                             </Card>
@@ -690,6 +606,3 @@ const StudySpherePage: FC = () => {
 };
 
 export default StudySpherePage;
-
-
-    
