@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import {
-  Brain, FlaskConical, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle, Waypoints, Pencil, CheckCircle as CheckCircleIcon, Link2 as ConnectionsIcon, Home as HomeIcon
+  Brain, FlaskConical, UsersRound, CalendarDays, MessageCircleQuestion, Lightbulb, Settings, HelpCircle, Waypoints, Pencil, CheckCircle as CheckCircleIcon, Link2 as ConnectionsIcon
 } from 'lucide-react';
 import type { MockStudentProfile } from '@/app/study-sphere/page'; // For connection object structure
 
@@ -57,7 +57,7 @@ const initialProfileData: UserProfile = {
 };
 
 const navFeatures = [
-  { href: "/", label: "UniVerse Home", icon: HomeIcon },
+  // { href: "/", label: "UniVerse Home", icon: HomeIcon }, // Removed as per request
   { href: "/study-sphere", label: "Study Sphere", icon: UsersRound },
   { href: "/event-horizon", label: "Event Horizon", icon: CalendarDays },
   { href: "/celestial-chats", label: "Celestial Chats", icon: MessageCircleQuestion },
@@ -90,9 +90,24 @@ const UserStatsSidebar: FC = () => {
       if (profileKey) {
         const savedProfile = localStorage.getItem(profileKey);
         if (savedProfile) {
-          const parsedProfile = JSON.parse(savedProfile) as UserProfile;
-          setProfile(parsedProfile);
-          setEditForm(parsedProfile); 
+          try {
+            const parsedProfile = JSON.parse(savedProfile) as UserProfile;
+            setProfile(parsedProfile);
+            setEditForm(parsedProfile); 
+          } catch (e) {
+            console.error("Error parsing profile from localStorage", e);
+            // Fallback to initial profile if parsing fails
+            const newProfile: UserProfile = {
+              ...initialProfileData,
+              id: user.uid,
+              name: user.email?.split('@')[0] || 'New Explorer',
+              profilePictureUrl: `https://placehold.co/128x128.png?text=${user.email?.[0]?.toUpperCase() || 'U'}`,
+              dataAiHint: 'student avatar',
+            };
+            setProfile(newProfile);
+            setEditForm(newProfile);
+            localStorage.setItem(profileKey, JSON.stringify(newProfile));
+          }
         } else {
           const newProfile: UserProfile = {
             ...initialProfileData,
@@ -160,7 +175,7 @@ const UserStatsSidebar: FC = () => {
     return () => {
       window.removeEventListener('connectionsUpdated', handleConnectionsUpdate);
     };
-  }, [user, isEditDialogOpen, fetchUserData, userLocalStorageKey]); // Added isEditDialogOpen to re-fetch when profile dialog interaction happens
+  }, [user, isEditDialogOpen, fetchUserData, userLocalStorageKey]);
 
 
   const handleEditProfile = () => {
@@ -222,17 +237,18 @@ const UserStatsSidebar: FC = () => {
     });
   };
 
-  if (isLoading && !profile && !user) { 
+  if (!user) { // Simplified loading: If no user, don't show sidebar (AppContent handles initial auth loading)
+    return null; 
+  }
+  
+  if (isLoading && !profile) { // Still loading profile data
     return (
       <aside className="hidden md:flex w-[25rem] h-screen flex-col border-r border-border/70 bg-card/70 backdrop-blur-sm p-6 sticky top-0 overflow-y-auto shadow-lg items-center justify-center">
-       {/* Minimal loader or nothing during very initial load if user state isn't resolved */}
+        {/* You can put a skeleton loader here if desired */}
       </aside>
     );
   }
-  
-  if (!user) { 
-    return null; 
-  }
+
 
   const skills = profile?.skills || [];
   const projectAreas = profile?.projectAreas || [];
