@@ -1,19 +1,20 @@
+
 // src/lib/firebase.ts
 import { initializeApp, getApps, type FirebaseApp, type FirebaseOptions } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
+// Your web app's Firebase configuration, directly from your Firebase project settings.
 // WARNING: Firebase configuration is hardcoded here for debugging .env issues.
 // This is NOT recommended for production.
-// Ensure these values exactly match your Firebase project settings.
 const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyCEQvpnd6j-mKoISy80gjHmKvkM_WMBsGA",
   authDomain: "universe-z7j8u.firebaseapp.com",
   projectId: "universe-z7j8u",
   storageBucket: "universe-z7j8u.firebasestorage.app",
   messagingSenderId: "21422167469",
-  appId: "1:21422167469:web:5f4adcc7702e1b1c703d24",
-  measurementId: undefined, // Explicitly undefined if not used or empty
+  appId: "1:21422167469:web:5f4adcc7702e1b1c703d24"
+  // measurementId is optional and can be omitted if not used
 };
 
 // Log the exact config being passed to Firebase
