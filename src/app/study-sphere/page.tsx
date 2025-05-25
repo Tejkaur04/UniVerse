@@ -27,15 +27,26 @@ interface StudyProfileData {
   learningStyles: string[];
 }
 
+interface PotentialMatch {
+  id: number;
+  name: string;
+  courses: string[];
+  learningStyles: string[];
+  avatar: string;
+  dataAiHint?: string;
+}
+
 const initialStudyProfile: StudyProfileData = {
   courses: ["Astrophysics 101", "Quantum Mechanics"],
   learningStyles: ["Visual", "Reading/Writing"],
 };
 
-const potentialMatches = [
+const potentialMatches: PotentialMatch[] = [
   { id: 1, name: "Alex Cosmo", courses: ["Astrophysics 101", "Calculus II"], learningStyles: ["Visual", "Kinesthetic"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person student" },
   { id: 2, name: "Nova Stellar", courses: ["Quantum Mechanics", "Organic Chemistry"], learningStyles: ["Auditory", "Reading/Writing"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person learner" },
   { id: 3, name: "Orion Byte", courses: ["Calculus II", "Astrophysics 101"], learningStyles: ["Kinesthetic", "Reading/Writing"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person tech" },
+  { id: 4, name: "Lyra Script", courses: ["Literary Theory", "History of Art"], learningStyles: ["Reading/Writing", "Auditory"], avatar: "https://placehold.co/80x80.png", dataAiHint: "writer student profile" },
+  { id: 5, name: "Draco Code", courses: ["Computer Science 101", "Calculus II"], learningStyles: ["Visual", "Kinesthetic"], avatar: "https://placehold.co/80x80.png", dataAiHint: "coder student profile" },
 ];
 
 const studyGroups = [
@@ -61,12 +72,27 @@ export default function StudySpherePage() {
   const [editCoursesInput, setEditCoursesInput] = useState('');
   const [editLearningStyles, setEditLearningStyles] = useState<string[]>([]);
 
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('');
+  const [selectedStyleFilter, setSelectedStyleFilter] = useState<string>('');
+  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(potentialMatches);
+
   useEffect(() => {
     if (isEditDialogOpen) {
         setEditCoursesInput(studyProfile.courses.join(', '));
         setEditLearningStyles([...studyProfile.learningStyles]);
     }
   }, [studyProfile, isEditDialogOpen]);
+
+  useEffect(() => {
+    let matches = [...potentialMatches];
+    if (selectedCourseFilter) {
+      matches = matches.filter(match => match.courses.includes(selectedCourseFilter));
+    }
+    if (selectedStyleFilter) {
+      matches = matches.filter(match => match.learningStyles.includes(selectedStyleFilter));
+    }
+    setFilteredMatches(matches);
+  }, [selectedCourseFilter, selectedStyleFilter]);
 
   const handleEditProfile = () => {
     setIsEditDialogOpen(true);
@@ -230,29 +256,28 @@ export default function StudySpherePage() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="course-filter" className="text-base text-foreground/90">Filter by Course:</Label>
-                  <Select onValueChange={(value) => handleDemoClick(`Filtered by course: ${value} (Demo)`)}>
+                  <Select onValueChange={(value) => setSelectedCourseFilter(value === 'all' ? '' : value)} defaultValue="">
                     <SelectTrigger id="course-filter" className="w-full bg-background/70">
                       <SelectValue placeholder="Select a course to find peers" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="all">All Courses</SelectItem>
                       {ALL_AVAILABLE_COURSES.map(course => <SelectItem key={course} value={course}>{course}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="style-filter" className="text-base text-foreground/90">Filter by Learning Style:</Label>
-                  <Select onValueChange={(value) => handleDemoClick(`Filtered by style: ${value} (Demo)`)}>
+                  <Select onValueChange={(value) => setSelectedStyleFilter(value === 'all' ? '' : value)} defaultValue="">
                     <SelectTrigger id="style-filter" className="w-full bg-background/70">
                       <SelectValue placeholder="Select a preferred learning style" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="all">All Styles</SelectItem>
                       {ALL_LEARNING_STYLES.map(style => <SelectItem key={style} value={style}>{style}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={() => handleDemoClick("Searching for partners... (Demo - results would appear below)")} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                  <Search className="mr-2 h-4 w-4" /> Search Partners
-                </Button>
               </CardContent>
             </Card>
 
@@ -261,23 +286,22 @@ export default function StudySpherePage() {
                 <CardTitle className="text-2xl flex items-center text-primary">
                     <Handshake className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Potential Study Buddies
                 </CardTitle>
-                <CardDescription>Discover students who align with your academic journey (results from search/recommendations).</CardDescription>
+                <CardDescription>Discover students who align with your academic journey (results update as you filter).</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {potentialMatches.map(match => (
+                {filteredMatches.length > 0 ? filteredMatches.map(match => (
                   <Card key={match.id} className="p-4 flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 bg-background/70 backdrop-blur-xs border-border/60 shadow-md">
                     <Image src={match.avatar} alt={match.name} data-ai-hint={match.dataAiHint} className="h-16 w-16 rounded-full object-cover" width={64} height={64} />
                     <div className="flex-grow">
                       <h4 className="font-semibold text-lg text-foreground">{match.name}</h4>
-                      <p className="text-sm text-muted-foreground">Shared Courses: {match.courses.join(', ')}</p>
+                      <p className="text-sm text-muted-foreground">Courses: {match.courses.join(', ')}</p>
                       <p className="text-sm text-muted-foreground">Learning Styles: {match.learningStyles.join(', ')}</p>
                     </div>
                     <Button onClick={() => handleDemoClick(`Connection request sent to ${match.name}! (Demo)`)} size="sm" variant="outline" className="shrink-0 self-start sm:self-center border-accent text-accent hover:bg-accent/10">
                       <UserPlus className="mr-2 h-4 w-4" /> Connect
                     </Button>
                   </Card>
-                ))}
-                {potentialMatches.length === 0 && <p className="text-muted-foreground">No specific matches found yet. Try searching or refining your profile!</p>}
+                )) : <p className="text-muted-foreground text-center">No matching buddies found for the selected filters. Try broadening your search!</p>}
               </CardContent>
             </Card>
           </div>
@@ -379,3 +403,5 @@ export default function StudySpherePage() {
     </div>
   );
 }
+
+    
