@@ -5,17 +5,27 @@ import Link from 'next/link';
 import React, { useState, useEffect, type ChangeEvent, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Telescope, CalendarDays, Search, Tag, Users, Share2, Sparkles as RecommendIcon, CheckCircle, PlusCircle, ListChecks, Info, Filter, ListFilter } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import type { LucideIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from 'framer-motion';
+
+// Define an icon map
+const iconMap: { [key: string]: LucideIcon } = {
+  CalendarDays,
+  Users,
+  Telescope, // Add any other icons you might use
+  // Add other icons as needed
+};
+
+const DefaultEventIcon = CalendarDays; // Fallback icon
 
 interface CampusEvent {
   id: string;
@@ -27,7 +37,7 @@ interface CampusEvent {
   description: string;
   organizer: string;
   tags: string[];
-  icon: LucideIcon;
+  iconName: string; // Changed from icon: LucideIcon
   dataAiHint?: string;
 }
 
@@ -42,7 +52,7 @@ const initialHardcodedEvents: CampusEvent[] = [
     description: "Join Prof. Anya Sharma as she discusses breakthroughs in quantum computing and its impact on technology.",
     organizer: "Dept. of Physics",
     tags: ["Academia", "Tech", "Physics"],
-    icon: CalendarDays,
+    iconName: "CalendarDays", // Changed
     dataAiHint: "lecture hall modern"
   },
   {
@@ -55,7 +65,7 @@ const initialHardcodedEvents: CampusEvent[] = [
     description: "Connect with leading tech companies and explore internship/job opportunities in various engineering fields.",
     organizer: "Career Services",
     tags: ["Career", "Tech", "Engineering"],
-    icon: Users,
+    iconName: "Users", // Changed
     dataAiHint: "career fair students"
   },
   {
@@ -68,7 +78,7 @@ const initialHardcodedEvents: CampusEvent[] = [
     description: "Collaborative review session for the upcoming Astrophysics 101 midterm. All welcome!",
     organizer: "Alex Cosmo (Student)",
     tags: ["Study Group", "Astrophysics"],
-    icon: Users,
+    iconName: "Users", // Changed
     dataAiHint: "students studying group"
   },
 ];
@@ -103,6 +113,8 @@ export default function EventHorizonPage() {
   const [allEvents, setAllEvents] = useState<CampusEvent[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem(getLocalStorageKey('uniVerseAllEvents'));
+      // When parsing, icons will not be functions. We need to handle this.
+      // For now, we'll re-map icon names later or ensure initial data is robust.
       return saved ? JSON.parse(saved) : initialHardcodedEvents;
     }
     return initialHardcodedEvents;
@@ -221,7 +233,7 @@ export default function EventHorizonPage() {
       description: newEventDescription,
       organizer: newEventOrganizer || "Peer Organizer",
       tags: newEventTags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      icon: Users, 
+      iconName: "Users", // Default icon for peer events
       dataAiHint: "group meeting"
     };
     setAllEvents(prevEvents => [newEvent, ...prevEvents]);
@@ -316,7 +328,7 @@ export default function EventHorizonPage() {
                 const interactions = userInteractions[event.id] || {};
                 const isRsvpd = !!interactions.rsvpd;
                 const isInterested = !!interactions.interested;
-                const Icon = event.icon; // Capitalize the icon component
+                const Icon = iconMap[event.iconName] || DefaultEventIcon;
 
                 return (
                   <Card key={event.id} className="bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300 overflow-hidden">
@@ -375,7 +387,7 @@ export default function EventHorizonPage() {
           </TabsContent>
 
           <TabsContent value="create">
-            <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+            <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30 mb-10">
               <CardHeader>
                 <CardTitle className="text-2xl flex items-center text-primary"><PlusCircle className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Launch Your Own Orbit: Create a Peer Event</CardTitle>
                 <CardDescription>Organize study sessions, club meetups, or informal gatherings for others to join. (Saved in browser).</CardDescription>
@@ -437,14 +449,14 @@ export default function EventHorizonPage() {
           </TabsContent>
 
           <TabsContent value="recommendations">
-            <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+            <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30 mb-10">
               <CardHeader>
                 <CardTitle className="text-2xl flex items-center text-primary"><RecommendIcon className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Cosmic Alignments: Recommended For You</CardTitle>
                 <CardDescription>Event suggestions based on general campus activity. (True personalization coming soon!)</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {recommendedEvents.length > 0 ? recommendedEvents.map(event => {
-                  const Icon = event.icon; // Capitalize the icon component
+                  const Icon = iconMap[event.iconName] || DefaultEventIcon;
                   return (
                   <Card key={`rec-${event.id}`} className="p-4 bg-background/50 border-border/50">
                     <div className="flex items-start space-x-3">
@@ -475,14 +487,14 @@ export default function EventHorizonPage() {
           </TabsContent>
 
           <TabsContent value="all-events">
-            <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30">
+            <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30 mb-10">
               <CardHeader>
                 <CardTitle className="text-2xl flex items-center text-primary"><ListChecks className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Celestial Timetable: All Events</CardTitle>
                 <CardDescription>A comprehensive list of all known happenings in the UniVerse.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3 max-h-[400px] overflow-y-auto">
                 {allEvents.length > 0 ? allEvents.map(event => {
-                  const Icon = event.icon; // Capitalize the icon component
+                  const Icon = iconMap[event.iconName] || DefaultEventIcon;
                   return (
                   <Card key={`all-${event.id}`} className="p-3 bg-background/40 border-border/40">
                     <div className="flex justify-between items-center">
@@ -506,6 +518,3 @@ export default function EventHorizonPage() {
     </div>
   );
 }
-    
-
-    
