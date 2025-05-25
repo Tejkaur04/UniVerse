@@ -19,8 +19,8 @@
     --secondary-foreground: 210 40% 98%;
     --muted: 230 20% 18%; /* Adjusted muted */
     --muted-foreground: 220 20% 65%; /* Softer text for muted */
-    --accent: 190 70% 60%; /* Stardust Blue - NEW */
-    --accent-foreground: 190 100% 10%; /* Dark Blue for text on accent - NEW */
+    --accent: 45 95% 60%; /* Starlight Gold/Yellow - REVERTED */
+    --accent-foreground: 45 100% 10%; /* Dark color for text on accent - REVERTED */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 25% 50%; /* Lighter, more visible borders */
@@ -55,8 +55,8 @@
     --secondary-foreground: 210 40% 98%;
     --muted: 230 20% 18%;
     --muted-foreground: 220 20% 65%;
-    --accent: 190 70% 60%; /* Stardust Blue - NEW */
-    --accent-foreground: 190 100% 10%; /* Dark Blue for text on accent - NEW */
+    --accent: 45 95% 60%; /* Starlight Gold/Yellow - REVERTED */
+    --accent-foreground: 45 100% 10%; /* Dark color for text on accent - REVERTED */
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 25% 50%;
