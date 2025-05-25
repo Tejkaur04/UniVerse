@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,12 +36,21 @@ interface PotentialMatch {
   dataAiHint?: string;
 }
 
+interface StudyGroup {
+  id: number;
+  name: string;
+  courses: string[];
+  members: number;
+  description: string;
+}
+
+
 const initialStudyProfile: StudyProfileData = {
   courses: ["Astrophysics 101", "Quantum Mechanics"],
   learningStyles: ["Visual", "Reading/Writing"],
 };
 
-const potentialMatches: PotentialMatch[] = [
+const initialPotentialMatches: PotentialMatch[] = [
   { id: 1, name: "Alex Cosmo", courses: ["Astrophysics 101", "Calculus II"], learningStyles: ["Visual", "Kinesthetic"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person student" },
   { id: 2, name: "Nova Stellar", courses: ["Quantum Mechanics", "Organic Chemistry"], learningStyles: ["Auditory", "Reading/Writing"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person learner" },
   { id: 3, name: "Orion Byte", courses: ["Calculus II", "Astrophysics 101"], learningStyles: ["Kinesthetic", "Reading/Writing"], avatar: "https://placehold.co/80x80.png", dataAiHint: "profile person tech" },
@@ -49,7 +58,7 @@ const potentialMatches: PotentialMatch[] = [
   { id: 5, name: "Draco Code", courses: ["Computer Science 101", "Calculus II"], learningStyles: ["Visual", "Kinesthetic"], avatar: "https://placehold.co/80x80.png", dataAiHint: "coder student profile" },
 ];
 
-const studyGroups = [
+const initialStudyGroups: StudyGroup[] = [
   { id: 1, name: "Quantum Leapsters", courses: ["Quantum Mechanics"], members: 3, description: "Mastering the quantum realm together." },
   { id: 2, name: "Astro Alliance", courses: ["Astrophysics 101"], members: 5, description: "Exploring the cosmos, one equation at a time." },
 ];
@@ -74,7 +83,14 @@ export default function StudySpherePage() {
 
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>('');
   const [selectedStyleFilter, setSelectedStyleFilter] = useState<string>('');
-  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(potentialMatches);
+  const [filteredMatches, setFilteredMatches] = useState<PotentialMatch[]>(initialPotentialMatches);
+
+  const [studyGroups, setStudyGroups] = useState<StudyGroup[]>(initialStudyGroups);
+  const [isCreateGroupDialogOpen, setIsCreateGroupDialogOpen] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupCourses, setNewGroupCourses] = useState('');
+  const [newGroupDescription, setNewGroupDescription] = useState('');
+
 
   useEffect(() => {
     if (isEditDialogOpen) {
@@ -84,11 +100,11 @@ export default function StudySpherePage() {
   }, [studyProfile, isEditDialogOpen]);
 
   useEffect(() => {
-    let matches = [...potentialMatches];
-    if (selectedCourseFilter) {
+    let matches = [...initialPotentialMatches];
+    if (selectedCourseFilter && selectedCourseFilter !== 'all') {
       matches = matches.filter(match => match.courses.includes(selectedCourseFilter));
     }
-    if (selectedStyleFilter) {
+    if (selectedStyleFilter && selectedStyleFilter !== 'all') {
       matches = matches.filter(match => match.learningStyles.includes(selectedStyleFilter));
     }
     setFilteredMatches(matches);
@@ -117,6 +133,33 @@ export default function StudySpherePage() {
     );
   };
 
+  const handleCreateGroup = () => {
+    if (!newGroupName.trim() || !newGroupCourses.trim() || !newGroupDescription.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill out all fields for the new group.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const newGroup: StudyGroup = {
+      id: Date.now(), // Simple unique ID
+      name: newGroupName.trim(),
+      courses: newGroupCourses.split(',').map(c => c.trim()).filter(c => c),
+      members: 1, // Starts with the creator
+      description: newGroupDescription.trim(),
+    };
+    setStudyGroups(prevGroups => [newGroup, ...prevGroups]);
+    setIsCreateGroupDialogOpen(false);
+    setNewGroupName('');
+    setNewGroupCourses('');
+    setNewGroupDescription('');
+    toast({
+      title: "Study Group Created!",
+      description: `The group "${newGroup.name}" has been successfully created.`,
+    });
+  };
+
   const handleDemoClick = (message: string) => {
     toast({
       title: "Demo Action",
@@ -139,10 +182,10 @@ export default function StudySpherePage() {
           <h1 className="text-4xl font-bold text-primary">Study Sphere</h1>
         </div>
         <p className="text-xl text-center text-muted-foreground mb-4">
-          Your cosmic hub for collaborative learning! Define your profile, find partners, join groups, and more.
+          Your cosmic hub for collaborative learning! Find partners, join groups, and share knowledge.
         </p>
         <p className="text-md text-center text-foreground/80 mb-10">
-          Navigate your academic journey by connecting with fellow students. Let's make learning a shared adventure! Welcome to your personal constellation for academic success!
+          Welcome to your personal constellation for academic success! Define your study preferences and connect with fellow learners on a shared journey through the stars of knowledge.
         </p>
       </div>
 
@@ -316,9 +359,62 @@ export default function StudySpherePage() {
               <CardDescription>Launch your own study group or join an existing constellation of learners.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Button onClick={() => handleDemoClick("Navigating to 'Create New Group' form... (Demo)")} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
-                <Users className="mr-2 h-4 w-4" /> Create New Group
-              </Button>
+                <Dialog open={isCreateGroupDialogOpen} onOpenChange={setIsCreateGroupDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button onClick={() => setIsCreateGroupDialogOpen(true)} className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                            <Users className="mr-2 h-4 w-4" /> Create New Group
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[480px] bg-card border-accent/50">
+                        <DialogHeader>
+                            <DialogTitle className="text-primary">Create a New Study Group</DialogTitle>
+                            <DialogDescription>
+                            Fill in the details to launch your new study group constellation!
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="space-y-1">
+                                <Label htmlFor="group-name" className="text-foreground/90">Group Name</Label>
+                                <Input 
+                                    id="group-name" 
+                                    value={newGroupName} 
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setNewGroupName(e.target.value)} 
+                                    placeholder="e.g., Quantum Physicists United" 
+                                    className="bg-background/70"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="group-courses" className="text-foreground/90">Relevant Courses (comma-separated)</Label>
+                                <Input 
+                                    id="group-courses" 
+                                    value={newGroupCourses} 
+                                    onChange={(e: ChangeEvent<HTMLInputElement>) => setNewGroupCourses(e.target.value)} 
+                                    placeholder="e.g., Quantum Mechanics, Astrophysics 101"
+                                    className="bg-background/70"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="group-description" className="text-foreground/90">Description</Label>
+                                <Textarea 
+                                    id="group-description" 
+                                    value={newGroupDescription} 
+                                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewGroupDescription(e.target.value)} 
+                                    placeholder="What's your group about? What are your goals?"
+                                    className="min-h-[80px] bg-background/70"
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button type="button" variant="outline">Cancel</Button>
+                            </DialogClose>
+                            <Button type="button" onClick={handleCreateGroup} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                                Create Group
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
               <Separator className="my-6 bg-border/50" />
               <h3 className="font-semibold text-lg mb-2 text-foreground">Join Existing Groups:</h3>
               {studyGroups.map(group => (
@@ -336,7 +432,7 @@ export default function StudySpherePage() {
                   </div>
                 </Card>
               ))}
-              {studyGroups.length === 0 && <p className="text-muted-foreground">No study groups found. Why not create one?</p>}
+              {studyGroups.length === 0 && <p className="text-muted-foreground text-center py-4">No study groups found. Why not create one?</p>}
             </CardContent>
           </Card>
         </TabsContent>
@@ -403,5 +499,3 @@ export default function StudySpherePage() {
     </div>
   );
 }
-
-    
