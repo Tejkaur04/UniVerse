@@ -130,7 +130,8 @@ function AppContent({ children }: { children: ReactNode }) {
                             </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={async () => {
-                          await logout(); 
+                          // await logout(); // Mock logout doesn't need to be async
+                          logout(); 
                           router.push('/login');
                         }} className="hover:!bg-primary/20 focus:!bg-primary/20 cursor-pointer">
                           <LogOut className="mr-2 h-4 w-4" />
@@ -152,9 +153,9 @@ function AppContent({ children }: { children: ReactNode }) {
               </div>
             </header>
             <main className={cn(
-              "flex-1 flex flex-col py-8 z-10 relative", // Removed items-center
+              "flex-1 flex flex-col py-8 z-10 relative", 
               showSidebarAndGuide ? "md:ml-[25rem]" : "", 
-              "px-4 md:pl-0 md:pr-1" 
+              "px-4 md:px-0" // Changed from md:pl-0 md:pr-1 to md:px-0
             )}>
               <div className="w-full max-w-7xl">
                 {children}
