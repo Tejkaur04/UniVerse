@@ -8,13 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger } from "@/components/ui/dialog"; 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose, DialogTrigger, DialogFooter } from "@/components/ui/dialog"; 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from '@/contexts/AuthContext'; 
 import { Badge } from '@/components/ui/badge';
 import {
-  ArrowLeft, CalendarDays, Search, Tags, CheckCircle, Star, Share2, PlusCircle, Telescope, Rocket, Users, ListFilter,
+  CalendarDays, Search, Tags, CheckCircle, Star, Share2, PlusCircle, Telescope, Rocket, Users, ListFilter,
   CalendarCheck, Info, Filter as FilterIcon, Eye, Compass, CalendarPlus, Home
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -67,11 +66,10 @@ const initialHardcodedEvents: CampusEvent[] = [
 
 
 const EventHorizonPage: FC = () => {
-  const { user } = useAuth(); 
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("discover");
 
-  const userLocalStorageKey = (dataKey: string) => user ? `uniVerse-eventHorizon-${dataKey}-${user.uid}` : `uniVerse-eventHorizon-${dataKey}-guest`;
+  const userLocalStorageKey = (dataKey: string) => `uniVerse-eventHorizon-${dataKey}-mockUser`; // Simplified key for demo
 
   const loadData = <T,>(keySuffix: string, fallbackData: T): T => {
     if (typeof window === 'undefined') return fallbackData;
@@ -89,8 +87,9 @@ const EventHorizonPage: FC = () => {
   };
 
   const saveData = <T,>(keySuffix: string, data: T) => {
-    if (typeof window === 'undefined' || !user) return;
-    localStorage.setItem(userLocalStorageKey(keySuffix), JSON.stringify(data));
+    if (typeof window === 'undefined') return;
+    const key = userLocalStorageKey(keySuffix);
+    localStorage.setItem(key, JSON.stringify(data));
   };
 
   const [allEvents, setAllEvents] = useState<CampusEvent[]>(() => loadData('allEvents', initialHardcodedEvents));
@@ -108,8 +107,8 @@ const EventHorizonPage: FC = () => {
   const [newEventOrganizer, setNewEventOrganizer] = useState('');
   const [newEventTags, setNewEventTags] = useState('');
 
-  useEffect(() => { saveData('allEvents', allEvents); }, [allEvents, user]);
-  useEffect(() => { saveData('userEventInteractions', userInteractions); }, [userInteractions, user]);
+  useEffect(() => { saveData('allEvents', allEvents); }, [allEvents]);
+  useEffect(() => { saveData('userEventInteractions', userInteractions); }, [userInteractions]);
 
   useEffect(() => {
     let filtered = allEvents;
@@ -154,10 +153,10 @@ const EventHorizonPage: FC = () => {
       time: newEventTime,
       location: newEventLocation || 'To Be Announced',
       description: newEventDescription,
-      organizer: newEventOrganizer || (user?.email?.split('@')[0] || 'Peer'),
+      organizer: newEventOrganizer || 'Peer Organizer',
       tags: newEventTags.split(',').map(tag => tag.trim()).filter(tag => tag),
       type: 'peer',
-      iconName: 'Users',
+      iconName: 'Users', // Default icon for peer events
     };
     setAllEvents(prev => [newEvent, ...prev]);
     setIsCreateEventDialogOpen(false);
@@ -177,7 +176,7 @@ const EventHorizonPage: FC = () => {
   };
 
   return (
-    <div className="w-full">
+    <div className="container mx-auto px-4 py-12 w-full max-w-5xl">
       <div className="mb-8">
         <Button asChild variant="outline" className="mb-6 bg-card hover:bg-accent hover:text-accent-foreground border-primary/30 hover:border-accent">
           <Link href="/">
@@ -244,7 +243,7 @@ const EventHorizonPage: FC = () => {
                         variant={selectedTag === tag ? "default" : "outline"}
                         size="sm"
                         onClick={() => setSelectedTag(tag)}
-                        className={`transition-all ${selectedTag === tag ? 'bg-accent text-accent-foreground scale-105' : 'border-primary/40 text-primary hover:bg-primary/10'}`}
+                        className={`transition-all ${selectedTag === tag ? 'bg-accent text-accent-foreground scale-105' : 'border-accent/40 text-accent hover:bg-accent/10'}`}
                     >
                         {tag}
                     </Button>
@@ -256,16 +255,16 @@ const EventHorizonPage: FC = () => {
             {displayedEvents.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {displayedEvents.map(event => {
-                    const Icon = iconMap[event.iconName] || iconMap.DefaultEventIcon;
+                    const IconComponent = iconMap[event.iconName] || iconMap.DefaultEventIcon;
                     const isRsvpd = userInteractions[event.id]?.rsvpd;
                     const isInterested = userInteractions[event.id]?.interested;
                     return (
                     <Card key={event.id} className="flex flex-col bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                         <CardHeader className="pb-3">
                         <div className="flex items-start space-x-3">
-                            <Icon className="h-10 w-10 text-accent mt-1 shrink-0" />
+                            <IconComponent className="h-10 w-10 text-accent mt-1 shrink-0" />
                             <div className="flex-grow">
-                            <CardTitle className="text-xl text-primary">{event.title}</CardTitle> {/* Adjusted size */}
+                            <CardTitle className="text-2xl text-primary">{event.title}</CardTitle>
                             <CardDescription className="text-sm">Organized by: {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-2 text-xs bg-primary/20 text-primary-foreground'>{event.type === 'official' ? 'Official Event' : 'Peer Event'}</Badge></CardDescription>
                             </div>
                         </div>
@@ -351,16 +350,16 @@ const EventHorizonPage: FC = () => {
                     {recommendedEvents.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {recommendedEvents.map(event => {
-                             const Icon = iconMap[event.iconName] || iconMap.DefaultEventIcon;
+                             const IconComponent = iconMap[event.iconName] || iconMap.DefaultEventIcon;
                              const isRsvpd = userInteractions[event.id]?.rsvpd;
                              const isInterested = userInteractions[event.id]?.interested;
                             return (
                             <Card key={event.id} className="flex flex-col bg-background/50 border border-border/50 shadow-md hover:border-border/70 hover:shadow-lg transition-all duration-300">
                                 <CardHeader className="pb-3">
                                 <div className="flex items-start space-x-3">
-                                     <Icon className="h-8 w-8 text-accent mt-1 shrink-0" />
+                                     <IconComponent className="h-8 w-8 text-accent mt-1 shrink-0" />
                                     <div>
-                                        <CardTitle className="text-xl text-primary">{event.title}</CardTitle>
+                                        <CardTitle className="text-2xl text-primary">{event.title}</CardTitle>
                                         <CardDescription className="text-xs">By: {event.organizer}</CardDescription>
                                     </div>
                                 </div>
@@ -402,13 +401,13 @@ const EventHorizonPage: FC = () => {
                 <CardContent className="max-h-[60vh] overflow-y-auto pr-2 space-y-3">
                     {allEvents.length > 0 ? (
                         allEvents.map(event => {
-                             const Icon = iconMap[event.iconName] || iconMap.DefaultEventIcon;
+                             const IconComponent = iconMap[event.iconName] || iconMap.DefaultEventIcon;
                              const isRsvpd = userInteractions[event.id]?.rsvpd;
                              const isInterested = userInteractions[event.id]?.interested;
                             return (
                             <Card key={event.id} className="p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-background/50 border border-border/50 shadow-sm hover:border-border/70 hover:shadow-md transition-all duration-300">
                                 <div className="flex items-center space-x-3">
-                                     <Icon className="h-7 w-7 text-accent shrink-0" />
+                                     <IconComponent className="h-7 w-7 text-accent shrink-0" />
                                     <div>
                                         <h4 className="font-medium text-primary text-sm">{event.title}</h4>
                                         <p className="text-xs text-muted-foreground">{event.date} @ {event.time} | By: {event.organizer} | Type: {event.type}</p>
