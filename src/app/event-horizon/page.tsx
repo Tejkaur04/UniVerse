@@ -2,14 +2,18 @@
 "use client";
 
 import Link from 'next/link';
-import React, { useState, useEffect, type ChangeEvent } from 'react';
+import React, { useState, useEffect, type ChangeEvent, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Telescope, CalendarDays, Search, Tag, Users, Share2, Sparkles as RecommendIcon, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Telescope, CalendarDays, Search, Tag, Users, Share2, Sparkles as RecommendIcon, CheckCircle, PlusCircle, ListChecks, Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import type { LucideIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 
 interface CampusEvent {
   id: string;
@@ -65,32 +69,6 @@ const initialHardcodedEvents: CampusEvent[] = [
     icon: Users,
     dataAiHint: "students studying group"
   },
-  {
-    id: "event4",
-    type: 'official',
-    title: "Digital Art Workshop: Intro to Procreate",
-    date: "December 2, 2024",
-    time: "2:00 PM - 5:00 PM UTC",
-    location: "Fine Arts Studio C",
-    description: "Learn the basics of digital painting and illustration using Procreate on iPad. No prior experience needed.",
-    organizer: "Arts Department",
-    tags: ["Arts", "Workshop", "Digital Art"],
-    icon: CalendarDays, // Using CalendarDays, could be Brush or similar if available
-    dataAiHint: "digital art workshop"
-  },
-  {
-    id: "event5",
-    type: 'peer',
-    title: "UniVerse App Feedback Session",
-    date: "December 5, 2024",
-    time: "4:00 PM UTC",
-    location: "Student Union Room 101 / Virtual",
-    description: "Help shape the future of UniVerse! Join us to share your feedback and ideas for new features.",
-    organizer: "UniVerse Dev Team (Student Lead)",
-    tags: ["Tech", "Feedback", "Community"],
-    icon: Users,
-    dataAiHint: "students discussion group"
-  }
 ];
 
 const allInterestTags = ["All", "Academia", "Tech", "Physics", "Career", "Engineering", "Study Group", "Astrophysics", "Arts", "Workshop", "Digital Art", "Feedback", "Community", "Social"];
@@ -103,9 +81,7 @@ interface UserEventInteractions {
 }
 
 const getLocalStorageKey = (baseKey: string) => {
-  // In a real app, you'd use a user ID here if authentication was in place.
-  // For mock auth, we can use a generic key or a mock user ID if available.
-  const mockUserId = "demoUser123"; // Example mock user ID
+  const mockUserId = "demoUser123"; 
   return `${baseKey}-${mockUserId}`;
 };
 
@@ -115,15 +91,31 @@ export default function EventHorizonPage() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('All');
-  const [displayedEvents, setDisplayedEvents] = useState<CampusEvent[]>(initialHardcodedEvents);
+  const [allEvents, setAllEvents] = useState<CampusEvent[]>([]);
+  const [displayedEvents, setDisplayedEvents] = useState<CampusEvent[]>([]);
   const [userInteractions, setUserInteractions] = useState<UserEventInteractions>({});
 
-  // Load interactions from localStorage on mount
+  const [isCreateEventDialogOpen, setIsCreateEventDialogOpen] = useState(false);
+  const [newEventTitle, setNewEventTitle] = useState('');
+  const [newEventDate, setNewEventDate] = useState('');
+  const [newEventTime, setNewEventTime] = useState('');
+  const [newEventLocation, setNewEventLocation] = useState('');
+  const [newEventDescription, setNewEventDescription] = useState('');
+  const [newEventOrganizer, setNewEventOrganizer] = useState('Peer Organizer');
+  const [newEventTags, setNewEventTags] = useState('');
+
+  // Load data from localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedInteractions = localStorage.getItem(getLocalStorageKey('uniVerseEventInteractions'));
       if (savedInteractions) {
         setUserInteractions(JSON.parse(savedInteractions));
+      }
+      const savedEvents = localStorage.getItem(getLocalStorageKey('uniVerseAllEvents'));
+      if (savedEvents) {
+        setAllEvents(JSON.parse(savedEvents));
+      } else {
+        setAllEvents(initialHardcodedEvents);
       }
     }
   }, []);
@@ -134,10 +126,17 @@ export default function EventHorizonPage() {
       localStorage.setItem(getLocalStorageKey('uniVerseEventInteractions'), JSON.stringify(userInteractions));
     }
   }, [userInteractions]);
+
+  // Save allEvents to localStorage when they change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && allEvents.length > 0) { // Only save if allEvents is populated to avoid overwriting with empty on initial load
+      localStorage.setItem(getLocalStorageKey('uniVerseAllEvents'), JSON.stringify(allEvents));
+    }
+  }, [allEvents]);
   
   // Filter events based on search term and selected tag
   useEffect(() => {
-    let filtered = initialHardcodedEvents;
+    let filtered = [...allEvents];
 
     if (searchTerm) {
       filtered = filtered.filter(event =>
@@ -150,7 +149,7 @@ export default function EventHorizonPage() {
       filtered = filtered.filter(event => event.tags.includes(selectedTag));
     }
     setDisplayedEvents(filtered);
-  }, [searchTerm, selectedTag]);
+  }, [searchTerm, selectedTag, allEvents]);
 
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -198,6 +197,48 @@ export default function EventHorizonPage() {
       duration: 3000,
     });
   };
+
+  const handleCreateEvent = () => {
+    if (!newEventTitle || !newEventDate || !newEventTime || !newEventLocation || !newEventDescription) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill out all required fields for the new event.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const newEvent: CampusEvent = {
+      id: `peer-${Date.now()}`,
+      type: 'peer',
+      title: newEventTitle,
+      date: newEventDate,
+      time: newEventTime,
+      location: newEventLocation,
+      description: newEventDescription,
+      organizer: newEventOrganizer || "Peer Organizer",
+      tags: newEventTags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      icon: Users, // Default icon for peer events
+      dataAiHint: "group meeting"
+    };
+    setAllEvents(prevEvents => [newEvent, ...prevEvents]);
+    setIsCreateEventDialogOpen(false);
+    // Reset form fields
+    setNewEventTitle('');
+    setNewEventDate('');
+    setNewEventTime('');
+    setNewEventLocation('');
+    setNewEventDescription('');
+    setNewEventOrganizer('Peer Organizer');
+    setNewEventTags('');
+    toast({
+      title: "Peer Event Created!",
+      description: `Your event "${newEvent.title}" has been added and saved in your browser.`,
+    });
+  };
+
+  const recommendedEvents = useMemo(() => {
+    return allEvents.filter(event => !(userInteractions[event.id]?.rsvpd || userInteractions[event.id]?.interested)).slice(0, 2);
+  }, [allEvents, userInteractions]);
   
   return (
     <div className="container mx-auto px-4 py-12 w-full max-w-4xl">
@@ -213,7 +254,7 @@ export default function EventHorizonPage() {
           <h1 className="text-4xl font-bold text-primary font-mono">Event Horizon</h1>
         </div>
         <p className="text-xl text-center text-muted-foreground mb-6">
-          Discover exciting campus events, workshops, and seminars. Your telescope to opportunities! Your preferences are saved locally in your browser.
+          Discover exciting campus events, workshops, and seminars. Your telescope to opportunities! Your preferences & created events are saved locally in your browser.
         </p>
       </div>
       
@@ -249,7 +290,7 @@ export default function EventHorizonPage() {
         </CardContent>
       </Card>
 
-      <div className="space-y-8">
+      <div className="space-y-8 mb-10">
         {displayedEvents.length > 0 ? displayedEvents.map(event => {
           const interactions = userInteractions[event.id] || {};
           const isRsvpd = !!interactions.rsvpd;
@@ -262,7 +303,7 @@ export default function EventHorizonPage() {
                     <event.icon className="h-10 w-10 text-accent mt-1 shrink-0" />
                     <div className="flex-grow">
                       <CardTitle className="text-2xl text-primary">{event.title}</CardTitle>
-                      <CardDescription className="text-sm">Organized by: {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-2 text-xs'>{event.type === 'official' ? 'Official' : 'Peer Event'}</Badge></CardDescription>
+                      <CardDescription className="text-sm">Organized by: {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-2 text-xs'>{event.type === 'official' ? 'Official Event' : 'Peer Event'}</Badge></CardDescription>
                     </div>
                   </div>
               </CardHeader>
@@ -310,20 +351,120 @@ export default function EventHorizonPage() {
         )}
       </div>
 
-       <Card className="mt-12 bg-card/80 backdrop-blur-sm border-primary/30 shadow-lg p-6 text-left">
-          <CardTitle className="text-2xl text-primary mb-3 flex items-center">
-            <RecommendIcon className="h-7 w-7 mr-3 text-accent animate-pulse" />
-            Future Discoveries (Coming Soon!):
-          </CardTitle>
-          <ul className="list-disc list-inside space-y-2 text-foreground/90">
-            <li><strong className="text-accent/90">Comprehensive Calendar View:</strong> Visualize all campus events, workshops, and seminars in a traditional calendar format.</li>
-            <li><strong className="text-accent/90">Personalized Recommendations:</strong> Get event suggestions based on your profile and expressed interests!</li>
-            <li><strong className="text-accent/90">Create Peer Events:</strong> Organize and list your own study sessions or informal gatherings for others to join.</li>
-          </ul>
-          <p className="mt-4 text-center text-primary font-semibold">Stay tuned, explorer! The Event Horizon is always expanding.</p>
-        </Card>
+      <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30 mb-10">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center text-primary"><PlusCircle className="mr-3 h-7 w-7 text-accent" />Launch Your Own Orbit: Create a Peer Event</CardTitle>
+          <CardDescription>Organize study sessions, club meetups, or informal gatherings for others to join. (Saved in browser).</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Dialog open={isCreateEventDialogOpen} onOpenChange={setIsCreateEventDialogOpen}>
+                <DialogTrigger asChild>
+                    <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground">
+                        <PlusCircle className="mr-2 h-4 w-4" /> Create New Peer Event
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[480px] bg-card border-accent/50">
+                    <DialogHeader>
+                        <DialogTitle className="text-primary">Create New Peer Event</DialogTitle>
+                        <DialogDescription>
+                            Share details about your gathering. It will be listed for other UniVerse explorers.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-3 py-4 max-h-[60vh] overflow-y-auto px-2">
+                        <div className="space-y-1">
+                            <Label htmlFor="event-title">Event Title</Label>
+                            <Input id="event-title" value={newEventTitle} onChange={(e) => setNewEventTitle(e.target.value)} placeholder="e.g., Midterm Study Sesh" className="bg-background/70" />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="event-date">Date</Label>
+                            <Input id="event-date" value={newEventDate} onChange={(e) => setNewEventDate(e.target.value)} placeholder="e.g., November 30, 2024" className="bg-background/70" />
+                        </div>
+                         <div className="space-y-1">
+                            <Label htmlFor="event-time">Time</Label>
+                            <Input id="event-time" value={newEventTime} onChange={(e) => setNewEventTime(e.target.value)} placeholder="e.g., 7:00 PM UTC" className="bg-background/70" />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="event-location">Location / Link</Label>
+                            <Input id="event-location" value={newEventLocation} onChange={(e) => setNewEventLocation(e.target.value)} placeholder="e.g., Library Cafe / Virtual Meet Link" className="bg-background/70" />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="event-description">Description</Label>
+                            <Textarea id="event-description" value={newEventDescription} onChange={(e) => setNewEventDescription(e.target.value)} placeholder="What's your event about?" className="min-h-[80px] bg-background/70" />
+                        </div>
+                         <div className="space-y-1">
+                            <Label htmlFor="event-organizer">Organizer Name (Optional)</Label>
+                            <Input id="event-organizer" value={newEventOrganizer} onChange={(e) => setNewEventOrganizer(e.target.value)} placeholder="Your Name / Group Name" className="bg-background/70" />
+                        </div>
+                        <div className="space-y-1">
+                            <Label htmlFor="event-tags">Tags (comma-separated)</Label>
+                            <Input id="event-tags" value={newEventTags} onChange={(e) => setNewEventTags(e.target.value)} placeholder="e.g., Study Group, Coding, Fun" className="bg-background/70" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                            <Button type="button" variant="outline">Cancel</Button>
+                        </DialogClose>
+                        <Button type="button" onClick={handleCreateEvent} className="bg-primary hover:bg-primary/90 text-primary-foreground">Create Event</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30 mb-10">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center text-primary"><RecommendIcon className="mr-3 h-7 w-7 text-accent animate-subtle-pulse" />Cosmic Alignments: Recommended For You</CardTitle>
+          <CardDescription>Event suggestions based on general campus activity. (True personalization coming soon!)</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {recommendedEvents.length > 0 ? recommendedEvents.map(event => (
+            <Card key={`rec-${event.id}`} className="p-4 bg-background/50 border-border/50">
+               <div className="flex items-start space-x-3">
+                <event.icon className="h-8 w-8 text-accent mt-1 shrink-0" />
+                <div className="flex-grow">
+                  <h4 className="font-semibold text-lg text-foreground">{event.title}</h4>
+                  <p className="text-sm text-muted-foreground">Organized by: {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-1 text-xs'>{event.type === 'official' ? 'Official' : 'Peer Event'}</Badge></p>
+                  <p className="text-sm text-muted-foreground">Date: {event.date} at {event.time}</p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2 justify-end">
+                 <Button onClick={() => handleDemoAction(`Viewing details for ${event.title}`)} size="sm" variant="outline"><Info className="mr-1 h-4 w-4" />Details</Button>
+                 <Button 
+                    onClick={() => toggleRsvp(event.id, event.title)} 
+                    size="sm" 
+                    variant={(userInteractions[event.id]?.rsvpd) ? "default" : "outline"}
+                    className={(userInteractions[event.id]?.rsvpd) ? 'bg-primary hover:bg-primary/90 text-primary-foreground' : 'border-primary text-primary hover:bg-primary/10'}
+                  >
+                   {(userInteractions[event.id]?.rsvpd) ? <CheckCircle className="mr-1 h-4 w-4" /> : <CalendarDays className="mr-1 h-4 w-4" />}
+                   {(userInteractions[event.id]?.rsvpd) ? "RSVP'd" : "RSVP"}
+                  </Button>
+              </div>
+            </Card>
+          )) : <p className="text-muted-foreground text-center">No specific recommendations right now. Explore all events below!</p>}
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-xl bg-card/80 backdrop-blur-sm border-primary/30 mb-10">
+        <CardHeader>
+          <CardTitle className="text-2xl flex items-center text-primary"><ListChecks className="mr-3 h-7 w-7 text-accent" />Celestial Timetable: All Events</CardTitle>
+          <CardDescription>A comprehensive list of all known happenings in the UniVerse.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 max-h-[400px] overflow-y-auto">
+          {allEvents.length > 0 ? allEvents.map(event => (
+             <Card key={`all-${event.id}`} className="p-3 bg-background/40 border-border/40">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h5 className="font-medium text-foreground">{event.title}</h5>
+                  <p className="text-xs text-muted-foreground">{event.date} - {event.organizer} <Badge variant={event.type === 'official' ? 'secondary' : 'outline'} className='ml-1 text-xs'>{event.type === 'official' ? 'Official' : 'Peer'}</Badge></p>
+                </div>
+                <Button onClick={() => handleDemoAction(`Viewing details for ${event.title}`)} size="sm" variant="ghost" className="text-accent hover:text-accent/80">Details</Button>
+              </div>
+            </Card>
+          )) : <p className="text-muted-foreground text-center">No events listed. Be the first to create a peer event!</p>}
+        </CardContent>
+      </Card>
+
     </div>
   );
 }
-
     
