@@ -2,6 +2,7 @@
 "use client";
 
 import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,13 +11,23 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, UsersRound, Pencil, SearchIcon, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, Brain, Share2, MessageSquare } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, UsersRound, Pencil, SearchIcon, UserPlus, Users, UploadCloud, Download, CalendarPlus, BookOpen, Group, FileText, Clock, UserCircle, Search, Handshake, Brain } from 'lucide-react';
 import Image from 'next/image';
 
-const hardcodedCourses = ["Astrophysics 101", "Quantum Mechanics", "Calculus II", "Organic Chemistry", "Literary Theory"];
-const learningStyles = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
+// Hardcoded initial data
+const ALL_AVAILABLE_COURSES = ["Astrophysics 101", "Quantum Mechanics", "Calculus II", "Organic Chemistry", "Literary Theory", "Computer Science 101", "History of Art"];
+const ALL_LEARNING_STYLES = ["Visual", "Auditory", "Kinesthetic", "Reading/Writing"];
 
-const studyProfile = {
+interface StudyProfileData {
+  courses: string[];
+  learningStyles: string[];
+}
+
+const initialStudyProfile: StudyProfileData = {
   courses: ["Astrophysics 101", "Quantum Mechanics"],
   learningStyles: ["Visual", "Reading/Writing"],
 };
@@ -44,6 +55,47 @@ const studySessions = [
 
 export default function StudySpherePage() {
   const { toast } = useToast();
+  const [studyProfile, setStudyProfile] = useState<StudyProfileData>(initialStudyProfile);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  // Temporary state for the edit dialog form
+  const [editCoursesInput, setEditCoursesInput] = useState(studyProfile.courses.join(', '));
+  const [editLearningStyles, setEditLearningStyles] = useState<string[]>(studyProfile.learningStyles);
+
+  useEffect(() => {
+    // When the dialog is opened, or studyProfile changes, reset the dialog's form fields
+    // to reflect the current studyProfile.
+    if (isEditDialogOpen) { 
+        setEditCoursesInput(studyProfile.courses.join(', '));
+        setEditLearningStyles([...studyProfile.learningStyles]);
+    }
+  }, [studyProfile, isEditDialogOpen]); 
+
+  const handleEditProfile = () => {
+    // This ensures the dialog opens with the most current profile data
+    setEditCoursesInput(studyProfile.courses.join(', '));
+    setEditLearningStyles([...studyProfile.learningStyles]);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveProfile = () => {
+    const updatedCourses = editCoursesInput.split(',').map(course => course.trim()).filter(course => course !== "");
+    setStudyProfile({
+      courses: updatedCourses,
+      learningStyles: editLearningStyles,
+    });
+    setIsEditDialogOpen(false);
+    toast({
+      title: "Profile Updated",
+      description: "Your study profile has been saved locally.",
+    });
+  };
+
+  const handleLearningStyleChange = (style: string, checked: boolean) => {
+    setEditLearningStyles(prevStyles =>
+      checked ? [...prevStyles, style] : prevStyles.filter(s => s !== style)
+    );
+  };
 
   const handleDemoClick = (message: string) => {
     toast({
@@ -113,9 +165,58 @@ export default function StudySpherePage() {
                   {studyProfile.learningStyles.length === 0 && <p className="text-sm text-muted-foreground">Specify your preferred learning styles!</p>}
                 </div>
               </div>
-              <Button onClick={() => handleDemoClick("Navigating to profile edit page... (Demo)")} variant="outline" className="mt-2 border-accent text-accent hover:bg-accent/10">
-                <Pencil className="mr-2 h-4 w-4" /> Edit Profile
-              </Button>
+              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={handleEditProfile} variant="outline" className="mt-2 border-accent text-accent hover:bg-accent/10">
+                    <Pencil className="mr-2 h-4 w-4" /> Edit Profile
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px] bg-card border-accent/50">
+                  <DialogHeader>
+                    <DialogTitle className="text-primary">Edit Your Study Profile</DialogTitle>
+                    <DialogDescription>
+                      Update your courses and learning preferences. Click save when you're done.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="courses" className="text-right text-foreground/90 col-span-1">
+                        Courses
+                      </Label>
+                      <Textarea
+                        id="courses"
+                        value={editCoursesInput}
+                        onChange={(e) => setEditCoursesInput(e.target.value)}
+                        placeholder="Enter courses, separated by commas"
+                        className="col-span-3 bg-background/70"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-start gap-4">
+                      <Label className="text-right text-foreground/90 col-span-1 pt-1">
+                        Learning Styles
+                      </Label>
+                      <div className="col-span-3 space-y-2">
+                        {ALL_LEARNING_STYLES.map((style) => (
+                          <div key={style} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`style-${style}`}
+                              checked={editLearningStyles.includes(style)}
+                              onCheckedChange={(checked) => handleLearningStyleChange(style, !!checked)}
+                            />
+                            <Label htmlFor={`style-${style}`} className="font-normal text-foreground/80">{style}</Label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <DialogClose asChild>
+                       <Button type="button" variant="outline">Cancel</Button>
+                    </DialogClose>
+                    <Button type="button" onClick={handleSaveProfile} className="bg-accent hover:bg-accent/90 text-accent-foreground">Save Changes</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
         </TabsContent>
@@ -132,23 +233,23 @@ export default function StudySpherePage() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="course-filter" className="text-base text-foreground/90">Filter by Course:</Label>
-                  <Select onValueChange={(value) => handleDemoClick(`Filtered by course: ${value} (Demo)`)}>
+                  <Select onValueChange={(value) => handleDemoClick(\`Filtered by course: \${value} (Demo)\`)}>
                     <SelectTrigger id="course-filter" className="w-full bg-background/70">
                       <SelectValue placeholder="Select a course to find peers" />
                     </SelectTrigger>
                     <SelectContent>
-                      {hardcodedCourses.map(course => <SelectItem key={course} value={course}>{course}</SelectItem>)}
+                      {ALL_AVAILABLE_COURSES.map(course => <SelectItem key={course} value={course}>{course}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="style-filter" className="text-base text-foreground/90">Filter by Learning Style:</Label>
-                  <Select onValueChange={(value) => handleDemoClick(`Filtered by style: ${value} (Demo)`)}>
+                  <Select onValueChange={(value) => handleDemoClick(\`Filtered by style: \${value} (Demo)\`)}>
                     <SelectTrigger id="style-filter" className="w-full bg-background/70">
                       <SelectValue placeholder="Select a preferred learning style" />
                     </SelectTrigger>
                     <SelectContent>
-                      {learningStyles.map(style => <SelectItem key={style} value={style}>{style}</SelectItem>)}
+                      {ALL_LEARNING_STYLES.map(style => <SelectItem key={style} value={style}>{style}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -174,7 +275,7 @@ export default function StudySpherePage() {
                       <p className="text-sm text-muted-foreground">Shared Courses: {match.courses.join(', ')}</p>
                       <p className="text-sm text-muted-foreground">Learning Styles: {match.learningStyles.join(', ')}</p>
                     </div>
-                    <Button onClick={() => handleDemoClick(`Connection request sent to ${match.name}! (Demo)`)} size="sm" variant="outline" className="shrink-0 self-start sm:self-center border-accent text-accent hover:bg-accent/10">
+                    <Button onClick={() => handleDemoClick(\`Connection request sent to \${match.name}! (Demo)\`)} size="sm" variant="outline" className="shrink-0 self-start sm:self-center border-accent text-accent hover:bg-accent/10">
                       <UserPlus className="mr-2 h-4 w-4" /> Connect
                     </Button>
                   </Card>
@@ -208,7 +309,7 @@ export default function StudySpherePage() {
                       <p className="text-sm text-foreground/80 mt-1">{group.description}</p>
                       <Badge variant="secondary" className="mt-2">{group.members} members</Badge>
                     </div>
-                    <Button onClick={() => handleDemoClick(`Requesting to join ${group.name}... (Demo)`)} size="sm" variant="outline" className="mt-1 border-accent text-accent hover:bg-accent/10 self-start sm:self-center">
+                    <Button onClick={() => handleDemoClick(\`Requesting to join \${group.name}... (Demo)\`)} size="sm" variant="outline" className="mt-1 border-accent text-accent hover:bg-accent/10 self-start sm:self-center">
                       Join Group
                     </Button>
                   </div>
@@ -241,7 +342,7 @@ export default function StudySpherePage() {
                     <p className="text-sm text-muted-foreground">Type: {resource.type} | Course: {resource.course}</p>
                     <p className="text-sm text-muted-foreground">Uploaded by: {resource.uploader}</p>
                   </div>
-                  <Button onClick={() => handleDemoClick(`Downloading ${resource.name}... (Demo)`)} variant="ghost" size="icon" className="text-accent hover:text-accent/80">
+                  <Button onClick={() => handleDemoClick(\`Downloading \${resource.name}... (Demo)\`)} variant="ghost" size="icon" className="text-accent hover:text-accent/80">
                     <Download className="h-5 w-5" />
                   </Button>
                 </Card>
@@ -270,7 +371,7 @@ export default function StudySpherePage() {
                   <h4 className="font-semibold text-lg text-foreground">{session.topic}</h4>
                   <p className="text-sm text-muted-foreground">When: {session.dateTime}</p>
                   <p className="text-sm text-muted-foreground">With: {session.group} | Where: {session.location}</p>
-                  <Button onClick={() => handleDemoClick(`Viewing details for session: ${session.topic} (Demo)`)} size="sm" variant="link" className="p-0 h-auto text-accent hover:text-accent/80 mt-1">View Details / Join</Button>
+                  <Button onClick={() => handleDemoClick(\`Viewing details for session: \${session.topic} (Demo)\`)} size="sm" variant="link" className="p-0 h-auto text-accent hover:text-accent/80 mt-1">View Details / Join</Button>
                 </Card>
               ))}
               {studySessions.length === 0 && <p className="text-muted-foreground">No study sessions scheduled yet.</p>}
@@ -281,3 +382,4 @@ export default function StudySpherePage() {
     </div>
   );
 }
+
